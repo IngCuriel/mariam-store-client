@@ -10,6 +10,8 @@ export const createCashExpressRequest = async (data) => {
 export const getCashExpressRequests = async (status) => {
   const params = {};
   if (status) params.status = status;
+  params.page = 1;
+  params.limit = 200;
   const response = await api.get('/cash-express', { params });
   return response.data;
 };

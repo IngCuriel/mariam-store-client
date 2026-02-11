@@ -65,7 +65,7 @@ export default function CashExpressRequests() {
     try {
       setLoading(true);
       const requestsData = await getCashExpressRequests();
-      const allRequests = Array.isArray(requestsData) ? requestsData : [];
+      const allRequests = Array.isArray(requestsData.requests) ? requestsData.requests : [];
       const sorted = [...allRequests].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setRequests(sorted);
     } catch (error) {
