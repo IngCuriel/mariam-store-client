@@ -207,18 +207,22 @@
   font-size: 14px;
 }
 
-/* Responsive */
+/* Móvil: dropdown justo debajo de la campanita */
 @media (max-width: 768px) {
+  .notification-bell-container {
+    position: relative;
+  }
+
   .notification-dropdown {
-    width: calc(100vw - 40px);
-    max-width: 400px;
-    right: auto;
-    left: 50%;
-    transform: translateX(-50%);
-    position: fixed;
-    bottom: 100px;
-    top: auto;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    left: auto;
+    width: min(340px, calc(100vw - 24px));
+    max-height: 70vh;
     z-index: 1002;
+    /* Evitar que se salga por la derecha en pantallas pequeñas */
+    max-width: calc(100vw - 64px);
   }
 
   .notification-item {

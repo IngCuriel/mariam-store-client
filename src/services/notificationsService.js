@@ -39,7 +39,7 @@ export const markAllAsRead = async () => {
 };
 
 /**
- * Eliminar notificación
+ * Ocultar notificación (no se elimina de la BD, solo deja de mostrarse)
  * @param {number} id - ID de la notificación
  * @returns {Promise<Object>} { message: string }
  */

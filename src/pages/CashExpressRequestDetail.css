@@ -1116,5 +1116,23 @@
     font-size: 0.9em;
     padding: 10px;
   }
+
+  /* Clave de retiro: dos filas en móvil (etiqueta arriba, clave abajo) */
+  .folio {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .folio-label {
+    display: block;
+    width: 100%;
+  }
+
+  .folio-value {
+    display: block;
+    width: 100%;
+    text-align: center;
+  }
 }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAnalytics } from '../hooks/useAnalytics';
@@ -9,6 +9,7 @@ import {
   getSuggestedAvailability,
   getCashExpressRequests,
 } from '../services/cashExpressService';
+import { Toast } from '../components/Toast';
 import './CashExpress.css';
 
 const STATUS_EN_PROCESO = new Set(['PENDIENTE', 'EN_ESPERA_CONFIRMACION', 'DEPOSITO_VALIDADO']);
@@ -38,6 +39,7 @@ export default function CashExpress() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [requestsInProcess, setRequestsInProcess] = useState(0);
   const [loadingRequests, setLoadingRequests] = useState(false);
+  const [toast, setToast] = useState({ open: false, message: '', type: 'info' });
 
   useEffect(() => {
     loadConfig();
@@ -51,7 +53,7 @@ export default function CashExpress() {
         setAmount(data.amount.toString());
         // Mostrar mensaje informativo
         setTimeout(() => {
-          alert('Bienvenido de vuelta. Tu solicitud está lista para ser creada.');
+          setToast({ open: true, message: 'Bienvenido de vuelta. Tu solicitud está lista para ser creada.', type: 'info' });
         }, 500);
       } catch (error) {
         console.error('Error recuperando datos pendientes:', error);
@@ -346,9 +348,8 @@ export default function CashExpress() {
   const isFormValid = isValidAmount;
 
   const handleSubmit = async () => {
-    // Validar formulario primero
     if (!isFormValid) {
-      alert('Por favor ingresa un monto válido.');
+      setToast({ open: true, message: 'Por favor ingresa un monto válido.', type: 'error' });
       return;
     }
 
@@ -357,7 +358,7 @@ export default function CashExpress() {
       const alertMessage = availability.formattedNextDate
         ? `${availability.message}\n\nPróxima disponibilidad: ${availability.formattedNextDate}`
         : availability.message;
-      alert(alertMessage);
+      setToast({ open: true, message: alertMessage, type: 'info' });
       return;
     }
 
@@ -398,14 +399,28 @@ export default function CashExpress() {
       loadRequestsCount();
       logCashExpressRequest(amountNum);
     } catch (error) {
-      alert(error.response?.data?.error || 'No se pudo crear la solicitud. Intenta nuevamente.');
+      setToast({
+        open: true,
+        message: error.response?.data?.error || 'No se pudo crear la solicitud. Intenta nuevamente.',
+        type: 'error',
+      });
     } finally {
       setLoading(false);
     }
   };
 
+  const closeToast = useCallback(() => {
+    setToast((prev) => ({ ...prev, open: false }));
+  }, []);
+
   return (
     <div className="cash-express-container">
+      <Toast
+        open={toast.open}
+        message={toast.message}
+        type={toast.type}
+        onClose={closeToast}
+      />
       <div className="cash-express-header">
         <h1>⚡ Efectivo Express</h1>
       </div>
