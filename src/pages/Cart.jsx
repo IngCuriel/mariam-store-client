@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { getProductEmoji } from '../services/imageService';
 import { createOrder } from '../services/ordersService';
+import { Toast } from '../components/Toast';
 import './Cart.css';
 
 const formatPrice = (price) => {
@@ -20,27 +21,72 @@ export default function Cart() {
   const { items, removeFromCart, updateQuantity, clearCart, getTotalAmount } = useCart();
   const { isAuthenticated } = useAuth();
   const [creatingOrder, setCreatingOrder] = useState(false);
+  const [toast, setToast] = useState({ open: false, message: '', type: 'info' });
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    title: '',
+    message: '',
+    confirmLabel: 'Aceptar',
+  });
+  const pendingConfirmRef = useRef(null);
+  const confirmDialogRef = useRef(null);
 
-  const handleCheckout = async () => {
+  useEffect(() => {
+    const dialog = confirmDialogRef.current;
+    if (!dialog) return;
+    if (confirmDialog.open) {
+      dialog.showModal();
+    } else {
+      dialog.close();
+    }
+  }, [confirmDialog.open]);
+
+  const showToast = useCallback((message, type = 'info') => {
+    setToast({ open: true, message, type });
+  }, []);
+  const closeToast = useCallback(() => {
+    setToast((prev) => ({ ...prev, open: false }));
+  }, []);
+
+  const openConfirm = useCallback((title, message, confirmLabel, onConfirm) => {
+    pendingConfirmRef.current = onConfirm;
+    setConfirmDialog({ open: true, title, message, confirmLabel });
+  }, []);
+  const closeConfirm = useCallback(() => {
+    setConfirmDialog((prev) => ({ ...prev, open: false }));
+    pendingConfirmRef.current = null;
+  }, []);
+  const handleConfirmAction = useCallback(() => {
+    const fn = pendingConfirmRef.current;
+    if (fn) fn();
+    closeConfirm();
+  }, [closeConfirm]);
+  const handleCancelConfirm = useCallback(() => {
+    closeConfirm();
+  }, [closeConfirm]);
+
+  const handleCheckout = () => {
     if (!isAuthenticated) {
-      if (window.confirm('Necesitas iniciar sesión para generar tu pedido. ¿Ir a iniciar sesión?')) {
-        navigate('/login', { state: { from: '/cart' } });
-      }
+      openConfirm(
+        'Iniciar sesión',
+        'Necesitas iniciar sesión para generar tu pedido. ¿Deseas ir a la página de acceso?',
+        'Ir a iniciar sesión',
+        () => navigate('/login', { state: { from: '/cart' } })
+      );
       return;
     }
 
-    if (items.length === 0) {
-      return;
-    }
+    if (items.length === 0) return;
 
-    if (
-      !window.confirm(
-        `Total: ${formatPrice(getTotalAmount())}\n\nLa tienda revisará la disponibilidad y te contactará para confirmar.\n¿Continuar?`
-      )
-    ) {
-      return;
-    }
+    openConfirm(
+      'Confirmar pedido',
+      `Total a pagar: ${formatPrice(getTotalAmount())}. La tienda revisará la disponibilidad de los productos y te notificara en el modulo de pedidos para el seguimiento. ¿Deseas generar el pedido?`,
+      'Generar pedido',
+      () => submitOrder()
+    );
+  };
 
+  const submitOrder = async () => {
     try {
       setCreatingOrder(true);
       const orderItems = items.map((item) => ({
@@ -57,10 +103,13 @@ export default function Cart() {
       });
 
       clearCart();
-      alert('Pedido enviado correctamente. La tienda te contactará pronto.');
+      showToast('Pedido generado correctamente. La tienda te contactará pronto.', 'success');
       navigate('/products');
     } catch (error) {
-      alert(error.response?.data?.error || 'No se pudo generar el pedido. Intenta de nuevo.');
+      showToast(
+        error.response?.data?.error || 'No se pudo generar el pedido. Intenta de nuevo.',
+        'error'
+      );
     } finally {
       setCreatingOrder(false);
     }
@@ -99,6 +148,35 @@ export default function Cart() {
 
   return (
     <div className="cart-page">
+      <dialog
+        ref={confirmDialogRef}
+        className="cart-confirm-dialog"
+        aria-labelledby="cart-confirm-title"
+        onClose={handleCancelConfirm}
+        onCancel={handleCancelConfirm}
+      >
+        <div className="cart-confirm-content">
+          <h2 id="cart-confirm-title" className="cart-confirm-title">{confirmDialog.title}</h2>
+          <p className="cart-confirm-message">{confirmDialog.message}</p>
+          <div className="cart-confirm-actions">
+            <button
+              type="button"
+              className="cart-confirm-btn cart-confirm-btn--cancel"
+              onClick={handleCancelConfirm}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="cart-confirm-btn cart-confirm-btn--confirm"
+              onClick={handleConfirmAction}
+            >
+              {confirmDialog.confirmLabel}
+            </button>
+          </div>
+        </div>
+      </dialog>
+      <Toast open={toast.open} message={toast.message} type={toast.type} onClose={closeToast} />
       <div className="cart-container">
         <nav className="cart-breadcrumb">
           <Link to="/">Inicio</Link>
@@ -205,7 +283,7 @@ export default function Cart() {
               onClick={handleCheckout}
               disabled={creatingOrder}
             >
-              {creatingOrder ? 'Generando pedido...' : 'Finalizar compra'}
+              {creatingOrder ? 'Generando pedido...' : 'Generar pedido'}
             </button>
             {!isAuthenticated && (
               <p className="cart-login-reminder">

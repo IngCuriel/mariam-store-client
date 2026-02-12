@@ -61,6 +61,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link to="/orders" className="footer-link">
+                  📦 Mis Pedidos
+                </Link>
+              </li>
+              <li>
                 <Link to="/cash-express/terms" className="footer-link">
                   📄 Términos y Condiciones
                 </Link>

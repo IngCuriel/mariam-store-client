@@ -16,6 +16,8 @@ import CashExpress from './pages/CashExpress';
 import CashExpressRequests from './pages/CashExpressRequests';
 import CashExpressRequestDetail from './pages/CashExpressRequestDetail';
 import TermsAndConditions from './pages/TermsAndConditions';
+import Orders from './pages/Orders';
+import OrderDetail from './pages/OrderDetail';
 import './App.css';
 
 function AppRoutes() {
@@ -55,8 +57,8 @@ function AppRoutes() {
           <Route path="/cash-express/requests" element={<CashExpressRequests />} />
           <Route path="/cash-express/requests/:id" element={<CashExpressRequestDetail />} />
           <Route path="/cash-express/terms" element={<TermsAndConditions />} />
-          {/* Aquí agregaremos más rutas protegidas más adelante */}
-          {/* Ejemplo: <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} /> */}
+          <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+          <Route path="/orders/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
