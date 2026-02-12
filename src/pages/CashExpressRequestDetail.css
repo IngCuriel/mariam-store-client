@@ -629,6 +629,33 @@
   cursor: not-allowed;
 }
 
+.form-actions--recipient {
+  flex-wrap: wrap;
+}
+
+.form-actions-primary {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.save-button--primary {
+  flex: none;
+  width: 100%;
+  padding: 14px 20px;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(220, 20, 60, 0.25);
+}
+
+.form-action-hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
 .rejection-card {
   background: #fee;
   border-left: 4px solid #e74c3c;
@@ -1134,5 +1161,82 @@
     width: 100%;
     text-align: center;
   }
+}
+
+/* Modal de confirmación (reemplazo de window.confirm) */
+.confirm-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.confirm-dialog-content {
+  background: #fff;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 100%;
+  padding: 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+}
+
+.confirm-dialog-title {
+  margin: 0 0 12px 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.confirm-dialog-message {
+  margin: 0 0 24px 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: #475569;
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.confirm-dialog-btn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.confirm-dialog-btn--cancel {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+}
+
+.confirm-dialog-btn--cancel:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+.confirm-dialog-btn--confirm {
+  background: #DC143C;
+  border: none;
+  color: #fff;
+}
+
+.confirm-dialog-btn--confirm:hover {
+  background: #b8122f;
 }
 

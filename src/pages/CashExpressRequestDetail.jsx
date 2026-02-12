@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -10,6 +11,7 @@ import {
 } from '../services/cashExpressService';
 import { uploadImageToCloudinary } from '../services/cloudinaryService';
 import { STATUS_COLORS, STATUS_LABELS, STATUS_ICONS } from '../constants/cashExpress';
+import { Toast } from '../components/Toast';
 import './CashExpressRequestDetail.css';
 
 const formatPrice = (price) => {
@@ -50,6 +52,44 @@ export default function CashExpressRequestDetail() {
   const [editingRecipientData, setEditingRecipientData] = useState(false);
   const [savingRecipientData, setSavingRecipientData] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [toast, setToast] = useState({ open: false, message: '', type: 'info' });
+  const [confirmDialog, setConfirmDialog] = useState({ open: false, title: '', message: '' });
+  const pendingConfirmRef = useRef(null);
+  const pendingCancelRef = useRef(null);
+
+  const showToast = useCallback((message, type = 'info') => {
+    setToast({ open: true, message, type });
+  }, []);
+  const closeToast = useCallback(() => {
+    setToast((prev) => ({ ...prev, open: false }));
+  }, []);
+
+  const openConfirm = useCallback((title, message, onConfirm, onCancel) => {
+    pendingConfirmRef.current = onConfirm;
+    pendingCancelRef.current = onCancel;
+    setConfirmDialog({ open: true, title, message });
+  }, []);
+  const closeConfirm = useCallback(() => {
+    setConfirmDialog((prev) => ({ ...prev, open: false }));
+    pendingConfirmRef.current = null;
+    pendingCancelRef.current = null;
+  }, []);
+  const handleConfirmAction = useCallback(async () => {
+    const fn = pendingConfirmRef.current;
+    if (fn) {
+      try {
+        await fn();
+      } finally {
+        closeConfirm();
+      }
+    } else {
+      closeConfirm();
+    }
+  }, [closeConfirm]);
+  const handleCancelConfirm = useCallback(() => {
+    pendingCancelRef.current?.();
+    closeConfirm();
+  }, [closeConfirm]);
 
   // Obtener datos del remitente del usuario autenticado
   const getSenderData = () => {
@@ -110,13 +150,13 @@ export default function CashExpressRequestDetail() {
 
     // Validar que sea una imagen
     if (!file.type.startsWith('image/')) {
-      alert('Por favor selecciona un archivo de imagen');
+      showToast('Por favor selecciona un archivo de imagen.', 'error');
       return;
     }
 
     // Validar tamaño (máximo 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert('La imagen es demasiado grande. Máximo 5MB');
+      showToast('La imagen es demasiado grande. Máximo 5MB.', 'error');
       return;
     }
 
@@ -130,10 +170,10 @@ export default function CashExpressRequestDetail() {
       const updatedRequest = await uploadDepositReceipt(id, imageUrl);
       setRequest(updatedRequest);
 
-      alert('✅ Comprobante subido\n\nTu comprobante ha sido subido. Por favor, completa los datos del destinatario antes de enviarlo a revisión.');
+      showToast('Comprobante subido. Completa los datos del destinatario antes de enviarlo a revisión.', 'success');
     } catch (error) {
       console.error('Error subiendo comprobante:', error);
-      alert(error.message || 'No se pudo subir el comprobante. Intenta nuevamente.');
+      showToast(error.message || 'No se pudo subir el comprobante. Intenta nuevamente.', 'error');
     } finally {
       setUploadingReceipt(false);
       // Resetear el input
@@ -143,9 +183,9 @@ export default function CashExpressRequestDetail() {
 
   const handleSaveRecipientData = async () => {
     const senderData = getSenderData();
-    
+
     if (!senderData.name.trim() || !recipientName.trim() || !relationship.trim()) {
-      alert('Por favor completa todos los campos requeridos del destinatario');
+      showToast('Por favor completa todos los campos requeridos del destinatario.', 'error');
       return;
     }
 
@@ -155,17 +195,74 @@ export default function CashExpressRequestDetail() {
       setSavingRecipientData(true);
       const updatedRequest = await updateRecipientData(id, {
         senderName: senderData.name.trim(),
-        senderPhone: senderData.phone.trim() || '', // Si no tiene teléfono, enviar vacío
+        senderPhone: senderData.phone.trim() || '',
         recipientName: recipientName.trim(),
-        recipientPhone: recipientPhone.trim() || '', // Opcional
+        recipientPhone: recipientPhone.trim() || '',
         relationship: relationship.trim(),
       });
       setRequest(updatedRequest);
       setEditingRecipientData(false);
-      alert('✅ Datos guardados exitosamente');
+      showToast('Datos guardados correctamente.', 'success');
     } catch (error) {
       console.error('Error guardando datos:', error);
-      alert(error.response?.data?.error || 'No se pudieron guardar los datos');
+      showToast(error.response?.data?.error || 'No se pudieron guardar los datos.', 'error');
+    } finally {
+      setSavingRecipientData(false);
+    }
+  };
+
+  /** Guardar datos del destinatario y, si hay comprobante, enviarlo a revisión en un solo paso */
+  const handleSaveAndSendToReview = async () => {
+    const senderData = getSenderData();
+
+    if (!senderData.name.trim() || !recipientName.trim() || !relationship.trim()) {
+      showToast('Por favor completa todos los campos requeridos del destinatario.', 'error');
+      return;
+    }
+
+    if (!id || !request) return;
+
+    const hasReceipt = !!request.depositReceipt;
+
+    try {
+      setSavingRecipientData(true);
+
+      const updatedRequest = await updateRecipientData(id, {
+        senderName: senderData.name.trim(),
+        senderPhone: senderData.phone.trim() || '',
+        recipientName: recipientName.trim(),
+        recipientPhone: recipientPhone.trim() || '',
+        relationship: relationship.trim(),
+      });
+      setRequest(updatedRequest);
+      setEditingRecipientData(false);
+
+      if (hasReceipt) {
+        setSavingRecipientData(false);
+        openConfirm(
+          'Enviar comprobante a revisión',
+          'Se guardarán los datos del destinatario y tu comprobante quedará en validación. No podrás modificarlo hasta que sea revisado.',
+          async () => {
+            setSavingRecipientData(true);
+            try {
+              const afterConfirm = await confirmDepositReceipt(id);
+              setRequest(afterConfirm);
+              showToast('Tus datos se guardaron y tu comprobante fue enviado a revisión. Te notificaremos cuando sea validado.', 'success');
+            } catch (error) {
+              showToast(error.response?.data?.error || error.message || 'No se pudo completar. Intenta de nuevo.', 'error');
+            } finally {
+              setSavingRecipientData(false);
+            }
+          },
+          () => setSavingRecipientData(false)
+        );
+        return;
+      } else {
+        showToast('Datos guardados. Cuando subas tu comprobante de depósito, podrás enviarlo a revisión desde aquí.', 'success');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      showToast(error.response?.data?.error || error.message || 'No se pudo completar. Intenta de nuevo.', 'error');
     } finally {
       setSavingRecipientData(false);
     }
@@ -173,7 +270,7 @@ export default function CashExpressRequestDetail() {
 
   const handleConfirmReceipt = async () => {
     if (!request?.depositReceipt) {
-      alert('No hay comprobante para enviar. Por favor, sube un comprobante primero.');
+      showToast('No hay comprobante para enviar. Por favor, sube un comprobante primero.', 'error');
       return;
     }
 
@@ -185,7 +282,7 @@ export default function CashExpressRequestDetail() {
     // Si no hay datos guardados, verificar los datos del estado local
     if (!hasSavedData) {
       if (!senderData.name.trim() || !recipientName.trim() || !relationship.trim()) {
-        alert('Por favor, completa todos los datos requeridos del destinatario antes de enviar el comprobante a revisión.');
+        showToast('Completa todos los datos requeridos del destinatario antes de enviar el comprobante a revisión.', 'error');
         return;
       }
 
@@ -202,28 +299,32 @@ export default function CashExpressRequestDetail() {
         await loadRequest();
       } catch (error) {
         console.error('Error guardando datos:', error);
-        alert(error.response?.data?.error || 'No se pudieron guardar los datos. Por favor, intenta nuevamente.');
+        showToast(error.response?.data?.error || 'No se pudieron guardar los datos. Intenta nuevamente.', 'error');
         setUploadingReceipt(false);
         return;
       }
     }
 
-    // Confirmar antes de enviar
-    if (!window.confirm('¿Estás seguro de que deseas enviar este comprobante a revisión? Una vez enviado, no podrás modificarlo hasta que sea revisado.')) {
-      setUploadingReceipt(false);
-      return;
-    }
-
-    try {
-      const updatedRequest = await confirmDepositReceipt(id);
-      setRequest(updatedRequest);
-      alert('✅ Comprobante enviado\n\nTu comprobante ha sido enviado a revisión. Te notificaremos cuando sea validado.');
-    } catch (error) {
-      console.error('Error enviando comprobante:', error);
-      alert(error.response?.data?.error || error.message || 'No se pudo enviar el comprobante. Intenta nuevamente.');
-    } finally {
-      setUploadingReceipt(false);
-    }
+    // Mostrar modal de confirmación antes de enviar
+    openConfirm(
+      'Enviar comprobante a revisión',
+      '¿Estás seguro? Una vez enviado, no podrás modificarlo hasta que sea revisado.',
+      async () => {
+        try {
+          const updatedRequest = await confirmDepositReceipt(id);
+          setRequest(updatedRequest);
+          showToast('Comprobante enviado a revisión. Te notificaremos cuando sea validado.', 'success');
+        } catch (error) {
+          console.error('Error enviando comprobante:', error);
+          showToast(error.response?.data?.error || error.message || 'No se pudo enviar el comprobante. Intenta nuevamente.', 'error');
+        } finally {
+          setUploadingReceipt(false);
+        }
+      },
+      () => setUploadingReceipt(false)
+    );
+    setUploadingReceipt(false);
+    return;
   };
 
   if (!isAuthenticated) {
@@ -284,8 +385,47 @@ export default function CashExpressRequestDetail() {
   const isDelivered = status === 'ENTREGADO';
   const isCanceled = status === 'CANCELADO';
 
+  const confirmModal = confirmDialog.open && createPortal(
+    <div
+      className="confirm-dialog-overlay"
+      onClick={handleCancelConfirm}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-dialog-title"
+    >
+      <div className="confirm-dialog-content" onClick={(e) => e.stopPropagation()}>
+        <h2 id="confirm-dialog-title" className="confirm-dialog-title">{confirmDialog.title}</h2>
+        <p className="confirm-dialog-message">{confirmDialog.message}</p>
+        <div className="confirm-dialog-actions">
+          <button
+            type="button"
+            className="confirm-dialog-btn confirm-dialog-btn--cancel"
+            onClick={handleCancelConfirm}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className="confirm-dialog-btn confirm-dialog-btn--confirm"
+            onClick={handleConfirmAction}
+          >
+            Enviar a revisión
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+
   return (
     <div className="request-detail-container">
+      {confirmModal}
+      <Toast
+        open={toast.open}
+        message={toast.message}
+        type={toast.type}
+        onClose={closeToast}
+      />
       <button type="button" className="back-button" onClick={() => navigate('/cash-express/requests')}>
         ← Volver
       </button>
@@ -367,7 +507,7 @@ export default function CashExpressRequestDetail() {
             {request.recipientName && (
               <div className="validated-message">
                 <span>💬</span>
-                <span>Informa a <strong>{request.recipientName}</strong> que puede pasar a recoger apartir de la fecha y hora indicada.</span>
+                <span>Informa a <strong>{request.recipientName}</strong> que puede pasar a recoger efectivo apartir de la fecha y hora indicada.</span>
               </div>
             )}
             <div className="validated-date-section">
@@ -442,6 +582,67 @@ export default function CashExpressRequestDetail() {
               </div>
             )}
           </div>
+        )}
+
+        {/* Comprobante: siempre después de Cuentas para Depósito (PENDIENTE/REBOTADO subir o ver; ENTREGADO solo ver) */}
+        {(isPending || isReboted || isDelivered) && (
+          request.depositReceipt ? (
+            <div className="receipt-card">
+              <div className="receipt-header">
+                <div className="receipt-header-left">
+                  <span>✅</span>
+                  <h3 className="receipt-title">Comprobante</h3>
+                </div>
+                <button
+                  type="button"
+                  className="toggle-receipt-button"
+                  onClick={() => setShowReceipt(!showReceipt)}
+                  aria-label={showReceipt ? 'Ocultar comprobante' : 'Mostrar comprobante'}
+                >
+                  {showReceipt ? 'Ocultar' : 'Ver comprobante'}
+                </button>
+              </div>
+              {showReceipt && (
+                <div className="receipt-image-container">
+                  <img
+                    src={request.depositReceipt}
+                    alt="Comprobante de depósito"
+                    className="receipt-image"
+                  />
+                </div>
+              )}
+              {!showReceipt && (
+                <p className="receipt-collapsed-hint">Haz clic en &quot;Ver comprobante&quot; para ver la imagen.</p>
+              )}
+              {(isPending || isReboted) && (
+                <div className="receipt-actions">
+                  <label className="replace-receipt-button">
+                    {uploadingReceipt ? '⏳ Subiendo...' : '📷 Reemplazar comprobante'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      disabled={uploadingReceipt}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                </div>
+              )}
+            </div>
+          ) : (isPending || isReboted) ? (
+            <div className="upload-receipt-section">
+              <label className="upload-receipt-button">
+                {uploadingReceipt ? '⏳ Subiendo...' : '📷 Subir comprobante de depósito'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  disabled={uploadingReceipt}
+                  style={{ display: 'none' }}
+                />
+              </label>
+            </div>
+          ) : null
         )}
 
         {/* Datos destinatario: solo cuando aplica y no está en modo edición */}
@@ -526,89 +727,7 @@ export default function CashExpressRequestDetail() {
           </div>
         )}
 
-        {/* Botón enviar comprobante: solo PENDIENTE o REBOTADO */}
-        {(isPending || isReboted) &&
-          request.depositReceipt &&
-          request.recipientName &&
-          !editingRecipientData && (
-            <button
-              className="send-receipt-button"
-              onClick={handleConfirmReceipt}
-              disabled={uploadingReceipt}
-            >
-              {uploadingReceipt ? (
-                '⏳ Enviando...'
-              ) : (
-                <>
-                  <span>📤</span>
-                  <span>Enviar Comprobante a Validar</span>
-                </>
-              )}
-            </button>
-          )}
-
-        {/* Comprobante: PENDIENTE/REBOTADO (subir o ver/reemplazar); ENTREGADO (solo ver) */}
-        {(isPending || isReboted || isDelivered) && (
-          request.depositReceipt ? (
-            <div className="receipt-card">
-              <div className="receipt-header">
-                <div className="receipt-header-left">
-                  <span>✅</span>
-                  <h3 className="receipt-title">Comprobante</h3>
-                </div>
-                <button
-                  type="button"
-                  className="toggle-receipt-button"
-                  onClick={() => setShowReceipt(!showReceipt)}
-                  aria-label={showReceipt ? 'Ocultar comprobante' : 'Mostrar comprobante'}
-                >
-                  {showReceipt ? 'Ocultar' : 'Ver comprobante'}
-                </button>
-              </div>
-              {showReceipt && (
-                <div className="receipt-image-container">
-                  <img
-                    src={request.depositReceipt}
-                    alt="Comprobante de depósito"
-                    className="receipt-image"
-                  />
-                </div>
-              )}
-              {!showReceipt && (
-                <p className="receipt-collapsed-hint">Haz clic en &quot;Ver comprobante&quot; para ver la imagen.</p>
-              )}
-              {(isPending || isReboted) && (
-                <div className="receipt-actions">
-                  <label className="replace-receipt-button">
-                    {uploadingReceipt ? '⏳ Subiendo...' : '📷 Reemplazar comprobante'}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      disabled={uploadingReceipt}
-                      style={{ display: 'none' }}
-                    />
-                  </label>
-                </div>
-              )}
-            </div>
-          ) : (isPending || isReboted) ? (
-            <div className="upload-receipt-section">
-              <label className="upload-receipt-button">
-                {uploadingReceipt ? '⏳ Subiendo...' : '📷 Subir comprobante de depósito'}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  disabled={uploadingReceipt}
-                  style={{ display: 'none' }}
-                />
-              </label>
-            </div>
-          ) : null
-        )}
-
-        {/* Formulario de Datos del Destinatario - Movido al final, después del comprobante */}
+        {/* Formulario de Datos del Destinatario */}
         {showRecipientForm && (
           <div className="recipient-form">
             <div className="form-header">
@@ -622,7 +741,9 @@ export default function CashExpressRequestDetail() {
             <p className="form-description">
               {request.status === 'DEPOSITO_VALIDADO'
                 ? 'Por favor, proporciona los datos del destinatario para proceder con la entrega.'
-                : 'Completa los datos del destinatario antes de enviar el comprobante a revisión'}
+                : request.depositReceipt
+                  ? 'Completa los datos del destinatario. Al guardar, también enviarás tu comprobante a validación en un solo paso.'
+                  : 'Completa los datos del destinatario. Después podrás subir y enviar tu comprobante a revisión.'}
             </p>
 
             <div className="form-section">
@@ -659,10 +780,11 @@ export default function CashExpressRequestDetail() {
               </div>
             </div>
 
-            <div className="form-actions">
+            <div className="form-actions form-actions--recipient">
               {editingRecipientData && (
                 <button
                   className="cancel-button"
+                  type="button"
                   onClick={() => {
                     setEditingRecipientData(false);
                     setRecipientName(request.recipientName || '');
@@ -674,21 +796,63 @@ export default function CashExpressRequestDetail() {
                   Cancelar
                 </button>
               )}
-              <button
-                className="save-button"
-                onClick={handleSaveRecipientData}
-                disabled={
-                  savingRecipientData ||
-                  !getSenderData().name.trim() ||
-                  !recipientName.trim() ||
-                  !relationship.trim()
-                }
-              >
-                {savingRecipientData ? '⏳ Guardando...' : '✓ Guardar Datos'}
-              </button>
+              <div className="form-actions-primary">
+                <button
+                  type="button"
+                  className={
+                    request.depositReceipt && (isPending || isReboted)
+                      ? 'save-button save-button--primary'
+                      : 'save-button'
+                  }
+                  onClick={
+                    request.depositReceipt && (isPending || isReboted)
+                      ? handleSaveAndSendToReview
+                      : handleSaveRecipientData
+                  }
+                  disabled={
+                    savingRecipientData ||
+                    !getSenderData().name.trim() ||
+                    !recipientName.trim() ||
+                    !relationship.trim()
+                  }
+                >
+                  {savingRecipientData
+                    ? '⏳ Procesando...'
+                    : request.depositReceipt && (isPending || isReboted)
+                      ? '✓ Guardar datos y enviar a revisión'
+                      : '✓ Guardar datos'}
+                </button>
+                {request.depositReceipt && (isPending || isReboted) && (
+                  <p className="form-action-hint">
+                    Se guardarán los datos del destinatario y tu comprobante se enviará a validación.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         )}
+
+        {/* Botón enviar comprobante: siempre al final (cuando aplica) */}
+        {(isPending || isReboted) &&
+          request.depositReceipt &&
+          request.recipientName &&
+          !showRecipientForm && (
+            <button
+              type="button"
+              className="send-receipt-button"
+              onClick={handleConfirmReceipt}
+              disabled={uploadingReceipt}
+            >
+              {uploadingReceipt ? (
+                '⏳ Enviando...'
+              ) : (
+                <>
+                  <span>📤</span>
+                  <span>Enviar comprobante a validar</span>
+                </>
+              )}
+            </button>
+          )}
       </div>
     </div>
   );
