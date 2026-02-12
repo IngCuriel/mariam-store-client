@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAnalytics } from '../hooks/useAnalytics';
@@ -628,8 +629,8 @@ export default function CashExpress() {
         </button>
       </div>
 
-      {/* Modal de Cuentas Bancarias */}
-      {showBankAccounts && createdRequest && (
+      {/* Modal de Cuentas Bancarias (Portal para evitar desborde en móvil) */}
+      {showBankAccounts && createdRequest && createPortal(
         <div className="modal-overlay" onClick={() => setShowBankAccounts(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
@@ -718,11 +719,12 @@ export default function CashExpress() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Modal de Confirmación de Solicitud */}
-      {showConfirmModal && (
+      {/* Modal de Confirmación (Portal) */}
+      {showConfirmModal && createPortal(
         <div className="modal-overlay" onClick={() => setShowConfirmModal(false)}>
           <div className="modal-content confirm-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
@@ -777,11 +779,12 @@ export default function CashExpress() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Modal de ¿Cómo funciona? */}
-      {showHowItWorks && (
+      {/* Modal de ¿Cómo funciona? (Portal) */}
+      {showHowItWorks && createPortal(
         <div className="modal-overlay" onClick={() => setShowHowItWorks(false)}>
           <div className="modal-content large" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
@@ -857,7 +860,8 @@ export default function CashExpress() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
