@@ -84,5 +84,9 @@ export const STATUS_NEXT_STEP_MESSAGE = {
 
 export const STATUS_OPTIONS_FILTER = [
   { value: '', label: 'Todos' },
-  ...Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label })),
-];
+  { value: ORDER_STATUS.UNDER_REVIEW, label: 'En revisión' },
+  { value: ORDER_STATUS.PARTIALLY_AVAILABLE, label: 'Parcialmente disponible' },
+   { value: ORDER_STATUS.IN_PREPARATION, label: 'En preparación' },
+  { value: ORDER_STATUS.READY_FOR_PICKUP, label: 'Listo para recoger' } 
+ ];
+ 

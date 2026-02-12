@@ -269,12 +269,12 @@ export default function OrderDetail() {
             </div>
           )}
 
-          {order.notes && (
+          {/*order.notes && (
             <p className="order-detail-notes-inline">
               <span className="order-detail-notes-label">Notas: </span>
               {order.notes}
             </p>
-          )}
+          )*/}
 
           {/* Productos */}
           <section className="order-detail-info-card order-detail-products-card">

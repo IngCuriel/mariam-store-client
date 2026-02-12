@@ -34,7 +34,7 @@ const formatShortDate = (dateString) => {
   }
 };
 
-const ORDERS_PER_PAGE = 10;
+const ORDERS_PER_PAGE = 3;
 
 /** Genera números de página para mostrar (estilo ML/Amazon: 1 ... 4 5 6 ... 12) */
 function getPageNumbers(currentPage, totalPages) {
@@ -125,30 +125,15 @@ export default function Orders() {
   const pageNumbers = getPageNumbers(page, totalPages);
   const showPagination = totalPages > 1 && total > 0;
 
-  if (loading && orders.length === 0) {
-    return (
-      <div className="orders-page">
-        <div className="orders-hero">
-          <h1 className="orders-hero-title">Mis Pedidos</h1>
-          <p className="orders-hero-subtitle">Revisa el estado de tus compras</p>
-        </div>
-        <div className="orders-loading">
-          <div className="orders-loading-spinner" aria-hidden="true" />
-          <p>Cargando tus pedidos...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="orders-page">
-      {/* Hero / Encabezado */}
+      {/* Hero / Encabezado: siempre visible */}
       <header className="orders-hero">
         <h1 className="orders-hero-title">Mis Pedidos</h1>
         <p className="orders-hero-subtitle">
           Revisa el estado de tus compras y el detalle de cada pedido
         </p>
-        {pendingCount > 0 && (
+        {pendingCount > 0 && !loading && (
           <div className="orders-hero-badge">
             <span className="orders-hero-badge-dot" aria-hidden="true" />
             {pendingCount} {pendingCount === 1 ? 'pedido pendiente' : 'pedidos pendientes'}
@@ -156,32 +141,33 @@ export default function Orders() {
         )}
       </header>
 
-      {/* Filtros tipo chips */}
-      <div className="orders-filters-wrap">
+      {/* Filtros por estado: siempre visibles */}
+      <nav className="orders-filters-wrap" aria-label="Filtrar pedidos por estado">
+        <span className="orders-filters-label">Filtrar por estado</span>
         <div className="orders-filters-scroll">
           {STATUS_OPTIONS.map((option) => (
             <button
               key={option.value}
               type="button"
-              className={`orders-chip ${selectedStatus === option.value ? 'orders-chip--active' : ''}`}
+              className={`orders-chip ${selectedStatus === option.value ? 'orders-chip--active' : ''} ${option.value === '' ? 'orders-chip--all' : ''}`}
               onClick={() => handleStatusFilter(option.value)}
+              disabled={loading}
+              aria-pressed={selectedStatus === option.value}
+              aria-label={option.value ? `Ver pedidos: ${option.label}` : 'Ver todos los pedidos'}
             >
               {option.label}
             </button>
           ))}
         </div>
-        <button
-          type="button"
-          className="orders-filter-btn-mobile"
-          onClick={() => setShowStatusFilter(true)}
-          aria-label="Abrir filtros"
-        >
-          Filtros
-        </button>
-      </div>
+      </nav>
 
-      {/* Lista de pedidos */}
-      {orders.length === 0 ? (
+      {/* Contenido variable: loading, lista vacía o lista de pedidos */}
+      {loading ? (
+        <div className="orders-loading orders-loading-inline">
+          <div className="orders-loading-spinner" aria-hidden="true" />
+          <p>Cargando pedidos...</p>
+        </div>
+      ) : orders.length === 0 ? (
         <section className="orders-empty" aria-label="Sin pedidos">
           <div className="orders-empty-box">
             <div className="orders-empty-icon" aria-hidden="true" />
@@ -261,8 +247,8 @@ export default function Orders() {
         </section>
       )}
 
-      {/* Paginación estilo ML/Amazon */}
-      {showPagination && (
+      {/* Paginación: solo cuando hay resultados y no está cargando */}
+      {!loading && showPagination && (
         <nav className="orders-pagination" aria-label="Paginación de pedidos">
           <div className="orders-pagination-summary">
             Mostrando <strong>{from}</strong>-<strong>{to}</strong> de <strong>{total}</strong>{' '}
