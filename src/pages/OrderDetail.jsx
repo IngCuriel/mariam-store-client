@@ -41,6 +41,21 @@ const formatDate = (dateString) => {
   }
 };
 
+const formatShortDate = (dateString) => {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleString('es-MX', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch (e) {
+    return dateString;
+  }
+};
+
 /** Cantidad efectiva para mostrar (confirmada o solicitada según disponibilidad) */
 function effectiveQuantity(item) {
   if (item.confirmedQuantity != null) return item.confirmedQuantity;
@@ -161,6 +176,12 @@ export default function OrderDetail() {
   const isFinalState = order.status === ORDER_STATUS.COMPLETED || order.status === ORDER_STATUS.CANCELLED;
   const showProductAvailability = !isFinalState;
 
+  const hasPartialAvailability =
+    showProductAvailability &&
+    order.items?.some(
+      (i) => i.isAvailable === false || (i.confirmedQuantity != null && i.confirmedQuantity !== i.quantity)
+    );
+
   return (
     <div className="order-detail-page">
       <Toast open={toast.open} message={toast.message} type={toast.type} onClose={closeToast} />
@@ -178,6 +199,10 @@ export default function OrderDetail() {
             {order.folio && (
               <span className="order-detail-folio-header">Folio {order.folio}</span>
             )}
+            <span className="order-detail-meta">
+              {formatShortDate(order.createdAt)}
+              {order.branch && ` · ${order.branch.name}`}
+            </span>
           </div>
           <span className="order-detail-spacer" aria-hidden="true" />
         </header>
@@ -244,43 +269,26 @@ export default function OrderDetail() {
             </div>
           )}
 
-          {/* Información del pedido: solo lo esencial */}
-          <section className="order-detail-info-card">
-            <h2 className="order-detail-section-title">Datos del pedido</h2>
-            <div className="order-detail-info-grid">
-              <div className="order-detail-info-item">
-                <span className="order-detail-info-icon">📅</span>
-                <div className="order-detail-info-text-wrap">
-                  <span className="order-detail-info-label">Fecha</span>
-                  <span className="order-detail-info-value">{formatDate(order.createdAt)}</span>
-                </div>
-              </div>
-              {order.branch && (
-                <div className="order-detail-info-item">
-                  <span className="order-detail-info-icon">📍</span>
-                  <div className="order-detail-info-text-wrap">
-                    <span className="order-detail-info-label">Sucursal</span>
-                    <span className="order-detail-info-value">{order.branch.name}</span>
-                  </div>
-                </div>
-              )}
-              {order.notes && (
-                <div className="order-detail-info-item order-detail-info-item-full">
-                  <span className="order-detail-info-icon">📝</span>
-                  <div className="order-detail-info-text-wrap">
-                    <span className="order-detail-info-label">Notas</span>
-                    <span className="order-detail-info-value">{order.notes}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </section>
+          {order.notes && (
+            <p className="order-detail-notes-inline">
+              <span className="order-detail-notes-label">Notas: </span>
+              {order.notes}
+            </p>
+          )}
 
           {/* Productos */}
           <section className="order-detail-info-card order-detail-products-card">
             <h2 className="order-detail-section-title">
               Productos <span className="order-detail-count">({order.items?.length || 0})</span>
             </h2>
+            {hasPartialAvailability && (
+              <div className="order-detail-availability-summary" role="alert">
+                <span className="order-detail-availability-summary-icon">ℹ️</span>
+                <p>
+                  Algunos productos tienen disponibilidad limitada. Revisa las cantidades disponibles y el total antes de aceptar.
+                </p>
+              </div>
+            )}
             <div className="order-detail-products-list">
               {order.items?.map((item, index) => {
                 const available = item.isAvailable === true;
@@ -295,29 +303,34 @@ export default function OrderDetail() {
                         <span className="order-detail-product-name">{item.productName}</span>
                         <span className="order-detail-product-details">
                           {item.quantity} × {formatPrice(item.unitPrice)}
-                          {item.confirmedQuantity != null && item.confirmedQuantity !== item.quantity && (
-                            <span className="order-detail-product-confirmed"> · Confirmado: {item.confirmedQuantity}</span>
-                          )}
                         </span>
                       </div>
                     </div>
                     {showProductAvailability && (
                       <div className="order-detail-availability-display">
-                        {available && (
-                          <div className="order-detail-availability-badge available">
-                            <span className="order-detail-availability-icon">✔</span>
+                        {unavailable && (
+                          <div className="order-detail-availability-row order-detail-availability-unavailable">
+                            <span className="order-detail-availability-row-icon">✕</span>
+                            <span>No disponible en este momento</span>
+                          </div>
+                        )}
+                        {available && item.confirmedQuantity != null && item.confirmedQuantity !== item.quantity && (
+                          <div className="order-detail-availability-row order-detail-availability-partial">
+                            <span className="order-detail-availability-row-icon">✓</span>
+                            <span>
+                              Disponible: <strong>{item.confirmedQuantity}</strong> de <strong>{item.quantity}</strong> unidades
+                            </span>
+                          </div>
+                        )}
+                        {available && (item.confirmedQuantity == null || item.confirmedQuantity === item.quantity) && (
+                          <div className="order-detail-availability-row order-detail-availability-full">
+                            <span className="order-detail-availability-row-icon">✔</span>
                             <span>Disponible</span>
                           </div>
                         )}
-                        {unavailable && (
-                          <div className="order-detail-availability-badge unavailable">
-                            <span className="order-detail-availability-icon">❌</span>
-                            <span>Agotado</span>
-                          </div>
-                        )}
                         {pending && (
-                          <div className="order-detail-availability-badge pending">
-                            <span className="order-detail-availability-icon">?</span>
+                          <div className="order-detail-availability-row order-detail-availability-pending">
+                            <span className="order-detail-availability-row-icon">?</span>
                             <span>Pendiente de revisión</span>
                           </div>
                         )}
