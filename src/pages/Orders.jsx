@@ -143,7 +143,6 @@ export default function Orders() {
 
       {/* Filtros por estado: siempre visibles */}
       <nav className="orders-filters-wrap" aria-label="Filtrar pedidos por estado">
-        <span className="orders-filters-label">Filtrar por estado</span>
         <div className="orders-filters-scroll">
           {STATUS_OPTIONS.map((option) => (
             <button
