@@ -86,6 +86,7 @@ export default function ProductDetail() {
 
   const hasStock = product?.inventory ? product.inventory.currentStock > 0 : true;
   const hasPresentations = product?.presentations && product.presentations.length > 0;
+  const isSoloTienda = product?.tipoEnvio === 'SOLO_TIENDA';
 
   let mainImageUrl = null;
   if (product?.images?.length > 0) {
@@ -195,7 +196,7 @@ export default function ProductDetail() {
               {hasStock ? '✓ Disponible' : '✕ Sin stock'}
             </div>
 
-            {hasPresentations && (
+            {hasPresentations && !isSoloTienda && (
               <div className="pdp-presentations">
                 <h4>Elige una presentación</h4>
                 <div className="pdp-presentations-list">
@@ -232,45 +233,65 @@ export default function ProductDetail() {
               </div>
             )}
 
-            <div className="pdp-actions">
-              <div className="pdp-quantity-row">
-                <span className="pdp-quantity-label">Cantidad</span>
-                <div className="pdp-quantity-controls">
-                  <button
-                    type="button"
-                    className="pdp-qty-btn"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  >
-                    −
-                  </button>
-                  <span className="pdp-qty-value">{quantity}</span>
-                  <button
-                    type="button"
-                    className="pdp-qty-btn"
-                    onClick={() => setQuantity(quantity + 1)}
-                  >
-                    +
-                  </button>
+            {isSoloTienda ? (
+              <div className="pdp-solo-tienda-block" role="region" aria-label="Disponible solo en tienda física">
+                <div className="pdp-solo-tienda-icon">🏪</div>
+                <h3 className="pdp-solo-tienda-title">
+                  Este producto está disponible solo en tienda
+                </h3>
+                {(product.branchInfo?.name || product.branch) && (
+                  <p className="pdp-solo-tienda-name">
+                    {product.branchInfo?.name || product.branch}
+                  </p>
+                )}
+                {product.branchInfo?.description && (
+                  <p className="pdp-solo-tienda-address">{product.branchInfo.description}</p>
+                )}
+                <p className="pdp-solo-tienda-cta">
+                  ¡Visítanos pronto! Te atenderemos con gusto.
+                </p>
+              </div>
+            ) : (
+              <div className="pdp-actions">
+                <div className="pdp-quantity-row">
+                  <span className="pdp-quantity-label">Cantidad</span>
+                  <div className="pdp-quantity-controls">
+                    <button
+                      type="button"
+                      className="pdp-qty-btn"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    >
+                      −
+                    </button>
+                    <span className="pdp-qty-value">{quantity}</span>
+                    <button
+                      type="button"
+                      className="pdp-qty-btn"
+                      onClick={() => setQuantity(quantity + 1)}
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
+                <div className="pdp-total-row">
+                  <span className="pdp-total-label">Total</span>
+                  <span className="pdp-total-value">{formatPrice(getTotalPrice())}</span>
+                </div>
+                <button
+                  type="button"
+                  className={`pdp-add-to-cart ${showSuccess ? 'success' : ''}`}
+                  onClick={handleAddToCart}
+                  disabled={!hasStock}
+                >
+                  {showSuccess ? '✓ Agregado al carrito' : 'Agregar al carrito'}
+                </button>
+                {showSuccess && (
+                  <Link to="/cart" className="pdp-view-cart-link">
+                    Ver carrito →
+                  </Link>
+                )}
               </div>
-              <div className="pdp-total-row">
-                <span className="pdp-total-label">Total</span>
-                <span className="pdp-total-value">{formatPrice(getTotalPrice())}</span>
-              </div>
-              <button
-                type="button"
-                className={`pdp-add-to-cart ${showSuccess ? 'success' : ''}`}
-                onClick={handleAddToCart}
-                disabled={!hasStock}
-              >
-                {showSuccess ? '✓ Agregado al carrito' : 'Agregar al carrito'}
-              </button>
-              {showSuccess && (
-                <Link to="/cart" className="pdp-view-cart-link">
-                  Ver carrito →
-                </Link>
-              )}
-            </div>
+            )}
           </div>
         </div>
 
