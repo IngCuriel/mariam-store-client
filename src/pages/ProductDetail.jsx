@@ -169,27 +169,6 @@ export default function ProductDetail() {
 
           <div className="pdp-info">
             <div className="pdp-meta">
-              {product.tipoEnvio && TIPO_ENVIO_LABELS[product.tipoEnvio] && (
-                <span
-                  className={`pdp-tipo-envio-badge pdp-tipo-envio-${product.tipoEnvio.toLowerCase()}`}
-                  aria-label={`Tipo de envío: ${TIPO_ENVIO_LABELS[product.tipoEnvio]}`}
-                >
-                  {TIPO_ENVIO_LABELS[product.tipoEnvio]}
-                </span>
-              )}
-              {product.tipoEnvio === 'SOBRE_PEDIDO' && (
-                <span className="pdp-sobre-pedido-visual" aria-hidden>
-                  {product.branchInfo?.logo ? (
-                    <img
-                      src={product.branchInfo.logo}
-                      alt=""
-                      className="pdp-sobre-pedido-logo"
-                    />
-                  ) : (
-                    <span className="pdp-sobre-pedido-icon">📦</span>
-                  )}
-                </span>
-              )}
               {product.category && (
                 <span className="pdp-category-badge">{product.category.name}</span>
               )}
@@ -207,6 +186,11 @@ export default function ProductDetail() {
 
             <div className={`pdp-stock ${hasStock ? 'in-stock' : 'out-of-stock'}`}>
               {hasStock ? '✓ Disponible' : '✕ Sin stock'}
+              {product.tipoEnvio && TIPO_ENVIO_LABELS[product.tipoEnvio] && (
+                <span className="pdp-stock-tipo-envio">
+                  {' · '}{TIPO_ENVIO_LABELS[product.tipoEnvio]}
+                </span>
+              )}
             </div>
 
             {hasPresentations && !isSoloTienda && (
@@ -248,7 +232,17 @@ export default function ProductDetail() {
 
             {isSoloTienda ? (
               <div className="pdp-solo-tienda-block" role="region" aria-label="Disponible solo en tienda física">
-                <div className="pdp-solo-tienda-icon">🏪</div>
+                <div className="pdp-solo-tienda-icon">
+                  {product.branchInfo?.logo ? (
+                    <img
+                      src={product.branchInfo.logo}
+                      alt=""
+                      className="pdp-solo-tienda-logo"
+                    />
+                  ) : (
+                    <span aria-hidden>🏪</span>
+                  )}
+                </div>
                 <h3 className="pdp-solo-tienda-title">
                   Este producto está disponible solo en tienda
                 </h3>
