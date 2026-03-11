@@ -244,9 +244,6 @@ export default function ProductDetail() {
                     <span aria-hidden>🏪</span>
                   )}
                 </div>
-                <h3 className="pdp-solo-tienda-title">
-                  Este producto está disponible solo en tienda
-                </h3>
                 {(product.branchInfo?.name || product.branch) && (
                   <p className="pdp-solo-tienda-name">
                     {product.branchInfo?.name || product.branch}
