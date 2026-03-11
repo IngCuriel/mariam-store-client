@@ -371,12 +371,6 @@ export default function CashExpressRequestDetail() {
     );
   }
 
-  const showRecipientForm =
-    ((request.status === 'PENDIENTE' || request.status === 'REBOTADO') &&
-      request.depositReceipt &&
-      (!request.senderName || editingRecipientData)) ||
-    (request.status === 'DEPOSITO_VALIDADO' && !request.senderName);
-
   const status = request.status;
   const isPending = status === 'PENDIENTE';
   const isReboted = status === 'REBOTADO';
@@ -384,6 +378,17 @@ export default function CashExpressRequestDetail() {
   const isValidated = status === 'DEPOSITO_VALIDADO';
   const isDelivered = status === 'ENTREGADO';
   const isCanceled = status === 'CANCELADO';
+
+  // Caso 1: si pasaron 48 h desde la creación, ya no se puede subir comprobante
+  const depositDeadlineExpired =
+    request.depositDeadline && new Date() > new Date(request.depositDeadline);
+
+  const showRecipientForm =
+    !depositDeadlineExpired &&
+    (((request.status === 'PENDIENTE' || request.status === 'REBOTADO') &&
+      request.depositReceipt &&
+      (!request.senderName || editingRecipientData)) ||
+    (request.status === 'DEPOSITO_VALIDADO' && !request.senderName));
 
   const confirmModal = confirmDialog.open && createPortal(
     <div
@@ -481,7 +486,7 @@ export default function CashExpressRequestDetail() {
         )}
 
         {/* REBOTADO: motivo */}
-        {isReboted && request.rejectionReason && (
+        {isReboted && request.rejectionReason && !depositDeadlineExpired && (
           <div className="rejection-card">
             <div className="rejection-header">
               <span>❌</span>
@@ -491,6 +496,30 @@ export default function CashExpressRequestDetail() {
             <p className="rejection-subtext">
               Corrige lo indicado, sube de nuevo el comprobante y completa los datos del destinatario para reenviar.
             </p>
+          </div>
+        )}
+
+        {/* Caso 1: plazo de 48 h vencido — ya no se puede subir comprobante, sugerir nueva solicitud */}
+        {(isPending || isReboted) && depositDeadlineExpired && (
+          <div className="status-message-card deposit-deadline-expired">
+            <span className="deadline-icon">⏰</span>
+            <div className="deadline-content">
+              <h3 className="deadline-title">Plazo de 48 horas vencido</h3>
+              <p className="deadline-text">
+                El tiempo para subir el comprobante de depósito en esta solicitud ha terminado.
+                Ya no puedes subir ni reemplazar el comprobante aquí.
+              </p>
+              <p className="deadline-action">
+                Crea una nueva solicitud para continuar. El tiempo de entrega puede variar según la disponibilidad de saldo.
+              </p>
+              <button
+                type="button"
+                className="deadline-new-request-button"
+                onClick={() => navigate('/cash-express')}
+              >
+                Crear nueva solicitud
+              </button>
+            </div>
           </div>
         )}
 
@@ -584,8 +613,34 @@ export default function CashExpressRequestDetail() {
           </div>
         )}
 
-        {/* Comprobante: siempre después de Cuentas para Depósito (PENDIENTE/REBOTADO subir o ver; ENTREGADO solo ver) */}
-        {(isPending || isReboted || isDelivered) && (
+        {/* Comprobante ya subido pero plazo 48 h vencido: solo lectura */}
+        {(isPending || isReboted) && depositDeadlineExpired && request.depositReceipt && (
+          <div className="receipt-card">
+            <div className="receipt-header">
+              <div className="receipt-header-left">
+                <span>📄</span>
+                <h3 className="receipt-title">Comprobante (plazo vencido)</h3>
+              </div>
+              <button
+                type="button"
+                className="toggle-receipt-button"
+                onClick={() => setShowReceipt(!showReceipt)}
+                aria-label={showReceipt ? 'Ocultar comprobante' : 'Mostrar comprobante'}
+              >
+                {showReceipt ? 'Ocultar' : 'Ver comprobante'}
+              </button>
+            </div>
+            {showReceipt && (
+              <div className="receipt-image-container">
+                <img src={request.depositReceipt} alt="Comprobante de depósito" className="receipt-image" />
+              </div>
+            )}
+            <p className="receipt-deadline-hint">El plazo para subir comprobante venció. Crea una nueva solicitud para continuar.</p>
+          </div>
+        )}
+
+        {/* Comprobante: PENDIENTE/REBOTADO (solo si no venció 48 h) subir o ver; ENTREGADO solo ver */}
+        {(isPending || isReboted || isDelivered) && !depositDeadlineExpired && (
           request.depositReceipt ? (
             <div className="receipt-card">
               <div className="receipt-header">
@@ -645,8 +700,9 @@ export default function CashExpressRequestDetail() {
           ) : null
         )}
 
-        {/* Datos destinatario: solo cuando aplica y no está en modo edición */}
+        {/* Datos destinatario: solo cuando aplica, no venció 48 h y no está en modo edición */}
         {(isPending || isReboted || isValidated || isDelivered) &&
+          !(depositDeadlineExpired && (isPending || isReboted)) &&
           (request.senderName || request.recipientName) &&
           !editingRecipientData && (
             <div className="section">
@@ -832,8 +888,9 @@ export default function CashExpressRequestDetail() {
           </div>
         )}
 
-        {/* Botón enviar comprobante: siempre al final (cuando aplica) */}
+        {/* Botón enviar comprobante: cuando aplica y no venció el plazo 48 h */}
         {(isPending || isReboted) &&
+          !depositDeadlineExpired &&
           request.depositReceipt &&
           request.recipientName &&
           !showRecipientForm && (

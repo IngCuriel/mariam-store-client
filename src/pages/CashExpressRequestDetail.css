@@ -989,6 +989,57 @@
   flex: 1;
 }
 
+/* Plazo 48 h vencido: no se puede subir comprobante, sugerir nueva solicitud */
+.status-message-card.deposit-deadline-expired {
+  background: #fff8e6;
+  border-left-color: #f39c12;
+}
+
+.deposit-deadline-expired .deadline-icon {
+  font-size: 1.8em;
+}
+
+.deposit-deadline-expired .deadline-content {
+  flex: 1;
+}
+
+.deposit-deadline-expired .deadline-title {
+  margin: 0 0 8px 0;
+  font-size: 1.15em;
+  color: #b8860b;
+}
+
+.deposit-deadline-expired .deadline-text,
+.deposit-deadline-expired .deadline-action {
+  margin: 0 0 12px 0;
+  color: #5c4a00;
+  line-height: 1.5;
+}
+
+.deadline-new-request-button {
+  margin-top: 8px;
+  padding: 12px 20px;
+  background: #0984e3;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.2s ease;
+}
+
+.deadline-new-request-button:hover {
+  background: #0770c4;
+}
+
+.receipt-deadline-hint {
+  margin: 12px 0 0 0;
+  font-size: 0.9em;
+  color: #95a5a6;
+  font-style: italic;
+}
+
 .summary-card {
   background: #f9f9f9;
   padding: 20px;

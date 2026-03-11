@@ -24,6 +24,22 @@ const formatPrice = (price) => {
   }).format(price);
 };
 
+const formatEstimatedDate = (dateString) => {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-MX', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return dateString;
+  }
+};
+
 export default function CashExpress() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -82,11 +98,9 @@ export default function CashExpress() {
     }
   };
 
-  useEffect(() => {
-    if (createdRequest && createdRequest.amount) {
-      loadSuggestedAvailability();
-    }
-  }, [createdRequest]);
+  // No volver a pedir fecha estimada después de crear: la fecha correcta es la que
+  // el backend calculó al crear (con saldo disponible antes de apartar esta solicitud).
+  // Si se pide después, el backend ya apartó el monto y devuelve una fecha más lejana.
 
   const loadConfig = async () => {
     try {
@@ -683,17 +697,15 @@ export default function CashExpress() {
                 <p>No hay cuentas bancarias disponibles.</p>
               )}
 
-              {loadingSuggestion ? (
-                <p>Cargando fecha estimada...</p>
-              ) : suggestedAvailability && (
+              {createdRequest?.estimatedDeliveryDate && (
                 <div className="availability-info">
                   <p><strong>Fecha estimada de entrega:</strong></p>
                   <p className="estimated-date">
-                    {suggestedAvailability.formattedDate || suggestedAvailability.estimatedDeliveryDate}
+                    {formatEstimatedDate(createdRequest.estimatedDeliveryDate)}
                   </p>
-                  {suggestedAvailability.message && (
-                    <p className="availability-message">{suggestedAvailability.message}</p>
-                  )}
+                  <p className="availability-message">
+                    Una vez validado tu depósito, el efectivo estará disponible a partir de esta fecha.
+                  </p>
                 </div>
               )}
 
