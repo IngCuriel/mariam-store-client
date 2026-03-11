@@ -87,6 +87,7 @@ export default function ProductDetail() {
   const hasStock = product?.inventory ? product.inventory.currentStock > 0 : true;
   const hasPresentations = product?.presentations && product.presentations.length > 0;
   const isSoloTienda = product?.tipoEnvio === 'SOLO_TIENDA';
+  const isSobrePedido = product?.tipoEnvio === 'SOBRE_PEDIDO';
 
   let mainImageUrl = null;
   if (product?.images?.length > 0) {
@@ -299,6 +300,30 @@ export default function ProductDetail() {
             )}
           </div>
         </div>
+
+        {isSobrePedido && (product.branchInfo?.name || product.branch || product.branchInfo?.description) && (
+          <section className="pdp-donde-recojo" aria-label="Dónde recojo mi pedido">
+            <h3 className="pdp-donde-recojo-title">¿Dónde recojo mi pedido una vez confirmado?</h3>
+            <p className="pdp-donde-recojo-subtitle">Recogerás tu pedido en la siguiente sucursal:</p>
+            <div className="pdp-donde-recojo-card">
+              {product.branchInfo?.logo && (
+                <img
+                  src={product.branchInfo.logo}
+                  alt=""
+                  className="pdp-donde-recojo-logo"
+                />
+              )}
+              <div className="pdp-donde-recojo-data">
+                {(product.branchInfo?.name || product.branch) && (
+                  <p className="pdp-donde-recojo-name">{product.branchInfo?.name || product.branch}</p>
+                )}
+                {product.branchInfo?.description && (
+                  <p className="pdp-donde-recojo-address">{product.branchInfo.description}</p>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
 
         {product.description && (
           <section className="pdp-description">

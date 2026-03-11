@@ -484,6 +484,67 @@
 }
 
 /* Descripción */
+/* Sección "¿Dónde recojo mi pedido?" (tipo envío SOBRE_PEDIDO) */
+.pdp-donde-recojo {
+  margin-top: 32px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.pdp-donde-recojo-title {
+  margin: 0 0 8px 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.pdp-donde-recojo-subtitle {
+  margin: 0 0 16px 0;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.pdp-donde-recojo-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 20px;
+  background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+  border-radius: 12px;
+  border: 1px solid #ffcc80;
+}
+
+.pdp-donde-recojo-logo {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: 10px;
+  border: 1px solid #ffcc80;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.pdp-donde-recojo-data {
+  flex: 1;
+  min-width: 0;
+}
+
+.pdp-donde-recojo-name {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #e65100;
+}
+
+.pdp-donde-recojo-address {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.5;
+}
+
 .pdp-description {
   margin-top: 32px;
   padding: 24px;
