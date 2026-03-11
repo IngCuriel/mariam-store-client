@@ -14,6 +14,12 @@ const formatPrice = (price) => {
   }).format(price);
 };
 
+const TIPO_ENVIO_LABELS = {
+  SOBRE_PEDIDO: 'Sobre pedido',
+  SOLO_TIENDA: 'Solo en tienda física',
+  ENVIO_INMEDIATO: 'Envío inmediato',
+};
+
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -162,6 +168,14 @@ export default function ProductDetail() {
 
           <div className="pdp-info">
             <div className="pdp-meta">
+              {product.tipoEnvio && TIPO_ENVIO_LABELS[product.tipoEnvio] && (
+                <span
+                  className={`pdp-tipo-envio-badge pdp-tipo-envio-${product.tipoEnvio.toLowerCase()}`}
+                  aria-label={`Tipo de envío: ${TIPO_ENVIO_LABELS[product.tipoEnvio]}`}
+                >
+                  {TIPO_ENVIO_LABELS[product.tipoEnvio]}
+                </span>
+              )}
               {product.category && (
                 <span className="pdp-category-badge">{product.category.name}</span>
               )}
@@ -264,6 +278,17 @@ export default function ProductDetail() {
           <section className="pdp-description">
             <h3>Descripción</h3>
             <p>{product.description}</p>
+          </section>
+        )}
+
+        {Array.isArray(product.features) && product.features.length > 0 && (
+          <section className="pdp-features" aria-label="Características del producto">
+            <h3>Características</h3>
+            <ul className="pdp-features-list">
+              {product.features.map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
           </section>
         )}
       </div>

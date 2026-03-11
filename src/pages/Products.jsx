@@ -13,6 +13,13 @@ const formatPrice = (price) => {
   }).format(price);
 };
 
+/** Etiquetas de tipo de envío (solo tipoEnvio, no saleType) */
+const TIPO_ENVIO_LABELS = {
+  SOBRE_PEDIDO: 'Sobre pedido',
+  SOLO_TIENDA: 'Solo en tienda física',
+  ENVIO_INMEDIATO: 'Envío inmediato',
+};
+
 export default function Products() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -249,6 +256,14 @@ export default function Products() {
                     )}
                   </div>
                   <div className="product-card-body">
+                    {product.tipoEnvio && TIPO_ENVIO_LABELS[product.tipoEnvio] && (
+                      <span
+                        className={`product-card-tipo-envio sale-type-${product.tipoEnvio.toLowerCase()}`}
+                        aria-label={`Tipo de envío: ${TIPO_ENVIO_LABELS[product.tipoEnvio]}`}
+                      >
+                        {TIPO_ENVIO_LABELS[product.tipoEnvio]}
+                      </span>
+                    )}
                     <h3 className="product-card-name">{product.name}</h3>
                     {product.description && (
                       <p className="product-card-desc">{product.description}</p>

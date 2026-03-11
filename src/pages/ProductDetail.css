@@ -149,6 +149,28 @@
   font-size: 0.8rem;
 }
 
+.pdp-tipo-envio-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.pdp-tipo-envio-badge.pdp-tipo-envio-sobre_pedido {
+  background: #fff3e0;
+  color: #e65100;
+  border: 1px solid #ffcc80;
+}
+.pdp-tipo-envio-badge.pdp-tipo-envio-solo_tienda {
+  background: #e3f2fd;
+  color: #1565c0;
+  border: 1px solid #90caf9;
+}
+.pdp-tipo-envio-badge.pdp-tipo-envio-envio_inmediato {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
 .pdp-title {
   font-size: 1.75rem;
   font-weight: 700;
@@ -425,6 +447,37 @@
   color: #555;
   line-height: 1.65;
   font-size: 0.95rem;
+}
+
+.pdp-features {
+  margin-top: 24px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.pdp-features h3 {
+  margin: 0 0 12px 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.pdp-features-list {
+  margin: 0;
+  padding-left: 20px;
+  color: #555;
+  line-height: 1.7;
+  font-size: 0.95rem;
+}
+
+.pdp-features-list li {
+  margin-bottom: 6px;
+}
+
+.pdp-features-list li:last-child {
+  margin-bottom: 0;
 }
 
 /* Loading y error */

@@ -270,6 +270,33 @@
   flex: 1;
 }
 
+/* Etiqueta tipo de envío (solo tipoEnvio, no saleType) */
+.product-card-tipo-envio {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #1a1a1a;
+}
+.product-card-tipo-envio.sale-type-sobre_pedido {
+  background: #fff3e0;
+  color: #e65100;
+  border: 1px solid #ffcc80;
+}
+.product-card-tipo-envio.sale-type-solo_tienda {
+  background: #e3f2fd;
+  color: #1565c0;
+  border: 1px solid #90caf9;
+}
+.product-card-tipo-envio.sale-type-envio_inmediato {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
 .product-card-name {
   font-size: 0.95rem;
   font-weight: 600;
