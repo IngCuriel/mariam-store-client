@@ -186,10 +186,11 @@ export default function ProductDetail() {
 
             <div className={`pdp-stock ${hasStock ? 'in-stock' : 'out-of-stock'}`}>
               {hasStock ? '✓ Disponible' : '✕ Sin stock'}
-              {product.tipoEnvio && TIPO_ENVIO_LABELS[product.tipoEnvio] && (
-                <span className="pdp-stock-tipo-envio">
-                  {' · '}{TIPO_ENVIO_LABELS[product.tipoEnvio]}
-                </span>
+              {product.tipoEnvio && TIPO_ENVIO_LABELS[String(product.tipoEnvio).trim()] != null && (
+                <>
+                  {' · '}
+                  {TIPO_ENVIO_LABELS[String(product.tipoEnvio).trim()]}
+                </>
               )}
             </div>
 
