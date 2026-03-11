@@ -17,7 +17,7 @@ const formatPrice = (price) => {
 const TIPO_ENVIO_LABELS = {
   SOBRE_PEDIDO: 'Sobre pedido',
   SOLO_TIENDA: 'Solo en tienda física',
-  ENVIO_INMEDIATO: 'Envío inmediato',
+  ENVIO_INMEDIATO: 'Envío inmediato a domicilio (con disponibilidad)',
 };
 
 export default function ProductDetail() {
