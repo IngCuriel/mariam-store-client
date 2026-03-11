@@ -177,6 +177,19 @@ export default function ProductDetail() {
                   {TIPO_ENVIO_LABELS[product.tipoEnvio]}
                 </span>
               )}
+              {product.tipoEnvio === 'SOBRE_PEDIDO' && (
+                <span className="pdp-sobre-pedido-visual" aria-hidden>
+                  {product.branchInfo?.logo ? (
+                    <img
+                      src={product.branchInfo.logo}
+                      alt=""
+                      className="pdp-sobre-pedido-logo"
+                    />
+                  ) : (
+                    <span className="pdp-sobre-pedido-icon">📦</span>
+                  )}
+                </span>
+              )}
               {product.category && (
                 <span className="pdp-category-badge">{product.category.name}</span>
               )}

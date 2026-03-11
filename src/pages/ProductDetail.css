@@ -171,6 +171,26 @@
   border: 1px solid #a5d6a7;
 }
 
+.pdp-sobre-pedido-visual {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdp-sobre-pedido-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid #ffcc80;
+  background: #fff;
+}
+
+.pdp-sobre-pedido-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
 .pdp-title {
   font-size: 1.75rem;
   font-weight: 700;
