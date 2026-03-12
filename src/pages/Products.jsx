@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllProducts, getAllCategories, getAllBranches } from '../services/productsService';
 import { getBestProductImage, getProductEmoji } from '../services/imageService';
@@ -28,6 +28,27 @@ export default function Products() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedBranch, setSelectedBranch] = useState(null);
+  const [showCategoriesView, setShowCategoriesView] = useState(false);
+  const [showNewProductsView, setShowNewProductsView] = useState(false);
+  const prevNewProductsViewRef = useRef(false);
+
+  /** Agrupa categorías por nombre de sucursal (para la pantalla de categorías) */
+  const categoriesByBranch = useMemo(() => {
+    const map = {};
+    for (const cat of categories) {
+      const key = cat.branch || 'General';
+      if (!map[key]) map[key] = [];
+      map[key].push(cat);
+    }
+    return map;
+  }, [categories]);
+
+  /** Orden de sucursales: primero las conocidas (branches), luego el resto */
+  const branchOrder = useMemo(() => {
+    const set = new Set(branches);
+    const others = Object.keys(categoriesByBranch).filter((b) => !set.has(b));
+    return [...branches, ...others];
+  }, [branches, categoriesByBranch]);
 
   useEffect(() => {
     loadData();
@@ -39,6 +60,32 @@ export default function Products() {
     }, searchQuery ? 500 : 0);
     return () => clearTimeout(timeoutId);
   }, [searchQuery, selectedCategory, selectedBranch]);
+
+  /** Al entrar a "Productos nuevos" cargar últimos 50 por createdAt */
+  useEffect(() => {
+    if (!showNewProductsView) return;
+    const fetchNewProducts = async () => {
+      try {
+        const data = await getAllProducts({
+          showInStoreOnly: true,
+          includePresentations: true,
+          includeInventory: true,
+          sortBy: 'createdAt',
+          limit: 50,
+        });
+        setProducts(Array.isArray(data) ? data : data.products || []);
+      } catch (err) {
+        console.error('Error cargando productos nuevos:', err);
+      }
+    };
+    fetchNewProducts();
+  }, [showNewProductsView]);
+
+  /** Al salir de "Productos nuevos" restaurar listado normal */
+  useEffect(() => {
+    if (prevNewProductsViewRef.current && !showNewProductsView) loadProducts();
+    prevNewProductsViewRef.current = showNewProductsView;
+  }, [showNewProductsView]);
 
   const loadData = async () => {
     try {
@@ -121,13 +168,11 @@ export default function Products() {
     return null;
   };
 
-  const clearFilters = () => {
-    setSelectedCategory(null);
-    setSelectedBranch(null);
-    setSearchQuery('');
+  const handleSelectCategory = (categoryId) => {
+    setSelectedCategory(categoryId);
+    setShowCategoriesView(false);
+    setShowNewProductsView(false);
   };
-
-  const hasActiveFilters = selectedCategory || selectedBranch || searchQuery;
 
   if (loading) {
     return (
@@ -158,38 +203,92 @@ export default function Products() {
               />
             </div>
           </div>
-          <div className="products-filters-row">
-            <select
-              value={selectedCategory || ''}
-              onChange={(e) => setSelectedCategory(e.target.value || null)}
-              className="products-filter-select"
-              aria-label="Filtrar por categoría"
+          <nav className="products-quick-nav" aria-label="Opciones rápidas">
+            <button
+              type="button"
+              className={`products-quick-nav-item ${showCategoriesView ? 'active' : ''}`}
+              aria-current={showCategoriesView}
+              onClick={() => setShowCategoriesView(true)}
             >
-              <option value="">Todas las categorías</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
-            <select
-              value={selectedBranch || ''}
-              onChange={(e) => setSelectedBranch(e.target.value || null)}
-              className="products-filter-select"
-              aria-label="Filtrar por sucursal"
+              Categorías
+            </button>
+           {/*<button type="button" className="products-quick-nav-item" aria-current="false">
+              Ofertas
+            </button>*/}
+            <button
+              type="button"
+              className={`products-quick-nav-item ${showNewProductsView ? 'active' : ''}`}
+              aria-current={showNewProductsView}
+              onClick={() => {
+                setShowCategoriesView(false);
+                setSelectedCategory(null);
+                setSelectedBranch(null);
+                setShowNewProductsView(true);
+              }}
             >
-              <option value="">Todas las sucursales</option>
-              {branches.map((branch) => (
-                <option key={branch} value={branch}>{branch}</option>
-              ))}
-            </select>
-            {hasActiveFilters && (
-              <button type="button" className="products-clear-filters" onClick={clearFilters}>
-                Limpiar filtros
-              </button>
-            )}
-          </div>
+              Productos Nuevo
+            </button>
+            {/*<button type="button" className="products-quick-nav-item" aria-current="false">
+              Sucursales
+            </button>*/}
+          </nav>
         </div>
       </div>
 
+      {showCategoriesView ? (
+        <div className="products-categories-view">
+          <div className="products-categories-view-inner">
+            <button
+              type="button"
+              className="products-categories-view-back"
+              onClick={() => setShowCategoriesView(false)}
+              aria-label="Volver a productos"
+            >
+              ← Volver a productos
+            </button>
+             {branchOrder.length === 0 ? (
+              <p className="products-categories-view-empty">No hay categorías disponibles.</p>
+            ) : (
+              branchOrder.map((branchName) => {
+                const branchCategories = categoriesByBranch[branchName] || [];
+                if (branchCategories.length === 0) return null;
+                return (
+                  <section
+                    key={branchName}
+                    className="products-branch-section"
+                    aria-labelledby={`branch-${branchName.replaceAll(/\s+/g, '-')}`}
+                  >
+                    <h3 id={`branch-${branchName.replaceAll(/\s+/g, '-')}`} className="products-branch-section-title">
+                      {branchName}
+                    </h3>
+                    <div className="products-category-cards-grid">
+                      {branchCategories.map((category) => (
+                        <button
+                          key={category.id}
+                          type="button"
+                          className="products-category-card"
+                          onClick={() => handleSelectCategory(category.id)}
+                        >
+                          <div className="products-category-card-image-wrap">
+                            {category.image ? (
+                              <img src={category.image} alt="" />
+                            ) : (
+                              <span className="products-category-card-icon">📁</span>
+                            )}
+                          </div>
+                          <span className="products-category-card-name">{category.name}</span>
+                          <span className="products-category-card-cta">Ver productos →</span>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                );
+              })
+            )}
+          </div>
+        </div>
+      ) : (
+        <>
       <div className="products-title-section">
         <p className="products-results-count">
           {filteredProducts.length} {filteredProducts.length === 1 ? 'resultado' : 'resultados'}
@@ -204,9 +303,10 @@ export default function Products() {
                 key={category.id}
                 type="button"
                 className={`category-chip ${selectedCategory === category.id ? 'active' : ''}`}
-                onClick={() =>
-                  setSelectedCategory(selectedCategory === category.id ? null : category.id)
-                }
+                onClick={() => {
+                  setShowNewProductsView(false);
+                  setSelectedCategory(selectedCategory === category.id ? null : category.id);
+                }}
               >
                 {category.image && (
                   <img
@@ -282,6 +382,8 @@ export default function Products() {
           )}
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }
