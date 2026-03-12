@@ -198,12 +198,11 @@
 .products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 20px;
+  gap: 5px;
 }
 
 .product-card {
   background: #fff;
-  border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -411,13 +410,13 @@
   .products-top-inner,
   .products-title-section,
   .products-grid-wrap {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: 3px;
+    padding-right: 3px;
   }
 
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    gap: 1px;
   }
 
   .product-card-name {
