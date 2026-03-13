@@ -494,8 +494,8 @@
   flex: 1;
 }
 
-/* Etiqueta tipo de envío (solo tipoEnvio, no saleType) */
-.product-card-tipo-envio {
+/* Etiqueta disponibilidad del producto */
+.product-card-availability {
   display: inline-block;
   align-self: flex-start;
   padding: 4px 10px;
@@ -505,20 +505,20 @@
   line-height: 1.2;
   color: #1a1a1a;
 }
-.product-card-tipo-envio.sale-type-sobre_pedido {
+.product-card-availability.availability-online_pickup {
   background: #fff3e0;
   color: #e65100;
   border: 1px solid #ffcc80;
 }
-.product-card-tipo-envio.sale-type-solo_tienda {
-  background: #e3f2fd;
-  color: #1565c0;
-  border: 1px solid #90caf9;
-}
-.product-card-tipo-envio.sale-type-envio_inmediato {
+.product-card-availability.availability-local_delivery {
   background: #e8f5e9;
   color: #2e7d32;
   border: 1px solid #a5d6a7;
+}
+.product-card-availability.availability-in_store_only {
+  background: #e3f2fd;
+  color: #1565c0;
+  border: 1px solid #90caf9;
 }
 
 .product-card-name {

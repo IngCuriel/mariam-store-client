@@ -14,10 +14,11 @@ const formatPrice = (price) => {
   }).format(price);
 };
 
-const TIPO_ENVIO_LABELS = {
-  SOBRE_PEDIDO: 'Sobre pedido',
-  SOLO_TIENDA: 'Solo en tienda física',
-  ENVIO_INMEDIATO: 'Envío inmediato a domicilio (con disponibilidad)',
+/** Etiquetas de disponibilidad para la tienda en línea */
+const PRODUCT_AVAILABILITY_LABELS = {
+  online_pickup: 'Disponible solo en línea',
+  local_delivery: 'Disponible ahora',
+  in_store_only: 'Solo en sucursal',
 };
 
 export default function ProductDetail() {
@@ -86,8 +87,11 @@ export default function ProductDetail() {
 
   const hasStock = product?.inventory ? product.inventory.currentStock > 0 : true;
   const hasPresentations = product?.presentations && product.presentations.length > 0;
-  const isSoloTienda = product?.tipoEnvio === 'SOLO_TIENDA';
-  const isSobrePedido = product?.tipoEnvio === 'SOBRE_PEDIDO';
+  const availability = product?.productAvailability ? String(product.productAvailability).trim() : null;
+  const isOnlinePickup = availability === 'online_pickup';
+  const isLocalDelivery = availability === 'local_delivery';
+  const isInStoreOnly = availability === 'in_store_only';
+  const availabilityLabel = availability && PRODUCT_AVAILABILITY_LABELS[availability];
 
   let mainImageUrl = null;
   if (product?.images?.length > 0) {
@@ -185,15 +189,59 @@ export default function ProductDetail() {
               <span className="pdp-price-unit">por unidad</span>
             </div>
 
-            <div className={`pdp-stock ${hasStock ? 'in-stock' : 'out-of-stock'}`}>
+            {/*<div className={`pdp-stock ${hasStock ? 'in-stock' : 'out-of-stock'}`}>
               {hasStock ? '✓ Disponible' : '✕ Sin stock'}
-              {product.tipoEnvio && TIPO_ENVIO_LABELS[String(product.tipoEnvio).trim()] != null && (
+              {availabilityLabel && (
                 <>
                   {' · '}
-                  {TIPO_ENVIO_LABELS[String(product.tipoEnvio).trim()]}
+                  <span className={`pdp-availability-badge pdp-availability-${availability}`}>
+                    {availabilityLabel}
+                  </span>
                 </>
               )}
-            </div>
+            </div>*/}
+            {(isLocalDelivery || (isOnlinePickup && (product.branchInfo?.name || product.branch || product.branchInfo?.description))) && (
+              <section className="pdp-delivery-card" aria-label="Entrega y disponibilidad">
+                {isLocalDelivery && (
+                  <>
+                    <h3 className="pdp-delivery-card-title">Entrega</h3>
+                    <p className="pdp-delivery-card-line">
+                      🚚 A domicilio hoy ó Recoger en tienda
+                    </p>
+                    <p className="pdp-delivery-card-note">Una vez confirmada disponibilidad</p>
+                  </>
+                )}
+                {isOnlinePickup && (product.branchInfo?.name || product.branch || product.branchInfo?.description) && (
+                  <>
+                    <h3 className="pdp-delivery-card-title">Disponible solo en Tienda Online</h3>
+                    <p className="pdp-delivery-card-line">
+                      📍 Entrega en sucursal · ⏱ Listo en 6 a 12 días
+                    </p>
+                    <div className="pdp-delivery-card-branch">
+                      {product.branchInfo?.logo && (
+                        <img
+                          src={product.branchInfo.logo}
+                          alt=""
+                          className="pdp-delivery-card-logo"
+                        />
+                      )}
+                      <div className="pdp-delivery-card-branch-data">
+                        {(product.branchInfo?.name || product.branch) && (
+                          <p className="pdp-delivery-card-branch-name">
+                            {product.branchInfo?.name || product.branch}
+                          </p>
+                        )}
+                        {product.branchInfo?.description && (
+                          <p className="pdp-delivery-card-branch-address">
+                            {product.branchInfo.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </section>
+            )}
 
             {hasPresentations && (
               <div className="pdp-presentations">
@@ -232,31 +280,40 @@ export default function ProductDetail() {
               </div>
             )}
 
-            {isSoloTienda ? (
-              <div className="pdp-solo-tienda-block" role="region" aria-label="Disponible solo en tienda física">
-                <div className="pdp-solo-tienda-icon">
-                  {product.branchInfo?.logo ? (
-                    <img
-                      src={product.branchInfo.logo}
-                      alt=""
-                      className="pdp-solo-tienda-logo"
-                    />
-                  ) : (
-                    <span aria-hidden>🏪</span>
-                  )}
-                </div>
-                {(product.branchInfo?.name || product.branch) && (
-                  <p className="pdp-solo-tienda-name">
-                    {product.branchInfo?.name || product.branch}
-                  </p>
-                )}
-                {product.branchInfo?.description && (
-                  <p className="pdp-solo-tienda-address">{product.branchInfo.description}</p>
-                )}
-                <p className="pdp-solo-tienda-cta">
-                  ¡Visítanos pronto! Te atenderemos con gusto.
+            {isInStoreOnly ? (
+              <section className="pdp-delivery-card" aria-label="Disponible solo en sucursal">
+                <h3 className="pdp-delivery-card-title">Disponible solo en sucursal</h3>
+                <p className="pdp-delivery-card-line">
+                  📍 Servicio presencial · 💼 Atiéndete en tienda
                 </p>
-              </div>
+                {(product.branchInfo?.name || product.branch || product.branchInfo?.description) && (
+                  <div className="pdp-delivery-card-branch">
+                    {product.branchInfo?.logo && (
+                      <img
+                        src={product.branchInfo.logo}
+                        alt=""
+                        className="pdp-delivery-card-logo"
+                      />
+                    )}
+                    {!product.branchInfo?.logo && (
+                      <span className="pdp-delivery-card-logo-placeholder" aria-hidden>🏪</span>
+                    )}
+                    <div className="pdp-delivery-card-branch-data">
+                      {(product.branchInfo?.name || product.branch) && (
+                        <p className="pdp-delivery-card-branch-name">
+                          {product.branchInfo?.name || product.branch}
+                        </p>
+                      )}
+                      {product.branchInfo?.description && (
+                        <p className="pdp-delivery-card-branch-address">
+                          {product.branchInfo.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+                <p className="pdp-delivery-card-note">¡Visítanos pronto! Te atenderemos con gusto.</p>
+              </section>
             ) : (
               <div className="pdp-actions">
                 <div className="pdp-quantity-row">
@@ -300,30 +357,6 @@ export default function ProductDetail() {
             )}
           </div>
         </div>
-
-        {isSobrePedido && (product.branchInfo?.name || product.branch || product.branchInfo?.description) && (
-          <section className="pdp-donde-recojo" aria-label="Dónde recojo mi pedido">
-            <h3 className="pdp-donde-recojo-title">¿Dónde recojo mi pedido una vez confirmado?</h3>
-            <p className="pdp-donde-recojo-subtitle">Recogerás tu pedido en la siguiente sucursal:</p>
-            <div className="pdp-donde-recojo-card">
-              {product.branchInfo?.logo && (
-                <img
-                  src={product.branchInfo.logo}
-                  alt=""
-                  className="pdp-donde-recojo-logo"
-                />
-              )}
-              <div className="pdp-donde-recojo-data">
-                {(product.branchInfo?.name || product.branch) && (
-                  <p className="pdp-donde-recojo-name">{product.branchInfo?.name || product.branch}</p>
-                )}
-                {product.branchInfo?.description && (
-                  <p className="pdp-donde-recojo-address">{product.branchInfo.description}</p>
-                )}
-              </div>
-            </div>
-          </section>
-        )}
 
         {product.description && (
           <section className="pdp-description">

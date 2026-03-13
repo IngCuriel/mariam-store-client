@@ -13,11 +13,11 @@ const formatPrice = (price) => {
   }).format(price);
 };
 
-/** Etiquetas de tipo de envío (solo tipoEnvio, no saleType) */
-const TIPO_ENVIO_LABELS = {
-  SOBRE_PEDIDO: 'Sobre pedido',
-  SOLO_TIENDA: 'Solo en tienda física',
-  ENVIO_INMEDIATO: 'Envío inmediato',
+/** Etiquetas de disponibilidad del producto en tienda en línea */
+const PRODUCT_AVAILABILITY_LABELS = {
+  online_pickup: 'Solo en línea',
+  local_delivery: 'Disponible ahora',
+  in_store_only: 'Solo sucursal',
 };
 
 const PAGE_SIZE = 20;
@@ -465,12 +465,12 @@ export default function Products() {
                     )}
                   </div>
                   <div className="product-card-body">
-                    {product.tipoEnvio && TIPO_ENVIO_LABELS[product.tipoEnvio] && (
+                    {product.productAvailability && PRODUCT_AVAILABILITY_LABELS[product.productAvailability] && (
                       <span
-                        className={`product-card-tipo-envio sale-type-${product.tipoEnvio.toLowerCase()}`}
-                        aria-label={`Tipo de envío: ${TIPO_ENVIO_LABELS[product.tipoEnvio]}`}
+                        className={`product-card-availability availability-${product.productAvailability}`}
+                        aria-label={`Disponibilidad: ${PRODUCT_AVAILABILITY_LABELS[product.productAvailability]}`}
                       >
-                        {TIPO_ENVIO_LABELS[product.tipoEnvio]}
+                        {PRODUCT_AVAILABILITY_LABELS[product.productAvailability]}
                       </span>
                     )}
                     <h3 className="product-card-name">{product.name}</h3>
