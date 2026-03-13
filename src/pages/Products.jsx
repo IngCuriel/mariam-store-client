@@ -20,6 +20,8 @@ const TIPO_ENVIO_LABELS = {
   ENVIO_INMEDIATO: 'Envío inmediato',
 };
 
+const PAGE_SIZE = 20;
+
 export default function Products() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -31,6 +33,9 @@ export default function Products() {
   const [showCategoriesView, setShowCategoriesView] = useState(false);
   const [showNewProductsView, setShowNewProductsView] = useState(false);
   const prevNewProductsViewRef = useRef(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [listLoading, setListLoading] = useState(false);
 
   /** Agrupa categorías por nombre de sucursal (para la pantalla de categorías) */
   const categoriesByBranch = useMemo(() => {
@@ -54,53 +59,62 @@ export default function Products() {
     loadData();
   }, []);
 
+  /** Al cambiar filtros, volver a página 1 */
   useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory, selectedBranch]);
+
+  /** Cargar productos (listado normal) con paginación */
+  useEffect(() => {
+    if (showNewProductsView) return;
     const timeoutId = setTimeout(() => {
       loadProducts();
     }, searchQuery ? 500 : 0);
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, selectedCategory, selectedBranch]);
+  }, [searchQuery, selectedCategory, selectedBranch, currentPage, showNewProductsView]);
 
-  /** Al entrar a "Productos nuevos" cargar últimos 50 por createdAt */
   useEffect(() => {
     if (!showNewProductsView) return;
     const fetchNewProducts = async () => {
       try {
+        setListLoading(true);
         const data = await getAllProducts({
           showInStoreOnly: true,
           includePresentations: true,
           includeInventory: true,
           sortBy: 'createdAt',
-          limit: 50,
+          limit: PAGE_SIZE,
+          offset: (currentPage - 1) * PAGE_SIZE,
         });
-        setProducts(Array.isArray(data) ? data : data.products || []);
+        const list = Array.isArray(data) ? data : data.products || [];
+        const total = typeof data?.total === 'number' ? data.total : list.length;
+        setProducts(list);
+        setTotalProducts(total);
       } catch (err) {
         console.error('Error cargando productos nuevos:', err);
+      } finally {
+        setListLoading(false);
       }
     };
     fetchNewProducts();
-  }, [showNewProductsView]);
+  }, [showNewProductsView, currentPage]);
 
-  /** Al salir de "Productos nuevos" restaurar listado normal */
+  /** Al salir de "Productos nuevos" restaurar listado normal en página 1 */
   useEffect(() => {
-    if (prevNewProductsViewRef.current && !showNewProductsView) loadProducts();
+    if (prevNewProductsViewRef.current && !showNewProductsView) {
+      setCurrentPage(1);
+      loadProducts();
+    }
     prevNewProductsViewRef.current = showNewProductsView;
   }, [showNewProductsView]);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [productsData, categoriesData, branchesData] = await Promise.all([
-        getAllProducts({
-          includePresentations: true,
-          includeInventory: true,
-          showInStoreOnly: true,
-        }),
+      const [categoriesData, branchesData] = await Promise.all([
         getAllCategories({ showInStore: true }),
         getAllBranches(),
       ]);
-
-      setProducts(Array.isArray(productsData) ? productsData : productsData.products || []);
       setCategories(categoriesData || []);
       setBranches(branchesData || []);
     } catch (error) {
@@ -113,35 +127,50 @@ export default function Products() {
 
   const loadProducts = async () => {
     try {
-      const productsData = await getAllProducts({
+      setListLoading(true);
+      const data = await getAllProducts({
         includePresentations: true,
         includeInventory: true,
         showInStoreOnly: true,
         search: searchQuery || undefined,
         categoryId: selectedCategory || undefined,
         branch: selectedBranch || undefined,
+        limit: PAGE_SIZE,
+        offset: (currentPage - 1) * PAGE_SIZE,
       });
-      setProducts(Array.isArray(productsData) ? productsData : productsData.products || []);
+      const list = Array.isArray(data) ? data : data.products || [];
+      const total = typeof data?.total === 'number' ? data.total : list.length;
+      setProducts(list);
+      setTotalProducts(total);
     } catch (error) {
       console.error('Error cargando productos:', error);
+    } finally {
+      setListLoading(false);
     }
   };
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        const matchesSearch =
-          product.name.toLowerCase().includes(query) ||
-          product.description?.toLowerCase().includes(query) ||
-          product.code?.toLowerCase().includes(query);
-        if (!matchesSearch) return false;
-      }
-      if (selectedCategory && product.categoryId !== selectedCategory) return false;
-      if (selectedBranch && product.branch !== selectedBranch) return false;
-      return true;
-    });
-  }, [products, searchQuery, selectedCategory, selectedBranch]);
+  /** Productos a mostrar (la API ya devuelve la página filtrada) */
+  const displayProducts = products;
+  const totalPages = Math.max(1, Math.ceil(totalProducts / PAGE_SIZE));
+  const hasPagination = totalProducts > PAGE_SIZE;
+
+  /** Números de página visibles (estilo ML: 1 ... 4 5 6 ... 12) */
+  const paginationNumbers = useMemo(() => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    const pages = [];
+    pages.push(1);
+    if (currentPage > 3) pages.push('ellipsis-start');
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    for (let i = start; i <= end; i++) {
+      if (!pages.includes(i)) pages.push(i);
+    }
+    if (currentPage < totalPages - 2) pages.push('ellipsis-end');
+    if (totalPages > 1) pages.push(totalPages);
+    return pages;
+  }, [currentPage, totalPages]);
 
   const [productImages, setProductImages] = useState({});
 
@@ -198,7 +227,13 @@ export default function Products() {
                 className="products-search-input"
                 placeholder="Buscar productos, marcas y más..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setSelectedCategory(null);
+                  setSelectedBranch(null);
+                  setShowNewProductsView(false);
+                  setShowCategoriesView(false);
+                }}
                 aria-label="Buscar productos"
               />
             </div>
@@ -223,6 +258,7 @@ export default function Products() {
                 setShowCategoriesView(false);
                 setSelectedCategory(null);
                 setSelectedBranch(null);
+                setCurrentPage(1);
                 setShowNewProductsView(true);
               }}
             >
@@ -288,13 +324,7 @@ export default function Products() {
           </div>
         </div>
       ) : (
-        <>
-      <div className="products-title-section">
-        <p className="products-results-count">
-          {filteredProducts.length} {filteredProducts.length === 1 ? 'resultado' : 'resultados'}
-        </p>
-      </div>
-
+        <> 
       {categories.length > 0 && (
         <div className="products-categories-wrap">
           <div className="products-categories-scroll">
@@ -323,15 +353,20 @@ export default function Products() {
       )}
 
       <div className="products-grid-wrap">
-        <div className="products-grid">
-          {filteredProducts.length === 0 ? (
+        {listLoading && (
+          <div className="products-grid-loading" aria-hidden>
+            <div className="products-loading-spinner" />
+          </div>
+        )}
+        <div className={`products-grid ${listLoading ? 'products-grid--dimmed' : ''}`}>
+          {displayProducts.length === 0 && !listLoading ? (
             <div className="empty-products">
               <div className="empty-icon">📦</div>
               <h3>No se encontraron productos</h3>
               <p>Prueba con otros términos o quita filtros</p>
             </div>
           ) : (
-            filteredProducts.map((product) => {
+            displayProducts.map((product) => {
               const imageUrl = getProductImage(product);
               const emoji = getProductEmoji(product);
               const defaultPrice = product.presentations?.find((p) => p.isDefault)
@@ -382,6 +417,55 @@ export default function Products() {
           )}
         </div>
       </div>
+
+      <p className="products-results-summary">
+        {totalProducts === 0
+          ? '0 resultados'
+          : `Mostrando ${(currentPage - 1) * PAGE_SIZE + 1}-${Math.min(currentPage * PAGE_SIZE, totalProducts)} de ${totalProducts} resultados`}
+      </p>
+      {hasPagination && !listLoading && (
+        <nav className="products-pagination" aria-label="Paginación de productos">
+          <button
+            type="button"
+            className="products-pagination-btn products-pagination-prev"
+            disabled={currentPage <= 1}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            aria-label="Página anterior"
+          >
+            Anterior
+          </button>
+          <ul className="products-pagination-list">
+            {paginationNumbers.map((item, idx) =>
+              item === 'ellipsis-start' || item === 'ellipsis-end' ? (
+                <li key={`ellipsis-${idx}`} className="products-pagination-ellipsis">
+                  …
+                </li>
+              ) : (
+                <li key={item}>
+                  <button
+                    type="button"
+                    className={`products-pagination-num ${currentPage === item ? 'active' : ''}`}
+                    onClick={() => setCurrentPage(item)}
+                    aria-label={`Página ${item}`}
+                    aria-current={currentPage === item ? 'page' : undefined}
+                  >
+                    {item}
+                  </button>
+                </li>
+              )
+            )}
+          </ul>
+          <button
+            type="button"
+            className="products-pagination-btn products-pagination-next"
+            disabled={currentPage >= totalPages}
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            aria-label="Página siguiente"
+          >
+            Siguiente
+          </button>
+        </nav>
+      )}
         </>
       )}
     </div>
