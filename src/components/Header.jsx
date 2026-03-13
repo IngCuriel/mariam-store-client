@@ -94,22 +94,39 @@ export default function Header() {
                 </Link>
                 <div className="user-menu-container">
                   <button
-                    className="user-menu-button"
+                    type="button"
+                    className={`user-menu-button ${showUserMenu ? 'user-menu-button--open' : ''}`}
                     onClick={() => setShowUserMenu(!showUserMenu)}
+                    aria-label="Menú de cuenta"
+                    aria-expanded={showUserMenu}
+                    aria-haspopup="true"
                   >
-                    👤 {user.name}
+                    <span className="user-menu-button-icon" aria-hidden>👤</span>
+                    <span className="user-menu-button-name">{user.name}</span>
+                    <span className="user-menu-button-chevron" aria-hidden>▼</span>
                   </button>
                 {showUserMenu && (
                   <div className="user-menu-dropdown">
-                    {/* <Link
+                    <Link
+                      to="/cash-express/requests"
+                      className="menu-item"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      📋 Mis Solicitudes
+                    </Link>
+                    <Link
                       to="/orders"
                       className="menu-item"
                       onClick={() => setShowUserMenu(false)}
                     >
                       📦 Mis Pedidos
-                    </Link> */}
-                    <button className="menu-item" onClick={handleLogout}>
-                      Cerrar Sesión
+                    </Link>
+                    <button
+                      type="button"
+                      className="menu-item menu-item-logout"
+                      onClick={handleLogout}
+                    >
+                      Salir
                     </button>
                   </div>
                 )}
@@ -174,14 +191,24 @@ export default function Header() {
             <span>Efectivo Express</span>
           </Link>
           {user && (
-            <Link
-              to="/cash-express/requests"
-              className="sidebar-link"
-              onClick={() => setShowMobileMenu(false)}
-            >
-              <span className="sidebar-icon">📋</span>
-              <span>Mis Solicitudes</span>
-            </Link>
+            <>
+              <Link
+                to="/cash-express/requests"
+                className="sidebar-link"
+                onClick={() => setShowMobileMenu(false)}
+              >
+                <span className="sidebar-icon">📋</span>
+                <span>Mis Solicitudes</span>
+              </Link>
+              <Link
+                to="/orders"
+                className="sidebar-link"
+                onClick={() => setShowMobileMenu(false)}
+              >
+                <span className="sidebar-icon">📦</span>
+                <span>Mis Pedidos</span>
+              </Link>
+            </>
           )}
         </nav>
 
@@ -196,20 +223,12 @@ export default function Header() {
                 </div>
               </div>
               <div className="sidebar-user-menu">
-                {/* <Link
-                  to="/orders"
-                  className="sidebar-menu-item"
-                  onClick={() => setShowMobileMenu(false)}
-                >
-                  <span>📦</span>
-                  <span>Mis Pedidos</span>
-                </Link> */}
                 <button
                   className="sidebar-menu-item logout-item"
                   onClick={handleLogout}
                 >
                   <span>🚪</span>
-                  <span>Cerrar Sesión</span>
+                  <span>Salir</span>
                 </button>
               </div>
             </>
