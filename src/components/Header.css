@@ -215,6 +215,7 @@
   top: 0;
   left: 0;
   height: 100vh;
+  height: 100dvh; /* viewport dinámico en móvil */
   width: 280px;
   max-width: 85vw;
   background: white;
@@ -222,8 +223,8 @@
   z-index: 1000;
   transform: translateX(-100%);
   transition: transform 0.3s ease;
-  overflow-y: auto;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .mobile-sidebar.open {
@@ -231,6 +232,7 @@
 }
 
 .sidebar-header {
+  flex-shrink: 0;
   background: #DC143C;
   color: white;
   padding: 20px;
@@ -276,8 +278,10 @@
 
 .sidebar-nav {
   flex: 1;
+  min-height: 0;
   padding: 20px 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .sidebar-link {
@@ -323,16 +327,20 @@
   height: 22px;
 }
 
-/* Notificaciones en header móvil */
+/* Notificaciones en header móvil (ocultas en desktop, se muestran en @media 768px) */
 .header-mobile-notifications {
   display: none;
-  margin-left: auto;
-  margin-right: 10px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 44px;
 }
 
 .header-mobile-notifications .notification-bell-button {
-  font-size: 24px;
-  padding: 6px 10px;
+  font-size: 22px;
+  padding: 8px;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 /* Carrito en barra móvil (visible solo en móvil, después de la campanita) */
@@ -376,6 +384,7 @@
 }
 
 .sidebar-footer {
+  flex-shrink: 0;
   border-top: 1px solid #e0e0e0;
   padding: 20px;
   background: #f8f9fa;
@@ -502,17 +511,23 @@
   .header-left {
     flex: 1;
     min-width: 0;
+    gap: 8px;
+  }
+
+  .header-logo {
+    min-width: 0;
+    flex-shrink: 1;
   }
 
   .header-logo-text {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 150px;
+    max-width: 120px;
   }
 
   .header-mobile-notifications {
-    display: block;
+    display: flex;
     flex-shrink: 0;
   }
 
@@ -532,7 +547,15 @@
     max-width: 100vw;
   }
 
+  .header-left {
+    gap: 6px;
+  }
+
   .header-logo {
     font-size: 1em;
+  }
+
+  .header-logo-text {
+    max-width: 90px;
   }
 }

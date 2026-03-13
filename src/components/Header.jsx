@@ -77,11 +77,11 @@ export default function Header() {
           </div>
 
           <nav className="header-nav desktop-nav">
+            <Link to="/" className="nav-link">
+              🛍️ Tienda Online
+            </Link>
             <Link to="/cash-express" className="nav-link">
               ⚡ Efectivo Express
-            </Link>
-            <Link to="/products" className="nav-link">
-              🛍️ Productos
             </Link>
             {user ? (
               <>
@@ -157,15 +157,14 @@ export default function Header() {
         </div>
 
         <nav className="sidebar-nav">
-          {/* Menús ocultos para primera versión - Solo Efectivo Express y Mis Solicitudes */}
-          {/* <Link
+          <Link
             to="/"
             className="sidebar-link"
             onClick={() => setShowMobileMenu(false)}
           >
             <span className="sidebar-icon">🛍️</span>
-            <span>Productos</span>
-          </Link> */}
+            <span>Tienda Online</span>
+          </Link>
           <Link
             to="/cash-express"
             className="sidebar-link"
@@ -173,14 +172,6 @@ export default function Header() {
           >
             <span className="sidebar-icon">⚡</span>
             <span>Efectivo Express</span>
-          </Link>
-          <Link
-            to="/products"
-            className="sidebar-link"
-            onClick={() => setShowMobileMenu(false)}
-          >
-            <span className="sidebar-icon">🛍️</span>
-            <span>Productos</span>
           </Link>
           {user && (
             <Link

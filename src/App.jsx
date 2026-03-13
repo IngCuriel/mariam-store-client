@@ -48,9 +48,8 @@ function AppRoutes() {
           <Route path="/register" element={
             isAuthenticated ? <Navigate to="/" replace /> : <Register />
           } />
-          <Route path="/" element={<CashExpress />} />
-          {/* Rutas de productos ocultas para primera versión */}
-           <Route path="/products" element={<Products />} />
+          <Route path="/" element={<Products />} />
+          <Route path="/products" element={<Products />} />
            <Route path="/products/:id" element={<ProductDetail />} /> 
            <Route path="/cart" element={<Cart />} />
           <Route path="/cash-express" element={<CashExpress />} />

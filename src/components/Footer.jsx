@@ -10,7 +10,7 @@ export default function Footer() {
   const goToStore = (e) => {
     e.preventDefault();
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    navigate('/products', { replace: true });
+    navigate('/', { replace: true });
   };
 
   return (
@@ -46,8 +46,8 @@ export default function Footer() {
             <h3 className="footer-title">Enlaces Rápidos</h3>
             <ul className="footer-links">
               <li>
-                <Link to="/products" className="footer-link" onClick={goToStore}>
-                  🛒 Tienda en línea
+                <Link to="/" className="footer-link" onClick={goToStore}>
+                  🛍️ Tienda Online
                 </Link>
               </li>
               <li>

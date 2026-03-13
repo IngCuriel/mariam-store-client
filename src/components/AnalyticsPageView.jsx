@@ -28,14 +28,14 @@ export default function AnalyticsPageView() {
  */
 function getPageNameFromPath(pathname) {
   const routeMap = {
-    '/': 'Efectivo Express',
+    '/': 'Tienda Online',
+    '/products': 'Tienda Online',
     '/cash-express': 'Efectivo Express',
     '/cash-express/requests': 'Mis Solicitudes',
     '/cash-express/requests/:id': 'Detalle de Solicitud',
     '/cash-express/terms': 'Términos y Condiciones',
     '/login': 'Iniciar Sesión',
     '/register': 'Registro',
-    '/products': 'Productos',
     '/cart': 'Carrito',
     '/home': 'Inicio',
   };
