@@ -1,25 +1,42 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
+
+const CART_STORAGE_KEY = 'mariam_store_cart';
+
+function loadCartFromStorage() {
+  try {
+    const storage = typeof globalThis !== 'undefined' && globalThis.localStorage;
+    const saved = storage ? storage.getItem(CART_STORAGE_KEY) : null;
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed : [];
+    }
+    return [];
+  } catch (error) {
+    console.error('Error cargando carrito desde localStorage:', error);
+    return [];
+  }
+}
 
 export const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState(loadCartFromStorage);
+  const isMounted = useRef(false);
 
-  // Cargar carrito desde localStorage al iniciar
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart_items');
-    if (savedCart) {
-      try {
-        setItems(JSON.parse(savedCart));
-      } catch (error) {
-        console.error('Error cargando carrito:', error);
+    if (!isMounted.current) {
+      isMounted.current = true;
+      return;
+    }
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    } catch (error) {
+      if (error.name === 'QuotaExceededError') {
+        console.warn('Carrito: espacio de almacenamiento insuficiente. Se mantendrá en memoria.');
+      } else {
+        console.error('Error guardando carrito en localStorage:', error);
       }
     }
-  }, []);
-
-  // Guardar carrito en localStorage cuando cambie
-  useEffect(() => {
-    localStorage.setItem('cart_items', JSON.stringify(items));
   }, [items]);
 
   const addToCart = (product, presentation, quantity = 1) => {
@@ -66,6 +83,11 @@ export function CartProvider({ children }) {
     setItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
   };
 
+  const removeItemsFromCart = (itemIds) => {
+    const idSet = new Set(Array.isArray(itemIds) ? itemIds : [itemIds]);
+    setItems((prevItems) => prevItems.filter((item) => !idSet.has(item.id)));
+  };
+
   const updateQuantity = (itemId, quantity) => {
     if (quantity <= 0) {
       removeFromCart(itemId);
@@ -87,7 +109,11 @@ export function CartProvider({ children }) {
 
   const clearCart = () => {
     setItems([]);
-    localStorage.removeItem('cart_items');
+    try {
+      localStorage.removeItem(CART_STORAGE_KEY);
+    } catch (error) {
+      console.error('Error limpiando carrito en localStorage:', error);
+    }
   };
 
   const getTotalItems = () => {
@@ -98,18 +124,22 @@ export function CartProvider({ children }) {
     return items.reduce((total, item) => total + item.subtotal, 0);
   };
 
+  const value = useMemo(
+    () => ({
+      items,
+      addToCart,
+      removeFromCart,
+      removeItemsFromCart,
+      updateQuantity,
+      clearCart,
+      getTotalItems,
+      getTotalAmount,
+    }),
+    [items]
+  );
+
   return (
-    <CartContext.Provider
-      value={{
-        items,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        getTotalItems,
-        getTotalAmount,
-      }}
-    >
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   );

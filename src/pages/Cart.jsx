@@ -48,7 +48,7 @@ const CART_AVAILABILITY_SECTIONS = {
 
 export default function Cart() {
   const navigate = useNavigate();
-  const { items, removeFromCart, updateQuantity, clearCart } = useCart();
+  const { items, removeFromCart, removeItemsFromCart, updateQuantity } = useCart();
   const { isAuthenticated } = useAuth();
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [toast, setToast] = useState({ open: false, message: '', type: 'info' });
@@ -127,9 +127,18 @@ export default function Cart() {
       return;
     }
 
+    const orderableGroups = ['local_delivery', 'online_pickup'].filter(
+      (key) => (itemsByAvailability[key] || []).length > 0
+    );
+    const numOrders = orderableGroups.length;
+    const message =
+      numOrders > 1
+        ? `Se generarán ${numOrders} pedidos (uno por tipo de entrega). Total: ${formatPrice(totalOrderable)}. ¿Deseas continuar?`
+        : `Total a pagar: ${formatPrice(totalOrderable)}. La tienda revisará la disponibilidad y te notificará en el módulo de pedidos. ¿Deseas generar el pedido?`;
+
     openConfirm(
       'Confirmar pedido',
-      `Total a pagar: ${formatPrice(totalOrderable)} (${orderableItems.length} ${orderableItems.length === 1 ? 'producto' : 'productos'}). La tienda revisará la disponibilidad y te notificará en el módulo de pedidos. ¿Deseas generar el pedido?`,
+      message,
       'Generar pedido',
       () => submitOrder()
     );
@@ -138,21 +147,38 @@ export default function Cart() {
   const submitOrder = async () => {
     try {
       setCreatingOrder(true);
-      const orderItems = orderableItems.map((item) => ({
-        productId: item.product.id,
-        productName: item.product.name,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        subtotal: item.subtotal,
-      }));
 
-      await createOrder({
-        items: orderItems,
-        notes: `Pedido web - ${orderableItems.length} ${orderableItems.length === 1 ? 'producto' : 'productos'}`,
-      });
+      const orderableGroups = ['local_delivery', 'online_pickup'].filter(
+        (key) => (itemsByAvailability[key] || []).length > 0
+      );
 
-      clearCart();
-      showToast('Pedido generado correctamente. La tienda te contactará pronto.', 'success');
+      for (const groupKey of orderableGroups) {
+        const groupItems = itemsByAvailability[groupKey] || [];
+        if (groupItems.length === 0) continue;
+
+        const config = CART_AVAILABILITY_SECTIONS[groupKey];
+        const orderItems = groupItems.map((item) => ({
+          productId: item.product.id,
+          productName: item.product.name,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          subtotal: item.subtotal,
+        }));
+
+        await createOrder({
+          items: orderItems,
+          notes: `Pedido web - ${config.title} (${groupItems.length} ${groupItems.length === 1 ? 'producto' : 'productos'})`,
+        });
+      }
+
+      removeItemsFromCart(orderableItems.map((item) => item.id));
+      const numOrders = orderableGroups.length;
+      showToast(
+        numOrders > 1
+          ? `Se generaron ${numOrders} pedidos correctamente. La tienda te contactará pronto.`
+          : 'Pedido generado correctamente. La tienda te contactará pronto.',
+        'success'
+      );
       navigate('/products');
     } catch (error) {
       showToast(

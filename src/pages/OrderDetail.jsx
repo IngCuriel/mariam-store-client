@@ -14,6 +14,7 @@ import {
   getTimelineStepIndex,
   STATUS_NEXT_STEP_MESSAGE,
 } from '../constants/orderStatus';
+import { getOrderAvailabilityFromNotes } from '../utils/orderAvailability';
 import { Toast } from '../components/Toast';
 import './OrderDetail.css';
 
@@ -182,6 +183,8 @@ export default function OrderDetail() {
       (i) => i.isAvailable === false || (i.confirmedQuantity != null && i.confirmedQuantity !== i.quantity)
     );
 
+  const orderAvailability = getOrderAvailabilityFromNotes(order.notes);
+
   return (
     <div className="order-detail-page">
       <Toast open={toast.open} message={toast.message} type={toast.type} onClose={closeToast} />
@@ -198,6 +201,15 @@ export default function OrderDetail() {
             <h1 className="order-detail-title">Detalle del pedido</h1>
             {order.folio && (
               <span className="order-detail-folio-header">Folio {order.folio}</span>
+            )}
+            {orderAvailability && (
+              <div className={`order-detail-availability-badge order-detail-availability-badge--${orderAvailability.type}`} role="status">
+                <span className="order-detail-availability-badge-icon" aria-hidden>{orderAvailability.icon}</span>
+                <div className="order-detail-availability-badge-text">
+                  <strong className="order-detail-availability-badge-label">{orderAvailability.label}</strong>
+                  <span className="order-detail-availability-badge-subtitle">{orderAvailability.subtitle}</span>
+                </div>
+              </div>
             )}
             <span className="order-detail-meta">
               {formatShortDate(order.createdAt)}
@@ -253,7 +265,11 @@ export default function OrderDetail() {
               <span className="order-detail-ready-icon">✓</span>
               <div>
                 <strong>Listo para recoger</strong>
-                <p>Pásate por la sucursal a recoger tu pedido.</p>
+                <p>
+                  {order.readyAt
+                    ? `Listo para recoger desde el ${formatDate(order.readyAt)}. Pásate por la sucursal.`
+                    : 'Pásate por la sucursal a recoger tu pedido.'}
+                </p>
               </div>
             </div>
           )}
@@ -264,7 +280,11 @@ export default function OrderDetail() {
               <span className="order-detail-ready-icon">✓</span>
               <div>
                 <strong>Pedido entregado</strong>
-                <p>Gracias por tu compra.</p>
+                <p>
+                  {order.deliveredAt
+                    ? `Entregado el ${formatDate(order.deliveredAt)}. Gracias por tu compra.`
+                    : 'Gracias por tu compra.'}
+                </p>
               </div>
             </div>
           )}

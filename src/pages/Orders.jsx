@@ -2,11 +2,13 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getOrders } from '../services/ordersService';
 import {
+  ORDER_STATUS,
   STATUS_LABELS,
   STATUS_COLORS,
   STATUS_OPTIONS_FILTER,
   STATUS_LIST_MESSAGE,
 } from '../constants/orderStatus';
+import { getOrderAvailabilityFromNotes } from '../utils/orderAvailability';
 import './Orders.css';
 
 const STATUS_OPTIONS = STATUS_OPTIONS_FILTER;
@@ -30,6 +32,21 @@ const formatShortDate = (dateString) => {
     });
   } catch (e) {
     console.warn('formatShortDate:', e);
+    return String(dateString);
+  }
+};
+
+const formatShortDateTime = (dateString) => {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleString('es-MX', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch (e) {
     return String(dateString);
   }
 };
@@ -183,66 +200,94 @@ export default function Orders() {
         </section>
       ) : (
         <section className="orders-list" aria-label="Lista de pedidos">
-          {orders.map((item) => (
-            <article
-              key={item.id}
-              className="orders-order-card"
-            >
-              <Link to={`/orders/${item.id}`} className="orders-order-card-link">
-                {/* Barra superior: fecha + folio | estado */}
-                <div className="orders-order-top">
-                  <div className="orders-order-meta">
-                    <span className="orders-order-date">
-                      {formatShortDate(item.createdAt)}
-                    </span>
-                    {item.folio && (
-                      <span className="orders-order-folio">Pedido {item.folio}</span>
-                    )}
-                  </div>
-                  <span
-                    className="orders-order-status"
-                    style={{
-                      backgroundColor: `${STATUS_COLORS[item.status] || '#95a5a6'}20`,
-                      color: STATUS_COLORS[item.status] || '#95a5a6',
-                    }}
-                  >
-                    {STATUS_LABELS[item.status] ?? item.status}
-                  </span>
-                </div>
-
-                {/* Resumen */}
-                <div className="orders-order-body">
-                  <div className="orders-order-summary">
-                    {STATUS_LIST_MESSAGE[item.status] ? (
-                      <span className="orders-order-status-message">
-                        {STATUS_LIST_MESSAGE[item.status]}
+          {orders.map((item) => {
+            const availability = getOrderAvailabilityFromNotes(item.notes);
+            return (
+              <article
+                key={item.id}
+                className="orders-order-card"
+              >
+                <Link to={`/orders/${item.id}`} className="orders-order-card-link">
+                  {/* Barra superior: fecha + folio | estado */}
+                  <div className="orders-order-top">
+                    <div className="orders-order-meta">
+                      <span className="orders-order-date">
+                        {formatShortDate(item.createdAt)}
                       </span>
-                    ) : (
-                      <>
-                        <span className="orders-order-products">
-                          {item.items?.length || 0}{' '}
-                          {item.items?.length === 1 ? 'producto' : 'productos'}
-                        </span>
-                        {item.branch && (
-                          <>
-                            <span className="orders-order-sep">·</span>
-                            <span className="orders-order-branch">{item.branch.name}</span>
-                          </>
-                        )}
-                      </>
-                    )}
+                      {item.folio && (
+                        <span className="orders-order-folio">Pedido {item.folio}</span>
+                      )}
+                    </div>
+                    <span
+                      className="orders-order-status"
+                      style={{
+                        backgroundColor: `${STATUS_COLORS[item.status] || '#95a5a6'}20`,
+                        color: STATUS_COLORS[item.status] || '#95a5a6',
+                      }}
+                    >
+                      {STATUS_LABELS[item.status] ?? item.status}
+                    </span>
                   </div>
-                  <div className="orders-order-total">{formatPrice(item.total)}</div>
-                </div>
 
-                {/* CTA */}
-                <div className="orders-order-footer">
-                  <span className="orders-order-cta">Ver detalle del pedido</span>
-                  <span className="orders-order-cta-arrow" aria-hidden="true">→</span>
-                </div>
-              </Link>
-            </article>
-          ))}
+                  {/* Fecha listo para recoger (solo si aplica) */}
+                  {item.status === ORDER_STATUS.READY_FOR_PICKUP && item.readyAt && (
+                    <p className="orders-order-ready-at" role="status">
+                      Listo desde {formatShortDateTime(item.readyAt)}
+                    </p>
+                  )}
+
+                  {/* Fecha entregado (solo si aplica) */}
+                  {item.status === ORDER_STATUS.COMPLETED && item.deliveredAt && (
+                    <p className="orders-order-delivered-at" role="status">
+                      Entregado el {formatShortDateTime(item.deliveredAt)}
+                    </p>
+                  )}
+
+                  {/* Flag tipo de entrega (productAvailability) */}
+                  {availability && (
+                    <div className={`orders-order-flag orders-order-flag--${availability.type}`} role="status">
+                      <span className="orders-order-flag-icon" aria-hidden>{availability.icon}</span>
+                      <div className="orders-order-flag-text">
+                        <span className="orders-order-flag-label">{availability.label}</span>
+                        <span className="orders-order-flag-subtitle">{availability.subtitle}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Resumen */}
+                  <div className="orders-order-body">
+                    <div className="orders-order-summary">
+                      {STATUS_LIST_MESSAGE[item.status] ? (
+                        <span className="orders-order-status-message">
+                          {STATUS_LIST_MESSAGE[item.status]}
+                        </span>
+                      ) : (
+                        <>
+                          <span className="orders-order-products">
+                            {item.items?.length || 0}{' '}
+                            {item.items?.length === 1 ? 'producto' : 'productos'}
+                          </span>
+                          {item.branch && (
+                            <>
+                              <span className="orders-order-sep">·</span>
+                              <span className="orders-order-branch">{item.branch.name}</span>
+                            </>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    <div className="orders-order-total">{formatPrice(item.total)}</div>
+                  </div>
+
+                  {/* CTA */}
+                  <div className="orders-order-footer">
+                    <span className="orders-order-cta">Ver detalle del pedido</span>
+                    <span className="orders-order-cta-arrow" aria-hidden="true">→</span>
+                  </div>
+                </Link>
+              </article>
+            );
+          })}
         </section>
       )}
 

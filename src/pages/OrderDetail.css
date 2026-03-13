@@ -69,6 +69,73 @@
   font-weight: 400;
 }
 
+/* Badge tipo de entrega (productAvailability) */
+.order-detail-availability-badge {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  margin-top: 12px;
+  border-radius: 10px;
+  text-align: left;
+  max-width: 360px;
+}
+
+.order-detail-availability-badge-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.order-detail-availability-badge-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.order-detail-availability-badge-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: block;
+}
+
+.order-detail-availability-badge-subtitle {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  opacity: 0.95;
+}
+
+.order-detail-availability-badge--local_delivery {
+  background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+  border: 1px solid #a5d6a7;
+  border-left: 4px solid #2e7d32;
+  color: #1b5e20;
+}
+
+.order-detail-availability-badge--local_delivery .order-detail-availability-badge-label {
+  color: #1b5e20;
+}
+
+.order-detail-availability-badge--online_pickup {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border: 1px solid #ffcc80;
+  color: #e65100;
+}
+
+.order-detail-availability-badge--online_pickup .order-detail-availability-badge-label {
+  color: #e65100;
+}
+
+.order-detail-availability-badge--in_store_only {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border: 1px solid #90caf9;
+  color: #1565c0;
+}
+
+.order-detail-availability-badge--in_store_only .order-detail-availability-badge-label {
+  color: #1565c0;
+}
+
 .order-detail-notes-inline {
   margin: 0;
   padding: 10px 14px;

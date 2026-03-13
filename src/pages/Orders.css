@@ -310,7 +310,105 @@
   font-weight: 600;
 }
 
+.orders-order-ready-at {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.8125rem;
+  color: #2ecc71;
+  font-weight: 500;
+}
+
+.orders-order-delivered-at {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.8125rem;
+  color: #27ae60;
+  font-weight: 500;
+}
+
 /* Cuerpo: resumen + total */
+/* Flag tipo de entrega (productAvailability) — etiqueta clara y visible */
+.orders-order-flag {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+  border-radius: 8px;
+  border-left: 4px solid currentColor;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  min-height: 44px;
+}
+
+.orders-order-flag-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.orders-order-flag-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.orders-order-flag-label {
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: -0.01em;
+}
+
+.orders-order-flag-subtitle {
+  font-size: 0.75rem;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+/* Entrega a domicilio o en tienda */
+.orders-order-flag--local_delivery {
+  background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+  border-left-color: #2e7d32;
+  color: #1b5e20;
+}
+
+.orders-order-flag--local_delivery .orders-order-flag-label {
+  color: #1b5e20;
+}
+
+.orders-order-flag--local_delivery .orders-order-flag-subtitle {
+  color: #388e3c;
+}
+
+/* Venta solo en tienda online (recoger en sucursal) */
+.orders-order-flag--online_pickup {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border-left-color: #e65100;
+  color: #bf360c;
+}
+
+.orders-order-flag--online_pickup .orders-order-flag-label {
+  color: #e65100;
+}
+
+.orders-order-flag--online_pickup .orders-order-flag-subtitle {
+  color: #d84315;
+}
+
+/* Solo en sucursal (servicio presencial) */
+.orders-order-flag--in_store_only {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border-left-color: #1565c0;
+  color: #0d47a1;
+}
+
+.orders-order-flag--in_store_only .orders-order-flag-label {
+  color: #1565c0;
+}
+
+.orders-order-flag--in_store_only .orders-order-flag-subtitle {
+  color: #1976d2;
+}
+
 .orders-order-body {
   display: flex;
   justify-content: space-between;
