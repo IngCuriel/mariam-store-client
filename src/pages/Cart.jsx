@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,9 +16,39 @@ const formatPrice = (price) => {
   }).format(price);
 };
 
+const EFFECTIVE_AVAILABILITY = (product) =>
+  product?.productAvailability ? String(product.productAvailability).trim() : 'local_delivery';
+
+const CART_AVAILABILITY_SECTIONS = {
+  local_delivery: {
+    title: 'Disponible en sucursal',
+    subtitle: 'Entrega a domicilio o recoger en tienda',
+    description: 'Estos productos tienen inventario local. Una vez confirmado tu pedido, puedes recibirlos a domicilio o recogerlos en sucursal.',
+    icon: '🚚',
+    orderable: true,
+    className: 'cart-group-local',
+  },
+  online_pickup: {
+    title: 'Disponible solo en Tienda Online',
+    subtitle: 'Listo en 6 a 12 días',
+    description: 'Compra online y recoge en sucursal. Te avisaremos cuando esté listo.',
+    icon: '🛒',
+    orderable: true,
+    className: 'cart-group-online',
+  },
+  in_store_only: {
+    title: 'Solo en sucursal',
+    subtitle: 'Servicio presencial',
+    description: 'Estos productos o servicios no se envían. Visita la sucursal para adquirirlos. No se incluyen en el pedido online.',
+    icon: '📍',
+    orderable: false,
+    className: 'cart-group-store',
+  },
+};
+
 export default function Cart() {
   const navigate = useNavigate();
-  const { items, removeFromCart, updateQuantity, clearCart, getTotalAmount } = useCart();
+  const { items, removeFromCart, updateQuantity, clearCart } = useCart();
   const { isAuthenticated } = useAuth();
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [toast, setToast] = useState({ open: false, message: '', type: 'info' });
@@ -65,6 +95,22 @@ export default function Cart() {
     closeConfirm();
   }, [closeConfirm]);
 
+  const itemsByAvailability = useMemo(() => {
+    const groups = { local_delivery: [], online_pickup: [], in_store_only: [] };
+    items.forEach((item) => {
+      const key = EFFECTIVE_AVAILABILITY(item.product);
+      if (groups[key]) groups[key].push(item);
+      else groups.local_delivery.push(item);
+    });
+    return groups;
+  }, [items]);
+
+  const orderableItems = useMemo(
+    () => items.filter((item) => CART_AVAILABILITY_SECTIONS[EFFECTIVE_AVAILABILITY(item.product)]?.orderable !== false),
+    [items]
+  );
+  const totalOrderable = orderableItems.reduce((sum, item) => sum + item.subtotal, 0);
+
   const handleCheckout = () => {
     if (!isAuthenticated) {
       openConfirm(
@@ -76,11 +122,14 @@ export default function Cart() {
       return;
     }
 
-    if (items.length === 0) return;
+    if (orderableItems.length === 0) {
+      showToast('Agrega al menos un producto que se pueda pedir en línea para generar tu pedido.', 'info');
+      return;
+    }
 
     openConfirm(
       'Confirmar pedido',
-      `Total a pagar: ${formatPrice(getTotalAmount())}. La tienda revisará la disponibilidad de los productos y te notificara en el modulo de pedidos para el seguimiento. ¿Deseas generar el pedido?`,
+      `Total a pagar: ${formatPrice(totalOrderable)} (${orderableItems.length} ${orderableItems.length === 1 ? 'producto' : 'productos'}). La tienda revisará la disponibilidad y te notificará en el módulo de pedidos. ¿Deseas generar el pedido?`,
       'Generar pedido',
       () => submitOrder()
     );
@@ -89,7 +138,7 @@ export default function Cart() {
   const submitOrder = async () => {
     try {
       setCreatingOrder(true);
-      const orderItems = items.map((item) => ({
+      const orderItems = orderableItems.map((item) => ({
         productId: item.product.id,
         productName: item.product.name,
         quantity: item.quantity,
@@ -99,7 +148,7 @@ export default function Cart() {
 
       await createOrder({
         items: orderItems,
-        notes: `Pedido web - ${items.length} ${items.length === 1 ? 'producto' : 'productos'}`,
+        notes: `Pedido web - ${orderableItems.length} ${orderableItems.length === 1 ? 'producto' : 'productos'}`,
       });
 
       clearCart();
@@ -192,99 +241,134 @@ export default function Cart() {
 
         <div className="cart-layout">
           <div className="cart-items-section">
-            <h2 className="cart-section-title">Productos</h2>
-            <p className="cart-items-count">
-              Total: {items.reduce((sum, i) => sum + i.quantity, 0)}{' '}
-              {items.reduce((sum, i) => sum + i.quantity, 0) === 1 ? 'unidad' : 'unidades'}
-            </p>
-            <div className="cart-items-list">
-              {items.map((item) => {
-                const imageUrl =
-                  item.product.images?.length > 0 ? item.product.images[0].url : null;
-                const emoji = getProductEmoji(item.product);
+            {(['local_delivery', 'online_pickup', 'in_store_only']).map((groupKey) => {
+              const groupItems = itemsByAvailability[groupKey] || [];
+              if (groupItems.length === 0) return null;
 
-                return (
-                  <article key={item.id} className="cart-item-card">
-                    <div className="cart-item-image-wrap">
-                      {imageUrl ? (
-                        <img src={imageUrl} alt={item.product.name} />
-                      ) : (
-                        <span className="cart-item-emoji">{emoji}</span>
-                      )}
+              const config = CART_AVAILABILITY_SECTIONS[groupKey];
+              const groupSubtotal = groupItems.reduce((s, i) => s + i.subtotal, 0);
+
+              return (
+                <section
+                  key={groupKey}
+                  className={`cart-availability-group ${config.className}`}
+                  aria-labelledby={`cart-group-title-${groupKey}`}
+                >
+                  <div className="cart-group-header">
+                    <span className="cart-group-icon" aria-hidden>{config.icon}</span>
+                    <div className="cart-group-heading">
+                      <h3 id={`cart-group-title-${groupKey}`} className="cart-group-title">
+                        {config.title}
+                      </h3>
+                      <p className="cart-group-subtitle">{config.subtitle}</p>
                     </div>
-                    <div className="cart-item-details">
-                      <h3 className="cart-item-name">{item.product.name}</h3>
-                      {item.presentation && (
-                        <p className="cart-item-presentation">
-                          {item.presentation.name} ·{' '}
-                          {item.presentation.quantity}{' '}
-                          {item.presentation.quantity === 1 ? 'pieza' : 'piezas'}
-                        </p>
-                      )}
-                      <p className="cart-item-unit-price">
-                        {formatPrice(item.unitPrice)} c/u
-                      </p>
-                    </div>
-                    <div className="cart-item-quantity">
-                      <button
-                        type="button"
-                        className="cart-qty-btn"
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        aria-label="Disminuir cantidad"
-                      >
-                        −
-                      </button>
-                      <span className="cart-qty-value">{item.quantity}</span>
-                      <button
-                        type="button"
-                        className="cart-qty-btn"
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        aria-label="Aumentar cantidad"
-                      >
-                        +
-                      </button>
-                    </div>
-                    <div className="cart-item-subtotal">
-                      {formatPrice(item.subtotal)}
-                    </div>
-                    <button
-                      type="button"
-                      className="cart-item-remove"
-                      onClick={() => removeFromCart(item.id)}
-                      title="Eliminar producto"
-                      aria-label="Eliminar producto"
-                    >
-                      ✕
-                    </button>
-                  </article>
-                );
-              })}
-            </div>
+                    <span className="cart-group-subtotal">{formatPrice(groupSubtotal)}</span>
+                  </div>
+                  <p className="cart-group-description">{config.description}</p>
+                  <div className="cart-items-list">
+                    {groupItems.map((item) => {
+                      const imageUrl = item.product.images?.length > 0 ? item.product.images[0].url : null;
+                      const emoji = getProductEmoji(item.product);
+                      return (
+                        <article key={item.id} className="cart-item-card">
+                          <div className="cart-item-image-wrap">
+                            {imageUrl ? (
+                              <img src={imageUrl} alt={item.product.name} />
+                            ) : (
+                              <span className="cart-item-emoji">{emoji}</span>
+                            )}
+                          </div>
+                          <div className="cart-item-details">
+                            <h3 className="cart-item-name">{item.product.name}</h3>
+                            {item.presentation && (
+                              <p className="cart-item-presentation">
+                                {item.presentation.name} · {item.presentation.quantity}{' '}
+                                {item.presentation.quantity === 1 ? 'pieza' : 'piezas'}
+                              </p>
+                            )}
+                            <p className="cart-item-unit-price">{formatPrice(item.unitPrice)} c/u</p>
+                          </div>
+                          <div className="cart-item-quantity">
+                            <button
+                              type="button"
+                              className="cart-qty-btn"
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              aria-label="Disminuir cantidad"
+                            >
+                              −
+                            </button>
+                            <span className="cart-qty-value">{item.quantity}</span>
+                            <button
+                              type="button"
+                              className="cart-qty-btn"
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              aria-label="Aumentar cantidad"
+                            >
+                              +
+                            </button>
+                          </div>
+                          <div className="cart-item-subtotal">{formatPrice(item.subtotal)}</div>
+                          <button
+                            type="button"
+                            className="cart-item-remove"
+                            onClick={() => removeFromCart(item.id)}
+                            title="Eliminar producto"
+                            aria-label="Eliminar producto"
+                          >
+                            ✕
+                          </button>
+                        </article>
+                      );
+                    })}
+                  </div>
+                </section>
+              );
+            })}
           </div>
 
           <aside className="cart-summary-card">
             <h2 className="cart-summary-title">Resumen</h2>
             <div className="cart-summary-rows">
-              <div className="cart-summary-row">
-                <span>
-                  Subtotal ({items.reduce((s, i) => s + i.quantity, 0)}{' '}
-                  {items.reduce((s, i) => s + i.quantity, 0) === 1 ? 'producto' : 'productos'})
-                </span>
-                <span>{formatPrice(getTotalAmount())}</span>
-              </div>
+              {(['local_delivery', 'online_pickup']).map((key) => {
+                const groupItems = itemsByAvailability[key] || [];
+                if (groupItems.length === 0) return null;
+                const config = CART_AVAILABILITY_SECTIONS[key];
+                const subtotal = groupItems.reduce((s, i) => s + i.subtotal, 0);
+                return (
+                  <div key={key} className="cart-summary-row">
+                    <span className="cart-summary-row-label">
+                      {config.icon} {config.title}
+                    </span>
+                    <span>{formatPrice(subtotal)}</span>
+                  </div>
+                );
+              })}
+              {itemsByAvailability.in_store_only?.length > 0 && (
+                <div className="cart-summary-row cart-summary-row--info">
+                  <span className="cart-summary-row-label">
+                    {CART_AVAILABILITY_SECTIONS.in_store_only.icon} Solo en sucursal
+                  </span>
+                  <span className="cart-summary-row-note">No se incluye en el pedido</span>
+                </div>
+              )}
               <div className="cart-summary-row total">
-                <span>Total</span>
-                <span className="amount">{formatPrice(getTotalAmount())}</span>
+                <span>Total a pagar</span>
+                <span className="amount">{formatPrice(totalOrderable)}</span>
               </div>
             </div>
             <button
               type="button"
               className="cart-checkout-btn"
               onClick={handleCheckout}
-              disabled={creatingOrder}
+              disabled={creatingOrder || orderableItems.length === 0}
             >
               {creatingOrder ? 'Generando pedido...' : 'Generar pedido'}
             </button>
+            {orderableItems.length === 0 && items.length > 0 && (
+              <p className="cart-info-only-store">
+                Los productos en tu carrito solo están disponibles en sucursal. Visítanos para comprarlos.
+              </p>
+            )}
             {!isAuthenticated && (
               <p className="cart-login-reminder">
                 <Link to="/login">Inicia sesión</Link> para poder generar tu pedido

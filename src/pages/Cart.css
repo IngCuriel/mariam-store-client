@@ -152,6 +152,75 @@
   margin: 0 0 16px 0;
 }
 
+/* Grupos por disponibilidad (tipo ML) */
+.cart-availability-group {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  margin-bottom: 20px;
+}
+
+.cart-availability-group:last-child {
+  margin-bottom: 0;
+}
+
+.cart-group-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.cart-group-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.cart-group-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.cart-group-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 2px 0;
+  letter-spacing: -0.01em;
+}
+
+.cart-group-subtitle {
+  font-size: 0.875rem;
+  color: #666;
+  margin: 0;
+}
+
+.cart-group-subtotal {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #DC143C;
+}
+
+.cart-group-description {
+  font-size: 0.875rem;
+  color: #555;
+  line-height: 1.45;
+  margin: 0 0 16px 0;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.cart-availability-group .cart-items-list {
+  margin-top: 0;
+}
+
+.cart-group-local .cart-group-title { color: #2e7d32; }
+.cart-group-online .cart-group-title { color: #e65100; }
+.cart-group-store .cart-group-title { color: #1565c0; }
+
 .cart-items-list {
   display: flex;
   flex-direction: column;
@@ -332,6 +401,32 @@
 .cart-summary-row.total .amount {
   font-size: 1.5rem;
   color: #DC143C;
+}
+
+.cart-summary-row-label {
+  font-weight: 500;
+  color: #333;
+}
+
+.cart-summary-row--info {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.cart-summary-row-note {
+  font-size: 0.85rem;
+  color: #999;
+  font-style: italic;
+}
+
+.cart-info-only-store {
+  font-size: 0.9rem;
+  color: #1565c0;
+  background: #e3f2fd;
+  padding: 12px;
+  border-radius: 8px;
+  margin: 0 0 12px 0;
+  line-height: 1.4;
 }
 
 .cart-checkout-btn {

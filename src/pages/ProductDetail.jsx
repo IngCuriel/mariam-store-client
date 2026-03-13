@@ -88,10 +88,11 @@ export default function ProductDetail() {
   const hasStock = product?.inventory ? product.inventory.currentStock > 0 : true;
   const hasPresentations = product?.presentations && product.presentations.length > 0;
   const availability = product?.productAvailability ? String(product.productAvailability).trim() : null;
-  const isOnlinePickup = availability === 'online_pickup';
-  const isLocalDelivery = availability === 'local_delivery';
-  const isInStoreOnly = availability === 'in_store_only';
-  const availabilityLabel = availability && PRODUCT_AVAILABILITY_LABELS[availability];
+  const effectiveAvailability = availability || 'local_delivery';
+  const isOnlinePickup = effectiveAvailability === 'online_pickup';
+  const isLocalDelivery = effectiveAvailability === 'local_delivery';
+  const isInStoreOnly = effectiveAvailability === 'in_store_only';
+  const availabilityLabel = availability ? PRODUCT_AVAILABILITY_LABELS[availability] : null;
 
   let mainImageUrl = null;
   if (product?.images?.length > 0) {
