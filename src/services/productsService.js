@@ -1,7 +1,8 @@
 import api from '../config/api';
 
 // Obtener todos los productos con filtros opcionales y paginación
-export const getAllProducts = async (params = {}) => {
+// config: opcional, ej. { signal } para cancelar la petición
+export const getAllProducts = async (params = {}, config = {}) => {
   const queryParams = { ...params };
   if (params.showInStoreOnly) {
     queryParams.showInStoreOnly = 'true';
@@ -12,7 +13,7 @@ export const getAllProducts = async (params = {}) => {
   if (params.includeInventory) {
     queryParams.includeInventory = 'true';
   }
-  const response = await api.get('/products/all', { params: queryParams });
+  const response = await api.get('/products/all', { params: queryParams, ...config });
   return response.data;
 };
 
