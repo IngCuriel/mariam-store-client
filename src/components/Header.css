@@ -375,7 +375,15 @@
   height: 22px;
 }
 
-/* Notificaciones en header móvil (ocultas en desktop, se muestran en @media 768px) */
+/* Contenedor derecha móvil: notificación + carrito alineados a la derecha */
+.header-mobile-right {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
 .header-mobile-notifications {
   display: none;
   align-items: center;
@@ -564,14 +572,18 @@
 
   .header-logo {
     min-width: 0;
-    flex-shrink: 1;
+    flex-shrink: 0;
+    align-items: center;
   }
 
   .header-logo-text {
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 120px;
+    overflow: visible;
+    text-overflow: unset;
+  }
+
+  .header-mobile-right {
+    display: flex;
   }
 
   .header-mobile-notifications {
@@ -600,10 +612,14 @@
   }
 
   .header-logo {
-    font-size: 1em;
+    font-size: 0.9em;
+    flex-shrink: 1;
+    min-width: 0;
   }
 
   .header-logo-text {
-    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 130px;
   }
 }

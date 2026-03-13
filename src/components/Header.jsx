@@ -58,22 +58,24 @@ export default function Header() {
               <img src={storeIcon} alt="Mini Super Curiel" className="header-logo-icon" />
               <span className="header-logo-text">Mini Super Curiel</span>
             </Link>
-            {user && (
-              <div className="header-mobile-notifications">
-                <NotificationBell />
-              </div>
-            )}
-            <Link
-              to="/cart"
-              className="header-mobile-cart"
-              onClick={() => setShowMobileMenu(false)}
-              aria-label="Carrito"
-            >
-              🛒
-              {cartItemsCount > 0 && (
-                <span className="cart-badge cart-badge-mobile">{cartItemsCount}</span>
+            <div className="header-mobile-right">
+              {user && (
+                <div className="header-mobile-notifications">
+                  <NotificationBell />
+                </div>
               )}
-            </Link>
+              <Link
+                to="/cart"
+                className="header-mobile-cart"
+                onClick={() => setShowMobileMenu(false)}
+                aria-label="Carrito"
+              >
+                🛒
+                {cartItemsCount > 0 && (
+                  <span className="cart-badge cart-badge-mobile">{cartItemsCount}</span>
+                )}
+              </Link>
+            </div>
           </div>
 
           <nav className="header-nav desktop-nav">
