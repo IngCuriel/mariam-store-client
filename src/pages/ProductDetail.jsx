@@ -195,7 +195,7 @@ export default function ProductDetail() {
               )}
             </div>
 
-            {hasPresentations && !isSoloTienda && (
+            {hasPresentations && (
               <div className="pdp-presentations">
                 <h4>Elige una presentación</h4>
                 <div className="pdp-presentations-list">
