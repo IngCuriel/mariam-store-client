@@ -78,12 +78,19 @@ export default function ProductDetail() {
     setTimeout(() => setShowSuccess(false), 3000);
   };
 
+  /** Precio de una unidad de presentación (total = piezas × precio por pieza). Sin presentación: precio del producto. */
   const getDisplayPrice = () => {
-    if (selectedPresentation) return selectedPresentation.unitPrice;
+    if (selectedPresentation) {
+      return selectedPresentation.quantity * selectedPresentation.unitPrice;
+    }
     return product?.price || 0;
   };
 
+  /** Total a pagar: (precio por unidad de presentación) × cantidad de unidades elegidas. */
   const getTotalPrice = () => getDisplayPrice() * quantity;
+
+  /** Total de una presentación: piezas × precio por pieza (para mostrar en cada opción). */
+  const getPresentationTotal = (p) => (p?.quantity ?? 0) * (p?.unitPrice ?? 0);
 
   const hasStock = product?.inventory ? product.inventory.currentStock > 0 : true;
   const hasPresentations = product?.presentations && product.presentations.length > 0;
@@ -247,35 +254,70 @@ export default function ProductDetail() {
             {hasPresentations && (
               <div className="pdp-presentations">
                 <h4>Elige una presentación</h4>
+                <p className="pdp-presentations-desc">
+                  Cada opción indica la cantidad de piezas y el total de esa presentación.
+                </p>
                 <div className="pdp-presentations-list">
-                  {product.presentations.map((presentation) => (
-                    <button
-                      key={presentation.id}
-                      type="button"
-                      className={`pdp-presentation-btn ${
-                        selectedPresentation?.id === presentation.id ? 'selected' : ''
-                      }`}
-                      onClick={() => setSelectedPresentation(presentation)}
-                    >
-                      <div className="pdp-presentation-info">
-                        <span className="pdp-presentation-name">{presentation.name}</span>
-                        <span className="pdp-presentation-qty">
-                          {presentation.quantity}{' '}
-                          {presentation.quantity === 1 ? 'pieza' : 'piezas'}
+                  {product.presentations.map((presentation) => {
+                    const totalPresentation = getPresentationTotal(presentation);
+                    const isSelected = selectedPresentation?.id === presentation.id;
+                    return (
+                      <button
+                        key={presentation.id}
+                        type="button"
+                        className={`pdp-presentation-btn ${isSelected ? 'selected' : ''}`}
+                        onClick={() => setSelectedPresentation(presentation)}
+                        aria-pressed={isSelected}
+                        aria-label={`${presentation.name}, ${presentation.quantity} piezas, total ${formatPrice(totalPresentation)}`}
+                      >
+                        <div className="pdp-presentation-info">
+                          <span className="pdp-presentation-name">{presentation.name}</span>
+                          <div className="pdp-presentation-pieces">
+                            <span className="pdp-presentation-pieces-badge">
+                              {presentation.quantity}{' '}
+                              {presentation.quantity === 1 ? 'pieza' : 'piezas'}
+                            </span>
+                          </div>
+                          <div className="pdp-presentation-formula">
+                            <span className="pdp-presentation-unit">
+                              {formatPrice(presentation.unitPrice)}/pieza
+                            </span>
+                            <span className="pdp-presentation-times"> × </span>
+                            <span className="pdp-presentation-qty-num">{presentation.quantity}</span>
+                            <span className="pdp-presentation-eq"> = </span>
+                            <span className="pdp-presentation-total">
+                              {formatPrice(totalPresentation)}
+                            </span>
+                          </div>
+                        </div>
+                        <span className="pdp-presentation-price" aria-hidden="true">
+                          {formatPrice(totalPresentation)}
                         </span>
-                      </div>
-                      <span className="pdp-presentation-price">
-                        {formatPrice(presentation.unitPrice)}
-                      </span>
-                    </button>
-                  ))}
+                      </button>
+                    );
+                  })}
                 </div>
                 {selectedPresentation && (
-                  <div className="pdp-selected-price-bar">
-                    <span>Precio seleccionado</span>
-                    <span className="value">
-                      {formatPrice(selectedPresentation.unitPrice)}
-                    </span>
+                  <div className="pdp-selected-summary">
+                    <div className="pdp-selected-summary-row">
+                      <span>Precio por pieza</span>
+                      <span className="value">{formatPrice(selectedPresentation.unitPrice)}</span>
+                    </div>
+                    <div className="pdp-selected-summary-row">
+                      <span>
+                        Total presentación ({selectedPresentation.quantity}{' '}
+                        {selectedPresentation.quantity === 1 ? 'pieza' : 'piezas'})
+                      </span>
+                      <span className="value">
+                        {formatPrice(getPresentationTotal(selectedPresentation))}
+                      </span>
+                    </div>
+                    {quantity > 1 && (
+                      <div className="pdp-selected-summary-row pdp-selected-summary-total">
+                        <span>Tu total ({quantity} {quantity === 1 ? 'unidad' : 'unidades'})</span>
+                        <span className="value">{formatPrice(getTotalPrice())}</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

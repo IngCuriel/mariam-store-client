@@ -11,15 +11,15 @@ export function getOrderAvailabilityFromNotes(notes) {
     return {
       type: 'local_delivery',
       label: 'Entrega a domicilio o en tienda',
-      subtitle: 'Disponible ahora · Recoge o recibe en casa',
+      subtitle: '',
       icon: '🚚',
     };
   }
   if (n.includes('Solo en línea') || n.includes('recoger en sucursal') || n.includes('Tienda Online')) {
     return {
       type: 'online_pickup',
-      label: 'Venta solo en tienda online',
-      subtitle: 'Compra en línea · Recoges en sucursal (6 a 12 días)',
+      label: 'Venta solo en tienda Online',
+      subtitle: 'Recoges en sucursal en 6 a 12 días',
       icon: '🛒',
     };
   }

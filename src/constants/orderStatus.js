@@ -9,6 +9,7 @@ export const ORDER_STATUS = {
   AVAILABLE: 'AVAILABLE',
   IN_PREPARATION: 'IN_PREPARATION',
   READY_FOR_PICKUP: 'READY_FOR_PICKUP',
+  IN_TRANSIT: 'IN_TRANSIT',   // En camino (envío a domicilio)
   COMPLETED: 'COMPLETED',
   CANCELLED: 'CANCELLED',
 };
@@ -20,6 +21,7 @@ export const STATUS_LABELS = {
   [ORDER_STATUS.AVAILABLE]: 'Disponible',
   [ORDER_STATUS.IN_PREPARATION]: 'En preparación',
   [ORDER_STATUS.READY_FOR_PICKUP]: 'Listo para recoger',
+  [ORDER_STATUS.IN_TRANSIT]: 'En camino',
   [ORDER_STATUS.COMPLETED]: 'Entregado',
   [ORDER_STATUS.CANCELLED]: 'Cancelado',
 };
@@ -31,6 +33,7 @@ export const STATUS_COLORS = {
   [ORDER_STATUS.AVAILABLE]: '#3498db',
   [ORDER_STATUS.IN_PREPARATION]: '#9b59b6',
   [ORDER_STATUS.READY_FOR_PICKUP]: '#2ecc71',
+  [ORDER_STATUS.IN_TRANSIT]: '#1abc9c',
   [ORDER_STATUS.COMPLETED]: '#27ae60',
   [ORDER_STATUS.CANCELLED]: '#e74c3c',
 };
@@ -41,18 +44,12 @@ export const CAN_ACCEPT_OR_CANCEL = [
   ORDER_STATUS.AVAILABLE,
 ];
 
-/** Mensaje corto para lista (ej. UNDER_REVIEW) */
-export const STATUS_LIST_MESSAGE = {
-  [ORDER_STATUS.UNDER_REVIEW]: 'Estamos revisando la disponibilidad de tus productos.',
-  [ORDER_STATUS.READY_FOR_PICKUP]: 'Tu pedido ya está listo para recoger en sucursal.',
-};
-
-/** Pasos del flujo para timeline (cliente y admin) */
+/** Pasos del flujo para timeline (cliente y admin); IN_TRANSIT y READY_FOR_PICKUP comparten paso. */
 export const ORDER_TIMELINE_STEPS = [
   { key: ORDER_STATUS.UNDER_REVIEW, label: 'En revisión' },
   { key: 'AVAILABLE_OR_PARTIAL', label: 'Disponibilidad' },
   { key: ORDER_STATUS.IN_PREPARATION, label: 'En preparación' },
-  { key: ORDER_STATUS.READY_FOR_PICKUP, label: 'Listo para recoger' },
+  { key: ORDER_STATUS.READY_FOR_PICKUP, label: 'Listo para recoger / En camino' },
   { key: ORDER_STATUS.COMPLETED, label: 'Entregado' },
 ];
 
@@ -65,6 +62,7 @@ export function getTimelineStepIndex(status) {
     [ORDER_STATUS.AVAILABLE]: 1,
     [ORDER_STATUS.IN_PREPARATION]: 2,
     [ORDER_STATUS.READY_FOR_PICKUP]: 3,
+    [ORDER_STATUS.IN_TRANSIT]: 3,
     [ORDER_STATUS.COMPLETED]: 4,
     [ORDER_STATUS.CANCELLED]: -1,
   };
@@ -76,17 +74,26 @@ export const STATUS_NEXT_STEP_MESSAGE = {
   [ORDER_STATUS.UNDER_REVIEW]: 'Estamos revisando la disponibilidad de los productos. Te notificaremos cuando esté listo.',
   [ORDER_STATUS.PARTIALLY_AVAILABLE]: 'Algunos productos no están disponibles. Revisa el total y acepta o cancela el pedido.',
   [ORDER_STATUS.AVAILABLE]: 'Todos los productos están disponibles. Acepta el pedido para que lo preparemos.',
-  [ORDER_STATUS.IN_PREPARATION]: 'Tu pedido está en preparación. Te avisaremos cuando esté listo para recoger.',
+  [ORDER_STATUS.IN_PREPARATION]: 'Tu pedido está en preparación. Te avisaremos cuando esté listo para recoger o en camino.',
   [ORDER_STATUS.READY_FOR_PICKUP]: 'Tu pedido está listo. Pásate por la sucursal a recogerlo.',
+  [ORDER_STATUS.IN_TRANSIT]: 'Tu pedido está en camino a tu domicilio.',
   [ORDER_STATUS.COMPLETED]: 'Gracias por tu compra.',
   [ORDER_STATUS.CANCELLED]: 'Este pedido fue cancelado.',
+};
+
+/** Mensaje corto para lista de pedidos */
+export const STATUS_LIST_MESSAGE = {
+  [ORDER_STATUS.UNDER_REVIEW]: 'Estamos revisando la disponibilidad de tus productos.',
+  [ORDER_STATUS.READY_FOR_PICKUP]: 'Tu pedido ya está listo para recoger en sucursal.',
+  [ORDER_STATUS.IN_TRANSIT]: 'Tu pedido está en camino.',
 };
 
 export const STATUS_OPTIONS_FILTER = [
   { value: '', label: 'Todos' },
   { value: ORDER_STATUS.UNDER_REVIEW, label: 'En revisión' },
   { value: ORDER_STATUS.PARTIALLY_AVAILABLE, label: 'Parcialmente disponible' },
-   { value: ORDER_STATUS.IN_PREPARATION, label: 'En preparación' },
-  { value: ORDER_STATUS.READY_FOR_PICKUP, label: 'Listo para recoger' } 
- ];
+  { value: ORDER_STATUS.IN_PREPARATION, label: 'En preparación' },
+  { value: ORDER_STATUS.READY_FOR_PICKUP, label: 'Listo para recoger' },
+  { value: ORDER_STATUS.IN_TRANSIT, label: 'En camino' },
+];
  

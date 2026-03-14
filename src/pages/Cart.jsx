@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { getProductEmoji } from '../services/imageService';
-import { createOrder } from '../services/ordersService';
+import { createOrder, getDeliveryTypes } from '../services/ordersService';
 import { Toast } from '../components/Toast';
 import './Cart.css';
 
@@ -58,8 +58,13 @@ export default function Cart() {
     message: '',
     confirmLabel: 'Aceptar',
   });
+  const [deliveryTypes, setDeliveryTypes] = useState([]);
+  const [selectedDeliveryType, setSelectedDeliveryType] = useState(null);
+  const [showDeliveryDialog, setShowDeliveryDialog] = useState(false);
+  const [loadingDeliveryTypes, setLoadingDeliveryTypes] = useState(false);
   const pendingConfirmRef = useRef(null);
   const confirmDialogRef = useRef(null);
+  const deliveryDialogRef = useRef(null);
 
   useEffect(() => {
     const dialog = confirmDialogRef.current;
@@ -70,6 +75,13 @@ export default function Cart() {
       dialog.close();
     }
   }, [confirmDialog.open]);
+
+  useEffect(() => {
+    const dialog = deliveryDialogRef.current;
+    if (!dialog) return;
+    if (showDeliveryDialog) dialog.showModal();
+    else dialog.close();
+  }, [showDeliveryDialog]);
 
   const showToast = useCallback((message, type = 'info') => {
     setToast({ open: true, message, type });
@@ -111,6 +123,31 @@ export default function Cart() {
   );
   const totalOrderable = orderableItems.reduce((sum, item) => sum + item.subtotal, 0);
 
+  const orderableGroups = useMemo(
+    () => ['local_delivery', 'online_pickup'].filter((key) => (itemsByAvailability[key] || []).length > 0),
+    [itemsByAvailability]
+  );
+  const numOrders = orderableGroups.length;
+  const deliveryCostPerOrder = selectedDeliveryType?.cost ?? 0;
+  const totalWithDelivery = totalOrderable + deliveryCostPerOrder * numOrders;
+
+  const openDeliveryDialog = useCallback(async () => {
+    setShowDeliveryDialog(true);
+    if (deliveryTypes.length === 0) {
+      setLoadingDeliveryTypes(true);
+      try {
+        const types = await getDeliveryTypes();
+        setDeliveryTypes(types);
+        if (types.length > 0) setSelectedDeliveryType(types[0]);
+      } catch (e) {
+        showToast('No se pudieron cargar las opciones de entrega. Intenta de nuevo.', 'error');
+        setShowDeliveryDialog(false);
+      } finally {
+        setLoadingDeliveryTypes(false);
+      }
+    }
+  }, [deliveryTypes.length, showToast]);
+
   const handleCheckout = () => {
     if (!isAuthenticated) {
       openConfirm(
@@ -127,52 +164,61 @@ export default function Cart() {
       return;
     }
 
-    const orderableGroups = ['local_delivery', 'online_pickup'].filter(
-      (key) => (itemsByAvailability[key] || []).length > 0
-    );
-    const numOrders = orderableGroups.length;
-    const message =
-      numOrders > 1
-        ? `Se generarán ${numOrders} pedidos (uno por tipo de entrega). Total: ${formatPrice(totalOrderable)}. ¿Deseas continuar?`
-        : `Total a pagar: ${formatPrice(totalOrderable)}. La tienda revisará la disponibilidad y te notificará en el módulo de pedidos. ¿Deseas generar el pedido?`;
-
-    openConfirm(
-      'Confirmar pedido',
-      message,
-      'Generar pedido',
-      () => submitOrder()
-    );
+    openDeliveryDialog();
   };
 
-  const submitOrder = async () => {
+  const handleDeliveryContinue = () => {
+    if (deliveryTypes.length > 0 && !selectedDeliveryType) {
+      showToast('Elige una forma de entrega.', 'info');
+      return;
+    }
+    setShowDeliveryDialog(false);
+    const delivery = selectedDeliveryType ?? null;
+    const message =
+      numOrders > 1
+        ? `Se generarán ${numOrders} pedidos. Total: ${formatPrice(totalWithDelivery)}${deliveryCostPerOrder > 0 ? ` (incl. envío)` : ''}. ¿Deseas continuar?`
+        : `Total a pagar: ${formatPrice(totalWithDelivery)}. La tienda revisará la disponibilidad y te notificará. ¿Deseas generar el pedido?`;
+    openConfirm('Confirmar pedido', message, 'Generar pedido', () => submitOrder(delivery));
+  };
+
+  const submitOrder = async (deliveryType) => {
     try {
       setCreatingOrder(true);
-
-      const orderableGroups = ['local_delivery', 'online_pickup'].filter(
-        (key) => (itemsByAvailability[key] || []).length > 0
-      );
 
       for (const groupKey of orderableGroups) {
         const groupItems = itemsByAvailability[groupKey] || [];
         if (groupItems.length === 0) continue;
 
         const config = CART_AVAILABILITY_SECTIONS[groupKey];
-        const orderItems = groupItems.map((item) => ({
-          productId: item.product.id,
-          productName: item.product.name,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          subtotal: item.subtotal,
-        }));
+        const orderItems = groupItems.map((item) => {
+          const payload = {
+            productId: item.product.id,
+            productName: item.product.name,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            subtotal: item.subtotal,
+          };
+          if (item.presentation) {
+            payload.presentationName = item.presentation.name;
+            payload.presentationQuantity = item.presentation.quantity;
+          }
+          return payload;
+        });
 
-        await createOrder({
+        const payload = {
           items: orderItems,
           notes: `Pedido web - ${config.title} (${groupItems.length} ${groupItems.length === 1 ? 'producto' : 'productos'})`,
-        });
+          orderAvailability: groupKey,
+        };
+        if (deliveryType?.id) {
+          payload.deliveryTypeId = deliveryType.id;
+          payload.deliveryCost = deliveryType.cost ?? 0;
+        }
+
+        await createOrder(payload);
       }
 
       removeItemsFromCart(orderableItems.map((item) => item.id));
-      const numOrders = orderableGroups.length;
       showToast(
         numOrders > 1
           ? `Se generaron ${numOrders} pedidos correctamente. La tienda te contactará pronto.`
@@ -223,6 +269,54 @@ export default function Cart() {
 
   return (
     <div className="cart-page">
+      <dialog
+        ref={deliveryDialogRef}
+        className="cart-delivery-dialog"
+        aria-labelledby="cart-delivery-title"
+        onClose={() => setShowDeliveryDialog(false)}
+        onCancel={() => setShowDeliveryDialog(false)}
+      >
+        <div className="cart-delivery-content">
+          <h2 id="cart-delivery-title" className="cart-delivery-title">Elige la forma de entrega</h2>
+          {loadingDeliveryTypes ? (
+            <p className="cart-delivery-loading">Cargando opciones...</p>
+          ) : deliveryTypes.length === 0 ? (
+            <p className="cart-delivery-empty">No hay opciones de entrega configuradas. Puedes continuar sin seleccionar.</p>
+          ) : (
+            <div className="cart-delivery-options" role="group" aria-label="Forma de entrega">
+              {deliveryTypes.map((type) => (
+                <button
+                  key={type.id}
+                  type="button"
+                  className={`cart-delivery-option ${selectedDeliveryType?.id === type.id ? 'selected' : ''}`}
+                  onClick={() => setSelectedDeliveryType(type)}
+                >
+                  <span className="cart-delivery-option-name">{type.name}</span>
+                  <span className="cart-delivery-option-cost">
+                    {type.cost > 0 ? formatPrice(type.cost) : 'Sin costo'}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+          {deliveryTypes.length > 0 && selectedDeliveryType && (
+            <p className="cart-delivery-total">
+              Total con envío: <strong>{formatPrice(totalWithDelivery)}</strong>
+              {deliveryCostPerOrder > 0 && numOrders > 0 && (
+                <span className="cart-delivery-note"> (incl. {formatPrice(deliveryCostPerOrder)} por pedido)</span>
+              )}
+            </p>
+          )}
+          <div className="cart-delivery-actions">
+            <button type="button" className="cart-confirm-btn cart-confirm-btn--cancel" onClick={() => setShowDeliveryDialog(false)}>
+              Cancelar
+            </button>
+            <button type="button" className="cart-confirm-btn cart-confirm-btn--confirm" onClick={handleDeliveryContinue}>
+              Continuar
+            </button>
+          </div>
+        </div>
+      </dialog>
       <dialog
         ref={confirmDialogRef}
         className="cart-confirm-dialog"

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   getOrderById,
   confirmOrderByCustomer,
@@ -259,6 +259,38 @@ export default function OrderDetail() {
             )}
           </section>
 
+          {/* Tipo de entrega (si aplica) */}
+          {order.deliveryType && (
+            <p className="order-detail-delivery-type">
+              Forma de entrega: <strong>{order.deliveryType.name}</strong>
+              {order.deliveryCost != null && order.deliveryCost > 0 && (
+                <span> · {formatPrice(order.deliveryCost)}</span>
+              )}
+            </p>
+          )}
+
+          {/* Historial de estados (timeline con fechas, tipo Mercado Libre) */}
+          {order.statusHistory && order.statusHistory.length > 0 && (
+            <section className="order-detail-history" aria-label="Historial del pedido">
+              <h3 className="order-detail-history-title">Seguimiento</h3>
+              <ul className="order-detail-history-list">
+                {order.statusHistory.map((entry, index) => (
+                  <li key={`${entry.status}-${entry.createdAt}`} className="order-detail-history-item">
+                    <span className="order-detail-history-dot" aria-hidden="true" />
+                    <div className="order-detail-history-content">
+                      <span className="order-detail-history-label">
+                        {STATUS_LABELS[entry.status] ?? entry.status}
+                      </span>
+                      <time className="order-detail-history-date" dateTime={entry.createdAt}>
+                        {formatDate(entry.createdAt)}
+                      </time>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           {/* Banner: Listo para recoger */}
           {order.status === ORDER_STATUS.READY_FOR_PICKUP && (
             <div className="order-detail-ready-banner">
@@ -269,6 +301,21 @@ export default function OrderDetail() {
                   {order.readyAt
                     ? `Listo para recoger desde el ${formatDate(order.readyAt)}. Pásate por la sucursal.`
                     : 'Pásate por la sucursal a recoger tu pedido.'}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Banner: En camino */}
+          {order.status === ORDER_STATUS.IN_TRANSIT && (
+            <div className="order-detail-ready-banner order-detail-transit-banner">
+              <span className="order-detail-ready-icon">🚚</span>
+              <div>
+                <strong>Tu pedido está en camino</strong>
+                <p>
+                  {order.readyAt
+                    ? `Enviado el ${formatDate(order.readyAt)}. Llegará pronto a tu domicilio.`
+                    : 'Te avisaremos cuando esté cerca.'}
                 </p>
               </div>
             </div>
@@ -320,7 +367,27 @@ export default function OrderDetail() {
                     <div className="order-detail-product-header">
                       <div className="order-detail-product-num">{index + 1}</div>
                       <div className="order-detail-product-info">
-                        <span className="order-detail-product-name">{item.productName}</span>
+                        {item.productId ? (
+                          <Link
+                            to={`/products/${item.productId}`}
+                            className="order-detail-product-name order-detail-product-name-link"
+                          >
+                            {item.productName}
+                          </Link>
+                        ) : (
+                          <span className="order-detail-product-name">{item.productName}</span>
+                        )}
+                        {item.presentationName && (
+                          <span className="order-detail-product-presentation">
+                            Presentación: {item.presentationName}
+                            {item.presentationQuantity != null && (
+                              <span className="order-detail-product-presentation-pieces">
+                                {' '}({item.presentationQuantity}{' '}
+                                {item.presentationQuantity === 1 ? 'pieza' : 'piezas'})
+                              </span>
+                            )}
+                          </span>
+                        )}
                         <span className="order-detail-product-details">
                           {item.quantity} × {formatPrice(item.unitPrice)}
                         </span>

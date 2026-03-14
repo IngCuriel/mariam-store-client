@@ -317,6 +317,90 @@
   color: #065f46;
 }
 
+.order-detail-transit-banner {
+  background: linear-gradient(135deg, #cffafe 0%, #a5f3fc 100%);
+  border-color: #22d3ee;
+}
+
+.order-detail-transit-banner .order-detail-ready-icon {
+  color: #0891b2;
+}
+
+.order-detail-transit-banner strong,
+.order-detail-transit-banner p {
+  color: #0e7490;
+}
+
+.order-detail-delivery-type {
+  margin: 0 0 12px 0;
+  font-size: 0.9375rem;
+  color: #475569;
+}
+
+.order-detail-delivery-type strong {
+  color: #1e293b;
+}
+
+/* Historial del pedido (timeline con fechas) */
+.order-detail-history {
+  margin-bottom: 24px;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.order-detail-history-title {
+  margin: 0 0 16px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.order-detail-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.order-detail-history-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.order-detail-history-item:last-child {
+  border-bottom: none;
+}
+
+.order-detail-history-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #3483fa;
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
+.order-detail-history-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.order-detail-history-label {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: #1e293b;
+}
+
+.order-detail-history-date {
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
 .order-detail-products-card .order-detail-section-title {
   margin-bottom: 12px;
 }
@@ -546,9 +630,31 @@
   color: #333;
 }
 
+.order-detail-product-name-link {
+  color: #1a1a1a;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.order-detail-product-name-link:hover {
+  color: #DC143C;
+  text-decoration: underline;
+}
+
 .order-detail-product-details {
   font-size: 0.9rem;
   color: #666;
+}
+
+.order-detail-product-presentation {
+  font-size: 0.875rem;
+  color: #555;
+  display: block;
+}
+
+.order-detail-product-presentation-pieces {
+  color: #777;
+  font-weight: 500;
 }
 
 .order-detail-availability-display {

@@ -236,6 +236,13 @@ export default function Orders() {
                     </p>
                   )}
 
+                  {/* Fecha en camino (solo si aplica) */}
+                  {item.status === ORDER_STATUS.IN_TRANSIT && item.readyAt && (
+                    <p className="orders-order-ready-at" role="status">
+                      En camino desde {formatShortDateTime(item.readyAt)}
+                    </p>
+                  )}
+
                   {/* Fecha entregado (solo si aplica) */}
                   {item.status === ORDER_STATUS.COMPLETED && item.deliveredAt && (
                     <p className="orders-order-delivered-at" role="status">

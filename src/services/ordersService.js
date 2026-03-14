@@ -1,5 +1,11 @@
 import api from '../config/api';
 
+/** Tipos de entrega activos (recoger en sucursal, envío a domicilio, etc.) */
+export const getDeliveryTypes = async () => {
+  const response = await api.get('/orders/delivery-types');
+  return response.data;
+};
+
 export const createOrder = async (data) => {
   const response = await api.post('/orders', data);
   return response.data;

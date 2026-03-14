@@ -318,84 +318,162 @@
 /* Presentaciones */
 .pdp-presentations {
   padding: 20px;
-  background: #f9f9f9;
+  background: #f8f9fa;
   border-radius: 12px;
-  border: 1px solid #eee;
+  border: 1px solid #e9ecef;
 }
 
 .pdp-presentations h4 {
-  margin: 0 0 14px 0;
-  font-size: 1rem;
+  margin: 0 0 6px 0;
+  font-size: 1.05rem;
   font-weight: 600;
-  color: #333;
+  color: #1a1a1a;
+}
+
+.pdp-presentations-desc {
+  margin: 0 0 16px 0;
+  font-size: 0.875rem;
+  color: #5c5c5c;
+  line-height: 1.4;
 }
 
 .pdp-presentations-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .pdp-presentation-btn {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 18px;
+  gap: 16px;
+  padding: 16px 18px;
   background: #fff;
   border: 2px solid #e0e0e0;
   border-radius: 10px;
   cursor: pointer;
   text-align: left;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
 .pdp-presentation-btn:hover {
-  border-color: #DC143C;
-  background: #fff9f9;
+  border-color: #c41e3a;
+  background: #fffbfb;
 }
 
 .pdp-presentation-btn.selected {
   border-color: #DC143C;
   background: #fff5f5;
-  box-shadow: 0 0 0 2px rgba(220, 20, 60, 0.15);
+  box-shadow: 0 0 0 2px rgba(220, 20, 60, 0.12);
 }
 
 .pdp-presentation-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
+  min-width: 0;
 }
 
 .pdp-presentation-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.pdp-presentation-pieces {
+  display: flex;
+  align-items: center;
+}
+
+.pdp-presentation-pieces-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: #e8f4fd;
+  color: #0d6efd;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 6px;
+}
+
+.pdp-presentation-btn.selected .pdp-presentation-pieces-badge {
+  background: #dc143c;
+  color: #fff;
+}
+
+.pdp-presentation-formula {
+  font-size: 0.8125rem;
+  color: #555;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.pdp-presentation-unit {
+  color: #444;
+}
+
+.pdp-presentation-times,
+.pdp-presentation-eq {
+  color: #888;
+  font-weight: 500;
+}
+
+.pdp-presentation-qty-num {
   font-weight: 600;
   color: #333;
 }
 
-.pdp-presentation-qty {
-  font-size: 0.85rem;
-  color: #666;
-}
-
-.pdp-presentation-price {
-  font-size: 1.15rem;
+.pdp-presentation-total {
   font-weight: 700;
   color: #DC143C;
 }
 
-.pdp-selected-price-bar {
+.pdp-presentation-price {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #DC143C;
+  flex-shrink: 0;
+}
+
+/* Resumen de presentación seleccionada */
+.pdp-selected-summary {
+  margin-top: 16px;
+  padding: 16px 18px;
+  background: linear-gradient(135deg, #DC143C 0%, #b01030 100%);
+  color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(220, 20, 60, 0.25);
+}
+
+.pdp-selected-summary-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 14px;
-  padding: 14px 18px;
-  background: #DC143C;
-  color: #fff;
-  border-radius: 10px;
+  font-size: 0.9375rem;
+  padding: 4px 0;
+}
+
+.pdp-selected-summary-row:not(:last-child) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.pdp-selected-summary-row .value {
   font-weight: 600;
 }
 
-.pdp-selected-price-bar .value {
-  font-size: 1.35rem;
+.pdp-selected-summary-total {
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 2px solid rgba(255, 255, 255, 0.35);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.pdp-selected-summary-total .value {
+  font-size: 1.25rem;
+  font-weight: 700;
 }
 
 /* Cantidad + Total + CTA */
