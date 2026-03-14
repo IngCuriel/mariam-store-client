@@ -1,0 +1,257 @@
+.addresses-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+}
+
+.addresses-header {
+  margin-bottom: 28px;
+}
+
+.addresses-back {
+  display: inline-block;
+  margin-bottom: 12px;
+  font-size: 0.9375rem;
+  color: #475569;
+  text-decoration: none;
+}
+
+.addresses-back:hover {
+  color: #1d4ed8;
+}
+
+.addresses-title {
+  margin: 0 0 8px 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.addresses-subtitle {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.addresses-loading {
+  margin: 0;
+  padding: 32px 0;
+  text-align: center;
+  color: #64748b;
+}
+
+.addresses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.addresses-card {
+  padding: 18px 20px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.addresses-card-body {
+  margin-bottom: 14px;
+}
+
+.addresses-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.addresses-card-label {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.addresses-card-default {
+  padding: 2px 8px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #0d9488;
+  background: #ccfbf1;
+  border-radius: 4px;
+}
+
+.addresses-card-line {
+  margin: 0 0 4px 0;
+  font-size: 0.9375rem;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.addresses-card-ref {
+  margin: 4px 0 0 0;
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+.addresses-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.addresses-card-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #f1f5f9;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.addresses-card-btn:hover {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.addresses-card-btn--danger:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.addresses-add-btn {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #f8fafc;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.addresses-add-btn:hover {
+  border-color: #3483fa;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.addresses-form-section {
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.addresses-form-title {
+  margin: 0 0 20px 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.addresses-form-zone-note {
+  margin: 0 0 16px 0;
+  padding: 10px 14px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #166534;
+  line-height: 1.4;
+}
+
+.addresses-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.addresses-form-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 4px;
+}
+
+.addresses-form-input {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.addresses-form-input:focus {
+  outline: none;
+  border-color: #3483fa;
+  box-shadow: 0 0 0 2px rgba(52, 131, 250, 0.2);
+}
+
+.addresses-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.addresses-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 20px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.addresses-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.addresses-btn--secondary {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+}
+
+.addresses-btn--secondary:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.addresses-btn--primary {
+  border: none;
+  background: #3483fa;
+  color: #fff;
+}
+
+.addresses-btn--primary:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.addresses-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .addresses-form-row {
+    grid-template-columns: 1fr;
+  }
+}

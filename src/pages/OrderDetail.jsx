@@ -5,6 +5,8 @@ import {
   confirmOrderByCustomer,
   cancelOrder,
 } from '../services/ordersService';
+import { getMyAddresses, createAddress } from '../services/addressesService';
+import { DELIVERY_POSTAL_CODE, DELIVERY_CITY, DELIVERY_STATE } from '../constants/deliveryZone';
 import {
   STATUS_LABELS,
   STATUS_COLORS,
@@ -66,10 +68,9 @@ function effectiveQuantity(item) {
 }
 
 const INITIAL_ADDRESS_FORM = {
+  label: 'Casa',
   street: '',
   colony: '',
-  postalCode: '',
-  city: '',
   references: '',
 };
 
@@ -83,6 +84,10 @@ export default function OrderDetail() {
   const [toast, setToast] = useState({ open: false, message: '', type: 'info' });
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [addressForm, setAddressForm] = useState(INITIAL_ADDRESS_FORM);
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [showNewAddressForm, setShowNewAddressForm] = useState(false);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
   const addressDialogRef = useRef(null);
 
   const showToast = useCallback((message, type = 'info') => {
@@ -120,14 +125,40 @@ export default function OrderDetail() {
     else dialog.close();
   }, [showAddressModal]);
 
-  const handleAcceptOrder = async (deliveryAddress) => {
+  useEffect(() => {
+    if (!showAddressModal) return;
+    let cancelled = false;
+    setLoadingAddresses(true);
+    getMyAddresses()
+      .then((list) => {
+        if (!cancelled) {
+          setSavedAddresses(Array.isArray(list) ? list : []);
+          const defaultAddr = list?.find((a) => a.isDefault) || list?.[0];
+          setSelectedAddressId(defaultAddr?.id ?? null);
+          setShowNewAddressForm(list?.length === 0);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSavedAddresses([]);
+          setShowNewAddressForm(true);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingAddresses(false);
+      });
+    return () => { cancelled = true; };
+  }, [showAddressModal]);
+
+  const handleAcceptOrder = async (payload = {}) => {
     if (!id || !order) return;
     try {
       setActionLoading(true);
-      await confirmOrderByCustomer(id, deliveryAddress ? { deliveryAddress } : {});
+      await confirmOrderByCustomer(id, payload);
       showToast('Pedido aceptado. Estamos preparando tu pedido.', 'success');
       setShowAddressModal(false);
       setAddressForm(INITIAL_ADDRESS_FORM);
+      setShowNewAddressForm(false);
       await loadOrder();
     } catch (err) {
       showToast(
@@ -150,30 +181,40 @@ export default function OrderDetail() {
     }
   };
 
-  const buildDeliveryAddressString = () => {
-    const parts = [
-      addressForm.street?.trim(),
-      addressForm.colony?.trim(),
-      [addressForm.postalCode?.trim(), addressForm.city?.trim()].filter(Boolean).join(' '),
-    ].filter(Boolean);
-    if (addressForm.references?.trim()) {
-      parts.push(`Ref: ${addressForm.references.trim()}`);
+  const handleUseSavedAddress = () => {
+    if (selectedAddressId != null) {
+      handleAcceptOrder({ addressId: selectedAddressId });
+    } else {
+      showToast('Elige una dirección o agrega una nueva.', 'info');
     }
-    return parts.join(', ');
   };
 
-  const handleSubmitAddress = (e) => {
+  const handleSubmitNewAddress = async (e) => {
     e.preventDefault();
     const street = addressForm.street?.trim();
     const colony = addressForm.colony?.trim();
-    const postalCode = addressForm.postalCode?.trim();
-    const city = addressForm.city?.trim();
-    if (!street || !colony || !postalCode || !city) {
-      showToast('Completa calle, colonia, código postal y ciudad.', 'info');
+    if (!street || !colony) {
+      showToast('Completa calle y colonia.', 'info');
       return;
     }
-    const deliveryAddress = buildDeliveryAddressString();
-    handleAcceptOrder(deliveryAddress);
+    try {
+      setActionLoading(true);
+      const newAddr = await createAddress({
+        label: addressForm.label?.trim() || 'Casa',
+        street,
+        colony,
+        postalCode: DELIVERY_POSTAL_CODE,
+        city: DELIVERY_CITY,
+        state: DELIVERY_STATE,
+        references: addressForm.references?.trim() || undefined,
+        isDefault: savedAddresses.length === 0,
+      });
+      await handleAcceptOrder({ addressId: newAddr.id });
+    } catch (err) {
+      showToast(err.response?.data?.error || 'No se pudo guardar la dirección.', 'error');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handleCancelOrder = async () => {
@@ -565,93 +606,143 @@ export default function OrderDetail() {
             Dirección de envío
           </h2>
           <p id="order-detail-address-desc" className="order-detail-address-dialog-desc">
-            Indica dónde quieres recibir tu pedido. La usaremos solo para la entrega.
+            Elige una dirección guardada o agrega una nueva. La usaremos solo para esta entrega.
           </p>
-            <form onSubmit={handleSubmitAddress} className="order-detail-address-form">
-              <label htmlFor="order-address-street" className="order-detail-address-label">
-                Calle y número <span className="order-detail-address-required">*</span>
-              </label>
-              <input
-                id="order-address-street"
-                type="text"
-                className="order-detail-address-input"
-                value={addressForm.street}
-                onChange={(e) => setAddressForm((p) => ({ ...p, street: e.target.value }))}
-                placeholder="Ej. Av. Principal 123"
-                required
-                autoComplete="street-address"
-              />
-              <label htmlFor="order-address-colony" className="order-detail-address-label">
-                Colonia <span className="order-detail-address-required">*</span>
-              </label>
-              <input
-                id="order-address-colony"
-                type="text"
-                className="order-detail-address-input"
-                value={addressForm.colony}
-                onChange={(e) => setAddressForm((p) => ({ ...p, colony: e.target.value }))}
-                placeholder="Ej. Centro"
-                required
-              />
-              <div className="order-detail-address-row">
-                <div className="order-detail-address-field">
-                  <label htmlFor="order-address-postalCode" className="order-detail-address-label">
-                    Código postal <span className="order-detail-address-required">*</span>
-                  </label>
+
+          {loadingAddresses ? (
+            <p className="order-detail-address-loading">Cargando direcciones...</p>
+          ) : (
+            <>
+              {savedAddresses.length === 0 && !showNewAddressForm && (
+                <p className="order-detail-address-empty-hint">
+                  No tienes direcciones guardadas. Registra una para enviar tu pedido.
+                </p>
+              )}
+              {savedAddresses.length > 0 && !showNewAddressForm && (
+                <div className="order-detail-address-catalog" role="listbox" aria-label="Direcciones guardadas">
+                  {savedAddresses.map((addr) => (
+                    <button
+                      key={addr.id}
+                      type="button"
+                      role="option"
+                      aria-selected={selectedAddressId === addr.id}
+                      className={`order-detail-address-card ${selectedAddressId === addr.id ? 'selected' : ''}`}
+                      onClick={() => setSelectedAddressId(addr.id)}
+                    >
+                      <span className="order-detail-address-card-label">
+                        {addr.label}
+                        {addr.isDefault && <span className="order-detail-address-card-default">Predeterminada</span>}
+                      </span>
+                      <span className="order-detail-address-card-line">{addr.street}</span>
+                      <span className="order-detail-address-card-line">
+                        {addr.colony}, {addr.postalCode} {addr.city}
+                        {addr.state ? `, ${addr.state}` : ''}
+                      </span>
+                      {addr.references?.trim() && (
+                        <span className="order-detail-address-card-ref">Ref: {addr.references}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {!showNewAddressForm ? (
+                <div className="order-detail-address-actions-wrap">
+                  <button
+                    type="button"
+                    className="order-detail-address-add-new"
+                    onClick={() => setShowNewAddressForm(true)}
+                  >
+                    + {savedAddresses.length > 0 ? 'Agregar nueva dirección' : 'Registrar mi dirección'}
+                  </button>
+                  <div className="order-detail-address-actions">
+                    <button
+                      type="button"
+                      className="order-detail-btn order-detail-btn-cancel"
+                      onClick={() => setShowAddressModal(false)}
+                      disabled={actionLoading}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      className="order-detail-btn order-detail-btn-accept"
+                      disabled={actionLoading || (savedAddresses.length > 0 && selectedAddressId == null)}
+                      onClick={handleUseSavedAddress}
+                    >
+                      {actionLoading ? 'Procesando...' : 'Enviar a esta dirección y aceptar pedido'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmitNewAddress} className="order-detail-address-form">
+                  <p className="order-detail-address-zone-note">
+                    Envío solo a C.P. {DELIVERY_POSTAL_CODE}. Completa los datos faltantes.
+                  </p>
+                  <label htmlFor="order-address-label" className="order-detail-address-label">Nombre (ej. Casa, Oficina)</label>
                   <input
-                    id="order-address-postalCode"
+                    id="order-address-label"
                     type="text"
                     className="order-detail-address-input"
-                    value={addressForm.postalCode}
-                    onChange={(e) => setAddressForm((p) => ({ ...p, postalCode: e.target.value }))}
-                    placeholder="00000"
-                    required
-                    autoComplete="postal-code"
+                    value={addressForm.label}
+                    onChange={(e) => setAddressForm((p) => ({ ...p, label: e.target.value }))}
+                    placeholder="Casa"
                   />
-                </div>
-                <div className="order-detail-address-field">
-                  <label htmlFor="order-address-city" className="order-detail-address-label">
-                    Ciudad <span className="order-detail-address-required">*</span>
+                  <label htmlFor="order-address-street" className="order-detail-address-label">
+                    Calle y número <span className="order-detail-address-required">*</span>
                   </label>
                   <input
-                    id="order-address-city"
+                    id="order-address-street"
                     type="text"
                     className="order-detail-address-input"
-                    value={addressForm.city}
-                    onChange={(e) => setAddressForm((p) => ({ ...p, city: e.target.value }))}
-                    placeholder="Tu ciudad"
+                    value={addressForm.street}
+                    onChange={(e) => setAddressForm((p) => ({ ...p, street: e.target.value }))}
+                    placeholder="Ej. Av. Principal 123"
                     required
-                    autoComplete="address-level2"
+                    autoComplete="street-address"
                   />
-                </div>
-              </div>
-              <label htmlFor="order-address-references" className="order-detail-address-label">Referencias (opcional)</label>
-              <input
-                id="order-address-references"
-                type="text"
-                className="order-detail-address-input"
-                value={addressForm.references}
-                onChange={(e) => setAddressForm((p) => ({ ...p, references: e.target.value }))}
-                placeholder="Ej. Entre X y Y, casa de color..."
-              />
-              <div className="order-detail-address-actions">
-                <button
-                  type="button"
-                  className="order-detail-btn order-detail-btn-cancel"
-                  onClick={() => setShowAddressModal(false)}
-                  disabled={actionLoading}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="order-detail-btn order-detail-btn-accept"
-                  disabled={actionLoading}
-                >
-                  {actionLoading ? 'Procesando...' : 'Aceptar pedido y enviar dirección'}
-                </button>
-              </div>
-            </form>
+                  <label htmlFor="order-address-colony" className="order-detail-address-label">
+                    Colonia <span className="order-detail-address-required">*</span>
+                  </label>
+                  <input
+                    id="order-address-colony"
+                    type="text"
+                    className="order-detail-address-input"
+                    value={addressForm.colony}
+                    onChange={(e) => setAddressForm((p) => ({ ...p, colony: e.target.value }))}
+                    placeholder="Ej. Centro"
+                    required
+                  />
+                  <label htmlFor="order-address-references" className="order-detail-address-label">Referencias (opcional)</label>
+                  <input
+                    id="order-address-references"
+                    type="text"
+                    className="order-detail-address-input"
+                    value={addressForm.references}
+                    onChange={(e) => setAddressForm((p) => ({ ...p, references: e.target.value }))}
+                    placeholder="Ej. Entre X y Y, casa de color..."
+                  />
+                  <div className="order-detail-address-actions">
+                    <button
+                      type="button"
+                      className="order-detail-btn order-detail-btn-cancel"
+                      onClick={() => setShowNewAddressForm(false)}
+                      disabled={actionLoading}
+                    >
+                      Volver
+                    </button>
+                    <button
+                      type="submit"
+                      className="order-detail-btn order-detail-btn-accept"
+                      disabled={actionLoading}
+                    >
+                      {actionLoading ? 'Procesando...' : 'Guardar dirección y aceptar pedido'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </>
+          )}
           </div>
         </dialog>
     </div>

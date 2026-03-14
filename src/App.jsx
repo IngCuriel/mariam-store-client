@@ -19,6 +19,7 @@ import CashExpressRequestDetail from './pages/CashExpressRequestDetail';
 import TermsAndConditions from './pages/TermsAndConditions';
 import Orders from './pages/Orders';
 import OrderDetail from './pages/OrderDetail';
+import Addresses from './pages/Addresses';
 import './App.css';
 
 function ScrollToTop() {
@@ -68,6 +69,7 @@ function AppRoutes() {
           <Route path="/cash-express/terms" element={<TermsAndConditions />} />
           <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
           <Route path="/orders/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
+          <Route path="/addresses" element={<ProtectedRoute><Addresses /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

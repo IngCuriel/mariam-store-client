@@ -123,6 +123,13 @@ export default function Header() {
                     >
                       📦 Mis Pedidos
                     </Link>
+                    <Link
+                      to="/addresses"
+                      className="menu-item"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      📍 Mis direcciones
+                    </Link>
                     <button
                       type="button"
                       className="menu-item menu-item-logout"
@@ -209,6 +216,14 @@ export default function Header() {
               >
                 <span className="sidebar-icon">📦</span>
                 <span>Mis Pedidos</span>
+              </Link>
+              <Link
+                to="/addresses"
+                className="sidebar-link"
+                onClick={() => setShowMobileMenu(false)}
+              >
+                <span className="sidebar-icon">📍</span>
+                <span>Mis direcciones</span>
               </Link>
             </>
           )}

@@ -821,8 +821,13 @@
   box-shadow: 0 4px 12px rgba(21, 101, 192, 0.35);
 }
 
-/* ----- Modal dirección de envío ----- */
+/* ----- Modal dirección de envío (centrado) ----- */
 .order-detail-address-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
   max-width: 96vw;
   width: 480px;
   max-height: 90vh;
@@ -895,6 +900,127 @@
   font-size: 0.9375rem;
   color: #64748b;
   line-height: 1.5;
+}
+
+.order-detail-address-loading {
+  margin: 0;
+  padding: 24px 0;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.9375rem;
+}
+
+.order-detail-address-empty-hint {
+  margin: 0 0 16px 0;
+  padding: 12px 16px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  color: #0369a1;
+  line-height: 1.45;
+}
+
+.order-detail-address-zone-note {
+  margin: 0 0 16px 0;
+  padding: 10px 14px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #166534;
+  line-height: 1.4;
+}
+
+/* Catálogo de direcciones (estilo ML) */
+.order-detail-address-catalog {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.order-detail-address-card {
+  display: block;
+  width: 100%;
+  padding: 14px 16px;
+  text-align: left;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.order-detail-address-card:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.order-detail-address-card.selected {
+  border-color: #3483fa;
+  background: #eff6ff;
+  box-shadow: 0 0 0 1px #3483fa;
+}
+
+.order-detail-address-card-label {
+  display: block;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.order-detail-address-card-default {
+  margin-left: 8px;
+  padding: 2px 8px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #0d9488;
+  background: #ccfbf1;
+  border-radius: 4px;
+}
+
+.order-detail-address-card-line {
+  display: block;
+  font-size: 0.875rem;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.order-detail-address-card-ref {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+.order-detail-address-actions-wrap {
+  margin-top: 8px;
+}
+
+.order-detail-address-add-new {
+  display: block;
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.order-detail-address-add-new:hover {
+  border-color: #3483fa;
+  background: #eff6ff;
+  color: #1d4ed8;
 }
 
 .order-detail-address-form {
