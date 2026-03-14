@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   getOrderById,
@@ -65,6 +65,14 @@ function effectiveQuantity(item) {
   return item.quantity; // pendiente de revisión: mostramos solicitada
 }
 
+const INITIAL_ADDRESS_FORM = {
+  street: '',
+  colony: '',
+  postalCode: '',
+  city: '',
+  references: '',
+};
+
 export default function OrderDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -73,6 +81,9 @@ export default function OrderDetail() {
   const [loadError, setLoadError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [toast, setToast] = useState({ open: false, message: '', type: 'info' });
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [addressForm, setAddressForm] = useState(INITIAL_ADDRESS_FORM);
+  const addressDialogRef = useRef(null);
 
   const showToast = useCallback((message, type = 'info') => {
     setToast({ open: true, message, type });
@@ -102,12 +113,21 @@ export default function OrderDetail() {
     loadOrder();
   }, [loadOrder]);
 
-  const handleAcceptOrder = async () => {
+  useEffect(() => {
+    const dialog = addressDialogRef.current;
+    if (!dialog) return;
+    if (showAddressModal) dialog.showModal();
+    else dialog.close();
+  }, [showAddressModal]);
+
+  const handleAcceptOrder = async (deliveryAddress) => {
     if (!id || !order) return;
     try {
       setActionLoading(true);
-      await confirmOrderByCustomer(id);
+      await confirmOrderByCustomer(id, deliveryAddress ? { deliveryAddress } : {});
       showToast('Pedido aceptado. Estamos preparando tu pedido.', 'success');
+      setShowAddressModal(false);
+      setAddressForm(INITIAL_ADDRESS_FORM);
       await loadOrder();
     } catch (err) {
       showToast(
@@ -117,6 +137,43 @@ export default function OrderDetail() {
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const isDeliveryOrder = order?.deliveryType?.code === 'delivery';
+  const needsDeliveryAddress = isDeliveryOrder && !order?.deliveryAddress;
+
+  const handleAcceptClick = () => {
+    if (needsDeliveryAddress) {
+      setShowAddressModal(true);
+    } else {
+      handleAcceptOrder();
+    }
+  };
+
+  const buildDeliveryAddressString = () => {
+    const parts = [
+      addressForm.street?.trim(),
+      addressForm.colony?.trim(),
+      [addressForm.postalCode?.trim(), addressForm.city?.trim()].filter(Boolean).join(' '),
+    ].filter(Boolean);
+    if (addressForm.references?.trim()) {
+      parts.push(`Ref: ${addressForm.references.trim()}`);
+    }
+    return parts.join(', ');
+  };
+
+  const handleSubmitAddress = (e) => {
+    e.preventDefault();
+    const street = addressForm.street?.trim();
+    const colony = addressForm.colony?.trim();
+    const postalCode = addressForm.postalCode?.trim();
+    const city = addressForm.city?.trim();
+    if (!street || !colony || !postalCode || !city) {
+      showToast('Completa calle, colonia, código postal y ciudad.', 'info');
+      return;
+    }
+    const deliveryAddress = buildDeliveryAddressString();
+    handleAcceptOrder(deliveryAddress);
   };
 
   const handleCancelOrder = async () => {
@@ -456,10 +513,15 @@ export default function OrderDetail() {
           {/* Acciones: Aceptar / Cancelar */}
           {canAcceptOrCancel && (
             <div className="order-detail-actions">
+              {needsDeliveryAddress && (
+                <p className="order-detail-delivery-address-hint">
+                  Es envío a domicilio. Al aceptar el pedido te pediremos tu dirección de entrega.
+                </p>
+              )}
               <button
                 type="button"
                 className="order-detail-btn order-detail-btn-accept"
-                onClick={handleAcceptOrder}
+                onClick={handleAcceptClick}
                 disabled={actionLoading}
               >
                 {actionLoading ? 'Procesando...' : 'Aceptar pedido actualizado'}
@@ -476,6 +538,122 @@ export default function OrderDetail() {
           )}
         </div>
       </div>
+
+      {/* Modal: dirección de envío (solo cuando es envío a domicilio y falta dirección) */}
+      <dialog
+        ref={addressDialogRef}
+        className="order-detail-address-dialog"
+        aria-labelledby="order-detail-address-title"
+        aria-describedby="order-detail-address-desc"
+        onClose={() => setShowAddressModal(false)}
+        onCancel={() => setShowAddressModal(false)}
+      >
+        <div className="order-detail-address-dialog-content">
+          <button
+            type="button"
+            className="order-detail-address-dialog-close"
+            onClick={() => setShowAddressModal(false)}
+            disabled={actionLoading}
+            aria-label="Cerrar"
+          >
+            ×
+          </button>
+          <div className="order-detail-address-dialog-icon" aria-hidden="true">
+            📍
+          </div>
+          <h2 id="order-detail-address-title" className="order-detail-address-dialog-title">
+            Dirección de envío
+          </h2>
+          <p id="order-detail-address-desc" className="order-detail-address-dialog-desc">
+            Indica dónde quieres recibir tu pedido. La usaremos solo para la entrega.
+          </p>
+            <form onSubmit={handleSubmitAddress} className="order-detail-address-form">
+              <label htmlFor="order-address-street" className="order-detail-address-label">
+                Calle y número <span className="order-detail-address-required">*</span>
+              </label>
+              <input
+                id="order-address-street"
+                type="text"
+                className="order-detail-address-input"
+                value={addressForm.street}
+                onChange={(e) => setAddressForm((p) => ({ ...p, street: e.target.value }))}
+                placeholder="Ej. Av. Principal 123"
+                required
+                autoComplete="street-address"
+              />
+              <label htmlFor="order-address-colony" className="order-detail-address-label">
+                Colonia <span className="order-detail-address-required">*</span>
+              </label>
+              <input
+                id="order-address-colony"
+                type="text"
+                className="order-detail-address-input"
+                value={addressForm.colony}
+                onChange={(e) => setAddressForm((p) => ({ ...p, colony: e.target.value }))}
+                placeholder="Ej. Centro"
+                required
+              />
+              <div className="order-detail-address-row">
+                <div className="order-detail-address-field">
+                  <label htmlFor="order-address-postalCode" className="order-detail-address-label">
+                    Código postal <span className="order-detail-address-required">*</span>
+                  </label>
+                  <input
+                    id="order-address-postalCode"
+                    type="text"
+                    className="order-detail-address-input"
+                    value={addressForm.postalCode}
+                    onChange={(e) => setAddressForm((p) => ({ ...p, postalCode: e.target.value }))}
+                    placeholder="00000"
+                    required
+                    autoComplete="postal-code"
+                  />
+                </div>
+                <div className="order-detail-address-field">
+                  <label htmlFor="order-address-city" className="order-detail-address-label">
+                    Ciudad <span className="order-detail-address-required">*</span>
+                  </label>
+                  <input
+                    id="order-address-city"
+                    type="text"
+                    className="order-detail-address-input"
+                    value={addressForm.city}
+                    onChange={(e) => setAddressForm((p) => ({ ...p, city: e.target.value }))}
+                    placeholder="Tu ciudad"
+                    required
+                    autoComplete="address-level2"
+                  />
+                </div>
+              </div>
+              <label htmlFor="order-address-references" className="order-detail-address-label">Referencias (opcional)</label>
+              <input
+                id="order-address-references"
+                type="text"
+                className="order-detail-address-input"
+                value={addressForm.references}
+                onChange={(e) => setAddressForm((p) => ({ ...p, references: e.target.value }))}
+                placeholder="Ej. Entre X y Y, casa de color..."
+              />
+              <div className="order-detail-address-actions">
+                <button
+                  type="button"
+                  className="order-detail-btn order-detail-btn-cancel"
+                  onClick={() => setShowAddressModal(false)}
+                  disabled={actionLoading}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="order-detail-btn order-detail-btn-accept"
+                  disabled={actionLoading}
+                >
+                  {actionLoading ? 'Procesando...' : 'Aceptar pedido y enviar dirección'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </dialog>
     </div>
   );
 }

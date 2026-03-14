@@ -724,6 +724,16 @@
   color: #3483fa;
 }
 
+.cart-delivery-address-note {
+  margin: 0 0 12px 0;
+  padding: 10px 12px;
+  font-size: 0.8125rem;
+  color: #0f766e;
+  background: #ccfbf1;
+  border-radius: 6px;
+  border: 1px solid #99f6e4;
+}
+
 .cart-delivery-total {
   margin: 0 0 20px 0;
   font-size: 0.9375rem;

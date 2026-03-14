@@ -300,12 +300,19 @@ export default function Cart() {
             </div>
           )}
           {deliveryTypes.length > 0 && selectedDeliveryType && (
-            <p className="cart-delivery-total">
-              Total con envío: <strong>{formatPrice(totalWithDelivery)}</strong>
-              {deliveryCostPerOrder > 0 && numOrders > 0 && (
-                <span className="cart-delivery-note"> (incl. {formatPrice(deliveryCostPerOrder)} por pedido)</span>
+            <>
+              {selectedDeliveryType.code === 'delivery' && (
+                <p className="cart-delivery-address-note" role="status">
+                  La dirección de envío la indicarás cuando la tienda confirme tu pedido.
+                </p>
               )}
-            </p>
+              <p className="cart-delivery-total">
+                Total con envío: <strong>{formatPrice(totalWithDelivery)}</strong>
+                {deliveryCostPerOrder > 0 && numOrders > 0 && (
+                  <span className="cart-delivery-note"> (incl. {formatPrice(deliveryCostPerOrder)} por pedido)</span>
+                )}
+              </p>
+            </>
           )}
           <div className="cart-delivery-actions">
             <button type="button" className="cart-confirm-btn cart-confirm-btn--cancel" onClick={() => setShowDeliveryDialog(false)}>

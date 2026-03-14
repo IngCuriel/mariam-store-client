@@ -30,9 +30,9 @@ export const getOrderById = async (id) => {
   return response.data;
 };
 
-/** Cliente acepta pedido actualizado -> pasa a IN_PREPARATION */
-export const confirmOrderByCustomer = async (id) => {
-  const response = await api.post(`/orders/${id}/confirm-by-customer`);
+/** Cliente acepta pedido actualizado -> pasa a IN_PREPARATION. Para envío a domicilio enviar deliveryAddress. */
+export const confirmOrderByCustomer = async (id, data = {}) => {
+  const response = await api.post(`/orders/${id}/confirm-by-customer`, data);
   return response.data;
 };
 
