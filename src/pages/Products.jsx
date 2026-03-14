@@ -15,7 +15,7 @@ const formatPrice = (price) => {
 
 /** Etiquetas de disponibilidad del producto en tienda en línea */
 const PRODUCT_AVAILABILITY_LABELS = {
-  online_pickup: 'Solo en línea',
+  online_pickup: 'Solo Tienda Online',
   local_delivery: 'Disponible ahora',
   in_store_only: 'Solo sucursal',
 };

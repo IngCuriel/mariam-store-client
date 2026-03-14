@@ -482,7 +482,7 @@ export default function Cart() {
               onClick={handleCheckout}
               disabled={creatingOrder || orderableItems.length === 0}
             >
-              {creatingOrder ? 'Generando pedido...' : 'Generar pedido'}
+              {creatingOrder ? 'Generando pedido...' : 'Continuar Compra'}
             </button>
             {orderableItems.length === 0 && items.length > 0 && (
               <p className="cart-info-only-store">
