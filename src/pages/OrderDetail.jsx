@@ -295,7 +295,15 @@ export default function OrderDetail() {
   const statusColor = STATUS_COLORS[order.status] || '#95a5a6';
   const statusLabel = STATUS_LABELS[order.status] ?? order.status;
   const currentStepIndex = getTimelineStepIndex(order.status);
-  const nextStepMessage = STATUS_NEXT_STEP_MESSAGE[order.status];
+  const deliveryCode = order.deliveryType?.code?.toLowerCase?.();
+  const nextStepMessage =
+    order.status === ORDER_STATUS.IN_PREPARATION
+      ? deliveryCode === 'delivery'
+        ? 'Tu pedido está en preparación. Te avisaremos cuando esté en camino a tu domicilio.'
+        : deliveryCode === 'pickup'
+          ? 'Tu pedido está en preparación. Te avisaremos cuando esté listo para recoger en sucursal.'
+          : STATUS_NEXT_STEP_MESSAGE[ORDER_STATUS.IN_PREPARATION]
+      : STATUS_NEXT_STEP_MESSAGE[order.status];
   const isFinalState = order.status === ORDER_STATUS.COMPLETED || order.status === ORDER_STATUS.CANCELLED;
   const showProductAvailability = !isFinalState;
 
@@ -419,17 +427,43 @@ export default function OrderDetail() {
             </p>
           )}
 
-          {/* Banner: Listo para recoger */}
+          {/* Banner: Listo para recoger + datos de la sucursal */}
           {order.status === ORDER_STATUS.READY_FOR_PICKUP && (
             <div className="order-detail-ready-banner">
               <span className="order-detail-ready-icon">✓</span>
-              <div>
-                <strong>Listo para recoger</strong>
+              <div className="order-detail-ready-content">
+                {/*<strong>Listo para recoger</strong>*/}
                 <p>
                   {order.readyAt
-                    ? `Listo para recoger desde el ${formatDate(order.readyAt)}. Pásate por la sucursal.`
+                    ? `Disponible apartir del ${formatDate(order.readyAt)}.`
                     : 'Pásate por la sucursal a recoger tu pedido.'}
                 </p>
+                {(order.branch || order.deliveryType?.code === 'pickup') && (
+                  <div className="order-detail-branch-pickup" role="region" aria-label="Datos de la sucursal">
+                    <p className="order-detail-branch-pickup-title">📍 Pasa a recoger a:</p>
+                    {order.branch ? (
+                      <div className="order-detail-branch-pickup-card">
+                        {order.branch.logo && (
+                          <img
+                            src={order.branch.logo}
+                            alt=""
+                            className="order-detail-branch-pickup-logo"
+                          />
+                        )}
+                        <div className="order-detail-branch-pickup-data">
+                          <p className="order-detail-branch-pickup-name">{order.branch.name}</p>
+                          {order.branch.description && (
+                            <p className="order-detail-branch-pickup-address">{order.branch.description}</p>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="order-detail-branch-pickup-fallback">
+                        Contacta a la tienda para confirmar la sucursal y horario de recolección.
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -565,13 +599,21 @@ export default function OrderDetail() {
           {/* Resumen */}
           <section className="order-detail-summary-card">
             <div className="order-detail-summary-row">
-              <span className="order-detail-summary-label">Subtotal</span>
+              <span className="order-detail-summary-label">Subtotal (productos)</span>
               <span className="order-detail-summary-value">
                 {formatPrice(
                   order.items?.reduce((sum, item) => sum + (item.subtotal || 0), 0) || 0
                 )}
               </span>
             </div>
+            {order.deliveryType && order.deliveryCost != null && Number(order.deliveryCost) > 0 && (
+              <div className="order-detail-summary-row">
+                <span className="order-detail-summary-label">Costo de envío</span>
+                <span className="order-detail-summary-value">
+                  {formatPrice(Number(order.deliveryCost))}
+                </span>
+              </div>
+            )}
             <div className="order-detail-summary-divider" />
             <div className="order-detail-summary-row order-detail-summary-total">
               <span className="order-detail-summary-total-label">Total</span>

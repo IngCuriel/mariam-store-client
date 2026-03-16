@@ -347,6 +347,73 @@
   color: #15803d;
 }
 
+.order-detail-ready-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.order-detail-branch-pickup {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.order-detail-branch-pickup-title {
+  margin: 0 0 8px 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #166534;
+}
+
+.order-detail-branch-pickup-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.order-detail-branch-pickup-logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.order-detail-branch-pickup-data {
+  flex: 1;
+  min-width: 0;
+}
+
+.order-detail-branch-pickup-name {
+  margin: 0 0 4px 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #14532d;
+}
+
+.order-detail-branch-pickup-address {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #15803d;
+  line-height: 1.4;
+  white-space: pre-line;
+}
+
+.order-detail-branch-pickup-fallback {
+  margin: 0;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  font-size: 0.9rem;
+  color: #166534;
+}
+
 .order-detail-delivered-banner {
   background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
   border-color: #10b981;

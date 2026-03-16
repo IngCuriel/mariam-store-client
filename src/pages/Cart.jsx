@@ -258,7 +258,7 @@ export default function Cart() {
       const isByBranch = deliveryTypeOrByBranch && typeof deliveryTypeOrByBranch === 'object' && !Array.isArray(deliveryTypeOrByBranch) && deliveryTypeOrByBranch.id == null;
 
       for (const group of orderableGroupsForCheckout) {
-        const { branchName, orderableItems: groupItems } = group;
+        const { branchName, branchId: groupBranchId, orderableItems: groupItems } = group;
         if (groupItems.length === 0) continue;
 
         const deliveryType = isByBranch ? deliveryTypeOrByBranch[group.branchKey] : deliveryTypeOrByBranch;
@@ -284,6 +284,9 @@ export default function Cart() {
           notes: `Pedido web - ${branchName} (${groupItems.length} ${groupItems.length === 1 ? 'producto' : 'productos'})`,
           orderAvailability: firstAvailability,
         };
+        if (groupBranchId != null) {
+          payload.branchId = groupBranchId;
+        }
         if (deliveryType?.id) {
           payload.deliveryTypeId = deliveryType.id;
           payload.deliveryCost = deliveryType.cost ?? 0;
