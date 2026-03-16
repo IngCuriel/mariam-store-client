@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { getProductEmoji } from '../services/imageService';
-import { createOrder, getDeliveryTypes } from '../services/ordersService';
+import { createOrder } from '../services/ordersService';
 import { Toast } from '../components/Toast';
 import './Cart.css';
 
@@ -45,18 +45,12 @@ export default function Cart() {
     message: '',
     confirmLabel: 'Aceptar',
     flowDescription: null,
+    flowSteps: null,
   });
-  const [deliveryTypes, setDeliveryTypes] = useState([]);
-  const [selectedDeliveryType, setSelectedDeliveryType] = useState(null);
-  /** Tipos de entrega por sucursal (branchKey → array). Usado cuando hay varios pedidos de distintas sucursales. */
-  const [deliveryTypesByBranch, setDeliveryTypesByBranch] = useState({});
-  /** Selección de tipo de entrega por sucursal (branchKey → tipo). */
-  const [selectedDeliveryByBranch, setSelectedDeliveryByBranch] = useState({});
-  const [showDeliveryDialog, setShowDeliveryDialog] = useState(false);
-  const [loadingDeliveryTypes, setLoadingDeliveryTypes] = useState(false);
+  /** Pantalla de éxito después de generar el pedido (estilo Mercado Libre). */
+  const [orderSuccessOpen, setOrderSuccessOpen] = useState(false);
   const pendingConfirmRef = useRef(null);
   const confirmDialogRef = useRef(null);
-  const deliveryDialogRef = useRef(null);
 
   useEffect(() => {
     const dialog = confirmDialogRef.current;
@@ -68,13 +62,6 @@ export default function Cart() {
     }
   }, [confirmDialog.open]);
 
-  useEffect(() => {
-    const dialog = deliveryDialogRef.current;
-    if (!dialog) return;
-    if (showDeliveryDialog) dialog.showModal();
-    else dialog.close();
-  }, [showDeliveryDialog]);
-
   const showToast = useCallback((message, type = 'info') => {
     setToast({ open: true, message, type });
   }, []);
@@ -82,9 +69,9 @@ export default function Cart() {
     setToast((prev) => ({ ...prev, open: false }));
   }, []);
 
-  const openConfirm = useCallback((title, message, confirmLabel, onConfirm, flowDescription = null) => {
+  const openConfirm = useCallback((title, message, confirmLabel, onConfirm, flowDescription = null, flowSteps = null) => {
     pendingConfirmRef.current = onConfirm;
-    setConfirmDialog({ open: true, title, message, confirmLabel, flowDescription });
+    setConfirmDialog({ open: true, title, message, confirmLabel, flowDescription, flowSteps });
   }, []);
   const closeConfirm = useCallback(() => {
     setConfirmDialog((prev) => ({ ...prev, open: false }));
@@ -139,59 +126,6 @@ export default function Cart() {
   const numOrders = orderableGroupsForCheckout.length;
   const isMultiBranch = numOrders > 1;
 
-  /** Total con envío: por sucursal si hay varias, sino un solo tipo aplicado a todos. */
-  const totalWithDelivery = useMemo(() => {
-    if (isMultiBranch) {
-      return orderableGroupsForCheckout.reduce((sum, group) => {
-        const groupSubtotal = group.orderableItems.reduce((s, i) => s + i.subtotal, 0);
-        const cost = selectedDeliveryByBranch[group.branchKey]?.cost ?? 0;
-        return sum + groupSubtotal + cost;
-      }, 0);
-    }
-    const deliveryCostPerOrder = selectedDeliveryType?.cost ?? 0;
-    return totalOrderable + deliveryCostPerOrder * numOrders;
-  }, [
-    isMultiBranch,
-    orderableGroupsForCheckout,
-    totalOrderable,
-    numOrders,
-    selectedDeliveryType,
-    selectedDeliveryByBranch,
-  ]);
-
-  const openDeliveryDialog = useCallback(async () => {
-    setShowDeliveryDialog(true);
-    setLoadingDeliveryTypes(true);
-    try {
-      if (isMultiBranch) {
-        const byBranch = {};
-        const selected = {};
-        await Promise.all(
-          orderableGroupsForCheckout.map(async (group) => {
-            const types = await getDeliveryTypes(group.branchId);
-            const list = Array.isArray(types) ? types : [];
-            byBranch[group.branchKey] = list;
-            if (list.length === 1) selected[group.branchKey] = list[0];
-            else if (list.length > 0) selected[group.branchKey] = list[0];
-          })
-        );
-        setDeliveryTypesByBranch(byBranch);
-        setSelectedDeliveryByBranch(selected);
-      } else {
-        const firstGroup = orderableGroupsForCheckout[0];
-        const types = await getDeliveryTypes(firstGroup?.branchId ?? null);
-        const list = Array.isArray(types) ? types : [];
-        setDeliveryTypes(list);
-        if (list.length > 0) setSelectedDeliveryType(list[0]);
-      }
-    } catch (e) {
-      showToast('No se pudieron cargar las opciones de entrega. Intenta de nuevo.', 'error');
-      setShowDeliveryDialog(false);
-    } finally {
-      setLoadingDeliveryTypes(false);
-    }
-  }, [isMultiBranch, orderableGroupsForCheckout, showToast]);
-
   const handleCheckout = () => {
     if (!isAuthenticated) {
       openConfirm(
@@ -208,60 +142,26 @@ export default function Cart() {
       return;
     }
 
-    openDeliveryDialog();
-  };
-
-  const handleDeliveryContinue = () => {
-    if (isMultiBranch) {
-      const missing = orderableGroupsForCheckout.filter((g) => {
-        const types = deliveryTypesByBranch[g.branchKey] || [];
-        return types.length > 0 && !selectedDeliveryByBranch[g.branchKey];
-      });
-      if (missing.length > 0) {
-        showToast('Elige la forma de entrega para cada pedido (cada sucursal).', 'info');
-        return;
-      }
-    } else if (deliveryTypes.length > 0 && !selectedDeliveryType) {
-      showToast('Elige una forma de entrega.', 'info');
-      return;
-    }
-    setShowDeliveryDialog(false);
-    const deliveryPayload = isMultiBranch ? selectedDeliveryByBranch : selectedDeliveryType ?? null;
-    const firstDelivery = isMultiBranch
-      ? orderableGroupsForCheckout[0] && selectedDeliveryByBranch[orderableGroupsForCheckout[0].branchKey]
-      : selectedDeliveryType;
-    const isDelivery = firstDelivery?.code === 'delivery';
-    const isPickup = firstDelivery?.code === 'pickup';
     const message =
       numOrders > 1
-        ? `Se generarán ${numOrders} pedidos (uno por sucursal). Total: ${formatPrice(totalWithDelivery)}.`
-        : `Total a pagar: ${formatPrice(totalWithDelivery)}.`;
-    const step2 =
-      isDelivery
-        ? 'En "Mis pedidos" podrás ver el estado y, cuando esté listo, confirmar tu dirección de envío para que te enviemos a domicilio.'
-        : isPickup
-          ? 'En el menú de "Mis Pedidos" podrás ver estatus y dar seguimiento a tu pedido.'
-          : 'En "Mis pedidos" podrás ver el estado y, cuando esté listo, confirmar si enviamos a domicilio o recoges en sucursal.';
-    const step3 =
-      isDelivery
-        ? 'Te avisaremos cuando tu pedido esté en camino a tu domicilio.'
-        : isPickup
-          ? 'Te avisaremos cuando tu pedido esté listo para recoger en sucursal.'
-          : 'Te avisaremos cuando tu pedido esté en camino o listo para recoger.';
-    const flowDescription = `1) La tienda revisará la disponibilidad de los productos y te notificará para que nos apoyes a confirmar el pedido. 2) ${step2} 3) ${step3}`;
-    openConfirm('Confirmar pedido', message, 'Generar pedido', () => submitOrder(deliveryPayload), flowDescription);
+        ? `Se generarán ${numOrders} pedidos (uno por sucursal). Total aproximado: ${formatPrice(totalOrderable)}.`
+        : `Total a pagar: ${formatPrice(totalOrderable)}.`;
+    const flowSteps = [
+      'La sucursal confirma disponibilidad del producto.',
+      'Acepta o rechaza el pedido, ya que puede o no tener modificación (según disponibilidad).',
+      'Elige alguna de las formas de entrega disponibles.',
+      'Solo esperar que el pedido esté listo para entrega.',
+    ];
+    openConfirm('Confirmar pedido', message, 'Generar pedido', () => submitOrder(), null, flowSteps);
   };
 
-  const submitOrder = async (deliveryTypeOrByBranch) => {
+  const submitOrder = async () => {
     try {
       setCreatingOrder(true);
-      const isByBranch = deliveryTypeOrByBranch && typeof deliveryTypeOrByBranch === 'object' && !Array.isArray(deliveryTypeOrByBranch) && deliveryTypeOrByBranch.id == null;
 
       for (const group of orderableGroupsForCheckout) {
         const { branchName, branchId: groupBranchId, orderableItems: groupItems } = group;
         if (groupItems.length === 0) continue;
-
-        const deliveryType = isByBranch ? deliveryTypeOrByBranch[group.branchKey] : deliveryTypeOrByBranch;
 
         const orderItems = groupItems.map((item) => {
           const payload = {
@@ -287,22 +187,11 @@ export default function Cart() {
         if (groupBranchId != null) {
           payload.branchId = groupBranchId;
         }
-        if (deliveryType?.id) {
-          payload.deliveryTypeId = deliveryType.id;
-          payload.deliveryCost = deliveryType.cost ?? 0;
-        }
-
         await createOrder(payload);
       }
 
       removeItemsFromCart(orderableItems.map((item) => item.id));
-      showToast(
-        numOrders > 1
-          ? `Se generaron ${numOrders} pedidos correctamente. La tienda te contactará pronto.`
-          : 'Pedido generado correctamente. La tienda te contactará pronto.',
-        'success'
-      );
-      navigate('/products');
+      setOrderSuccessOpen(true);
     } catch (error) {
       showToast(
         error.response?.data?.error || 'No se pudo generar el pedido. Intenta de nuevo.',
@@ -312,6 +201,53 @@ export default function Cart() {
       setCreatingOrder(false);
     }
   };
+
+  /** Pantalla de éxito después de generar el pedido (estilo Mercado Libre). */
+  if (orderSuccessOpen) {
+    return (
+      <div className="cart-page cart-page--success">
+        <div className="cart-container">
+          <section
+            className="cart-order-success"
+            aria-labelledby="cart-order-success-title"
+            aria-live="polite"
+          >
+            <div className="cart-order-success-icon" aria-hidden>
+              <span className="cart-order-success-check">✓</span>
+            </div>
+            <h1 id="cart-order-success-title" className="cart-order-success-title">
+              ¡Tus productos casi ya son tuyos!
+            </h1>
+            <p className="cart-order-success-subtitle">
+              Solo falta que la sucursal confirme disponibilidad y tú nos apoyes a aceptar el pedido.
+            </p>
+            <div className="cart-order-success-actions">
+              <button
+                type="button"
+                className="cart-order-success-btn cart-order-success-btn--primary"
+                onClick={() => {
+                  setOrderSuccessOpen(false);
+                  navigate('/orders');
+                }}
+              >
+                Ir a mis pedidos
+              </button>
+              <button
+                type="button"
+                className="cart-order-success-btn cart-order-success-btn--secondary"
+                onClick={() => {
+                  setOrderSuccessOpen(false);
+                  navigate('/products');
+                }}
+              >
+                Seguir explorando más productos
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -347,112 +283,6 @@ export default function Cart() {
   return (
     <div className="cart-page">
       <dialog
-        ref={deliveryDialogRef}
-        className="cart-delivery-dialog"
-        aria-labelledby="cart-delivery-title"
-        onClose={() => setShowDeliveryDialog(false)}
-        onCancel={() => setShowDeliveryDialog(false)}
-      >
-        <div className="cart-delivery-content">
-          <h2 id="cart-delivery-title" className="cart-delivery-title">
-            {isMultiBranch ? 'Elige la forma de entrega de cada pedido' : deliveryTypes.length === 1 ? 'Forma de entrega' : 'Elige la forma de entrega'}
-          </h2>
-          {loadingDeliveryTypes ? (
-            <p className="cart-delivery-loading">Cargando opciones...</p>
-          ) : isMultiBranch ? (
-            <>
-              <p className="cart-delivery-multi-intro" role="status">
-                Tienes productos de <strong>{numOrders} sucursales</strong>. Cada pedido se enviará por separado.
-                Elige cómo quieres recibir o recoger los productos de cada sucursal.
-              </p>
-              <div className="cart-delivery-by-branch">
-                {orderableGroupsForCheckout.map((group, index) => {
-                  const types = deliveryTypesByBranch[group.branchKey] || [];
-                  const selected = selectedDeliveryByBranch[group.branchKey];
-                  return (
-                    <fieldset key={group.branchKey} className="cart-delivery-branch-block">
-                      <legend className="cart-delivery-branch-legend">
-                        Pedido {index + 1} – {group.branchName}
-                      </legend>
-                      {types.length === 0 ? (
-                        <p className="cart-delivery-empty">Sin opciones de entrega configuradas.</p>
-                      ) : (
-                        <div className="cart-delivery-options" role="group" aria-label={`Entrega para ${group.branchName}`}>
-                          {types.map((type) => (
-                            <button
-                              key={type.id}
-                              type="button"
-                              className={`cart-delivery-option ${selected?.id === type.id ? 'selected' : ''}`}
-                              onClick={() =>
-                                setSelectedDeliveryByBranch((prev) => ({ ...prev, [group.branchKey]: type }))
-                              }
-                            >
-                              <span className="cart-delivery-option-name">{type.name}</span>
-                              <span className="cart-delivery-option-cost">
-                                {type.cost > 0 ? formatPrice(type.cost) : 'Sin costo'}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </fieldset>
-                  );
-                })}
-              </div>
-              <p className="cart-delivery-total cart-delivery-total--multi">
-                Total: <strong>{formatPrice(totalWithDelivery)}</strong>
-              </p>
-            </>
-          ) : deliveryTypes.length === 0 ? (
-            <p className="cart-delivery-empty">No hay opciones de entrega configuradas. Puedes continuar sin seleccionar.</p>
-          ) : (
-            <>
-              {deliveryTypes.length === 1 && (
-                <p className="cart-delivery-single-note" role="status">
-                  Por el momento solo contamos con la siguiente forma de entrega. Confírmala para continuar con tu compra.
-                </p>
-              )}
-              <div className="cart-delivery-options" role="group" aria-label="Forma de entrega">
-                {deliveryTypes.map((type) => (
-                  <button
-                    key={type.id}
-                    type="button"
-                    className={`cart-delivery-option ${selectedDeliveryType?.id === type.id ? 'selected' : ''}`}
-                    onClick={() => setSelectedDeliveryType(type)}
-                  >
-                    <span className="cart-delivery-option-name">{type.name}</span>
-                    <span className="cart-delivery-option-cost">
-                      {type.cost > 0 ? formatPrice(type.cost) : 'Sin costo'}
-                    </span>
-                  </button>
-                ))}
-              </div>
-              {selectedDeliveryType?.code === 'delivery' && (
-                <>
-                  <p className="cart-delivery-address-note" role="status">
-                    La dirección de envío la indicarás cuando la tienda confirme tu pedido.
-                  </p>
-                  <p className="cart-delivery-total">
-                    Total con envío: <strong>{formatPrice(totalWithDelivery)}</strong>
-                    {selectedDeliveryType?.cost > 0 && (
-                      <span className="cart-delivery-note"> (incl. envío)</span>
-                    )}
-                  </p>
-                </>
-              )}
-            </>
-          )}
-          <div className="cart-delivery-actions">
-            <button type="button" className="cart-confirm-btn cart-confirm-btn--cancel" onClick={() => setShowDeliveryDialog(false)}>
-              Cancelar
-            </button>
-            <button type="button" className="cart-confirm-btn cart-confirm-btn--confirm" onClick={handleDeliveryContinue}>
-              Continuar
-            </button>
-          </div>
-        </div>
-      </dialog>
-      <dialog
         ref={confirmDialogRef}
         className="cart-confirm-dialog"
         aria-labelledby="cart-confirm-title"
@@ -462,11 +292,21 @@ export default function Cart() {
         <div className="cart-confirm-content">
           <h2 id="cart-confirm-title" className="cart-confirm-title">{confirmDialog.title}</h2>
           <p className="cart-confirm-message">{confirmDialog.message}</p>
-          {confirmDialog.flowDescription && (
-            <div className="cart-confirm-flow" role="region" aria-label="Qué pasa después">
-              <h3 className="cart-confirm-flow-title">¿Qué pasa después?</h3>
-              <p className="cart-confirm-flow-text">{confirmDialog.flowDescription}</p>
-            </div>
+          {(confirmDialog.flowSteps?.length > 0 || confirmDialog.flowDescription) && (
+            <section className="cart-confirm-flow" aria-labelledby="cart-confirm-flow-title">
+              <h3 id="cart-confirm-flow-title" className="cart-confirm-flow-title">¿Qué pasa después?</h3>
+              {confirmDialog.flowSteps?.length > 0 ? (
+                <ol className="cart-confirm-flow-list">
+                  {confirmDialog.flowSteps.map((step, index) => (
+                    <li key={index} className="cart-confirm-flow-step">
+                      {step}
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="cart-confirm-flow-text">{confirmDialog.flowDescription}</p>
+              )}
+            </section>
           )}
           <div className="cart-confirm-actions">
             <button

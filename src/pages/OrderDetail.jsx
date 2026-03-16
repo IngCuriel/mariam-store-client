@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   getOrderById,
+  getDeliveryTypes,
   confirmOrderByCustomer,
   cancelOrder,
 } from '../services/ordersService';
@@ -91,8 +92,13 @@ export default function OrderDetail() {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [cancelReasonOther, setCancelReasonOther] = useState('');
+  const [showDeliveryTypeModal, setShowDeliveryTypeModal] = useState(false);
+  const [deliveryTypes, setDeliveryTypes] = useState([]);
+  const [selectedDeliveryType, setSelectedDeliveryType] = useState(null);
+  const [loadingDeliveryTypes, setLoadingDeliveryTypes] = useState(false);
   const addressDialogRef = useRef(null);
   const cancelDialogRef = useRef(null);
+  const deliveryTypeDialogRef = useRef(null);
 
   const CANCEL_REASON_OPTIONS = [
     { value: '', label: 'Seleccionar motivo (opcional)' },
@@ -145,6 +151,35 @@ export default function OrderDetail() {
   }, [showCancelConfirm]);
 
   useEffect(() => {
+    const dialog = deliveryTypeDialogRef.current;
+    if (!dialog) return;
+    if (showDeliveryTypeModal) dialog.showModal();
+    else dialog.close();
+  }, [showDeliveryTypeModal]);
+
+  useEffect(() => {
+    if (!showDeliveryTypeModal || !order) return;
+    let cancelled = false;
+    setLoadingDeliveryTypes(true);
+    setSelectedDeliveryType(null);
+    getDeliveryTypes(order.branchId ?? null)
+      .then((list) => {
+        if (!cancelled) {
+          const types = Array.isArray(list) ? list : [];
+          setDeliveryTypes(types);
+          if (types.length === 1) setSelectedDeliveryType(types[0]);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setDeliveryTypes([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingDeliveryTypes(false);
+      });
+    return () => { cancelled = true; };
+  }, [showDeliveryTypeModal, order?.id, order?.branchId]);
+
+  useEffect(() => {
     if (!showAddressModal) return;
     let cancelled = false;
     setLoadingAddresses(true);
@@ -176,6 +211,8 @@ export default function OrderDetail() {
       await confirmOrderByCustomer(id, payload);
       showToast('Pedido aceptado. Estamos preparando tu pedido.', 'success');
       setShowAddressModal(false);
+      setShowDeliveryTypeModal(false);
+      setSelectedDeliveryType(null);
       setAddressForm(INITIAL_ADDRESS_FORM);
       setShowNewAddressForm(false);
       await loadOrder();
@@ -191,18 +228,45 @@ export default function OrderDetail() {
 
   const isDeliveryOrder = order?.deliveryType?.code === 'delivery';
   const needsDeliveryAddress = isDeliveryOrder && !order?.deliveryAddress;
+  const needsDeliveryTypeSelection = order && order.deliveryType == null;
 
   const handleAcceptClick = () => {
-    if (needsDeliveryAddress) {
+    if (needsDeliveryTypeSelection) {
+      setShowDeliveryTypeModal(true);
+    } else if (needsDeliveryAddress) {
       setShowAddressModal(true);
     } else {
       handleAcceptOrder();
     }
   };
 
+  const handleDeliveryTypeConfirm = () => {
+    if (!selectedDeliveryType) {
+      showToast('Elige una forma de entrega.', 'info');
+      return;
+    }
+    const payload = {
+      deliveryTypeId: selectedDeliveryType.id,
+      deliveryCost: selectedDeliveryType.cost ?? 0,
+    };
+    if (selectedDeliveryType.code === 'delivery') {
+      setShowDeliveryTypeModal(false);
+      setShowAddressModal(true);
+      return;
+    }
+    setShowDeliveryTypeModal(false);
+    handleAcceptOrder(payload);
+    setSelectedDeliveryType(null);
+  };
+
   const handleUseSavedAddress = () => {
     if (selectedAddressId != null) {
-      handleAcceptOrder({ addressId: selectedAddressId });
+      const payload = { addressId: selectedAddressId };
+      if (selectedDeliveryType) {
+        payload.deliveryTypeId = selectedDeliveryType.id;
+        payload.deliveryCost = selectedDeliveryType.cost ?? 0;
+      }
+      handleAcceptOrder(payload);
     } else {
       showToast('Elige una dirección o agrega una nueva.', 'info');
     }
@@ -228,7 +292,12 @@ export default function OrderDetail() {
         references: addressForm.references?.trim() || undefined,
         isDefault: savedAddresses.length === 0,
       });
-      await handleAcceptOrder({ addressId: newAddr.id });
+      const payload = { addressId: newAddr.id };
+      if (selectedDeliveryType) {
+        payload.deliveryTypeId = selectedDeliveryType.id;
+        payload.deliveryCost = selectedDeliveryType.cost ?? 0;
+      }
+      await handleAcceptOrder(payload);
     } catch (err) {
       showToast(err.response?.data?.error || 'No se pudo guardar la dirección.', 'error');
     } finally {
@@ -626,6 +695,11 @@ export default function OrderDetail() {
           {/* Acciones: Aceptar / Cancelar (solo cuando hay productos disponibles para aceptar) */}
           {canAcceptOrCancel && !noProductsAvailable && (
             <div className="order-detail-actions">
+              {needsDeliveryTypeSelection && (
+                <p className="order-detail-delivery-address-hint">
+                  Al aceptar el pedido elegirás la forma de entrega (envío a domicilio o recoger en sucursal).
+                </p>
+              )}
               {needsDeliveryAddress && (
                 <p className="order-detail-delivery-address-hint">
                   Es envío a domicilio. Al aceptar el pedido te pediremos tu dirección de entrega.
@@ -750,6 +824,90 @@ export default function OrderDetail() {
               {actionLoading ? 'Cancelando...' : 'Sí, cancelar pedido'}
             </button>
           </div>
+        </div>
+      </dialog>
+
+      {/* Modal: forma de entrega (cuando el pedido se creó sin forma de entrega) */}
+      <dialog
+        ref={deliveryTypeDialogRef}
+        className="order-detail-delivery-type-dialog"
+        aria-labelledby="order-detail-delivery-type-title"
+        aria-describedby="order-detail-delivery-type-desc"
+        onClose={() => {
+          setShowDeliveryTypeModal(false);
+          setSelectedDeliveryType(null);
+        }}
+        onCancel={() => {
+          setShowDeliveryTypeModal(false);
+          setSelectedDeliveryType(null);
+        }}
+      >
+        <div className="order-detail-delivery-type-dialog-content">
+          <button
+            type="button"
+            className="order-detail-address-dialog-close"
+            onClick={() => {
+              setShowDeliveryTypeModal(false);
+              setSelectedDeliveryType(null);
+            }}
+            disabled={actionLoading}
+            aria-label="Cerrar"
+          >
+            ×
+          </button>
+          <div className="order-detail-delivery-type-dialog-icon" aria-hidden="true">
+            📦
+          </div>
+          <h2 id="order-detail-delivery-type-title" className="order-detail-delivery-type-dialog-title">
+            Forma de entrega
+          </h2>
+          <p id="order-detail-delivery-type-desc" className="order-detail-delivery-type-dialog-desc">
+            Elige cómo quieres recibir tu pedido: envío a domicilio o recoger en sucursal.
+          </p>
+          {loadingDeliveryTypes ? (
+            <p className="order-detail-delivery-type-loading">Cargando opciones...</p>
+          ) : deliveryTypes.length === 0 ? (
+            <p className="order-detail-delivery-type-empty">No hay opciones de entrega configuradas. Contacta a la tienda.</p>
+          ) : (
+            <>
+              <div className="order-detail-delivery-type-options" role="group" aria-label="Opciones de entrega">
+                {deliveryTypes.map((type) => (
+                  <button
+                    key={type.id}
+                    type="button"
+                    className={`order-detail-delivery-type-option ${selectedDeliveryType?.id === type.id ? 'selected' : ''}`}
+                    onClick={() => setSelectedDeliveryType(type)}
+                  >
+                    <span className="order-detail-delivery-type-option-name">{type.name}</span>
+                    <span className="order-detail-delivery-type-option-cost">
+                      {type.cost > 0 ? formatPrice(type.cost) : 'Sin costo'}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <div className="order-detail-delivery-type-actions">
+                <button
+                  type="button"
+                  className="order-detail-btn order-detail-btn-cancel"
+                  onClick={() => {
+                    setShowDeliveryTypeModal(false);
+                    setSelectedDeliveryType(null);
+                  }}
+                  disabled={actionLoading}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="order-detail-btn order-detail-btn-accept"
+                  onClick={handleDeliveryTypeConfirm}
+                  disabled={actionLoading || !selectedDeliveryType}
+                >
+                  {actionLoading ? 'Procesando...' : selectedDeliveryType?.code === 'delivery' ? 'Siguiente: indicar dirección' : 'Aceptar pedido'}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </dialog>
 
