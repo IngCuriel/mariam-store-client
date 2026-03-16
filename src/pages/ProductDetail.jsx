@@ -44,7 +44,7 @@ export default function ProductDetail() {
     if (id) loadProduct();
   }, [id]);
 
-  /** Cuando el producto es "Disponible ahora" (inventario local), cargar tipos de entrega para el card. */
+  /** Cuando el producto es "Disponible ahora" (inventario local), cargar tipos de entrega de la sucursal del producto. */
   useEffect(() => {
     const availability = product?.productAvailability ? String(product.productAvailability).trim() : null;
     const isLocalDelivery = (availability || 'local_delivery') === 'local_delivery';
@@ -52,9 +52,10 @@ export default function ProductDetail() {
       setDeliveryTypes([]);
       return;
     }
+    const branchId = product.branchId ?? null;
     let cancelled = false;
     setDeliveryTypesLoading(true);
-    getDeliveryTypes()
+    getDeliveryTypes(branchId)
       .then((types) => {
         if (!cancelled && Array.isArray(types)) setDeliveryTypes(types);
       })
@@ -65,7 +66,7 @@ export default function ProductDetail() {
         if (!cancelled) setDeliveryTypesLoading(false);
       });
     return () => { cancelled = true; };
-  }, [product?.id, product?.productAvailability]);
+  }, [product?.id, product?.productAvailability, product?.branchId]);
 
   const loadProduct = async () => {
     try {
