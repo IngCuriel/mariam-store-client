@@ -48,6 +48,10 @@ export default function Cart() {
   });
   const [deliveryTypes, setDeliveryTypes] = useState([]);
   const [selectedDeliveryType, setSelectedDeliveryType] = useState(null);
+  /** Tipos de entrega por sucursal (branchKey → array). Usado cuando hay varios pedidos de distintas sucursales. */
+  const [deliveryTypesByBranch, setDeliveryTypesByBranch] = useState({});
+  /** Selección de tipo de entrega por sucursal (branchKey → tipo). */
+  const [selectedDeliveryByBranch, setSelectedDeliveryByBranch] = useState({});
   const [showDeliveryDialog, setShowDeliveryDialog] = useState(false);
   const [loadingDeliveryTypes, setLoadingDeliveryTypes] = useState(false);
   const pendingConfirmRef = useRef(null);
@@ -116,11 +120,15 @@ export default function Cart() {
   const orderableGroupsForCheckout = useMemo(() => {
     return itemsByBranch
       .filter((group) => group.items.some((item) => isOrderable(item.product)))
-      .map((group) => ({
-        branchKey: group.branchKey,
-        branchName: group.branchName,
-        orderableItems: group.items.filter((item) => isOrderable(item.product)),
-      }));
+      .map((group) => {
+        const firstProduct = group.items.find((item) => isOrderable(item.product))?.product;
+        return {
+          branchKey: group.branchKey,
+          branchName: group.branchName,
+          branchId: firstProduct?.branchId ?? null,
+          orderableItems: group.items.filter((item) => isOrderable(item.product)),
+        };
+      });
   }, [itemsByBranch]);
 
   const orderableItems = useMemo(
@@ -129,25 +137,60 @@ export default function Cart() {
   );
   const totalOrderable = orderableItems.reduce((sum, item) => sum + item.subtotal, 0);
   const numOrders = orderableGroupsForCheckout.length;
-  const deliveryCostPerOrder = selectedDeliveryType?.cost ?? 0;
-  const totalWithDelivery = totalOrderable + deliveryCostPerOrder * numOrders;
+  const isMultiBranch = numOrders > 1;
+
+  /** Total con envío: por sucursal si hay varias, sino un solo tipo aplicado a todos. */
+  const totalWithDelivery = useMemo(() => {
+    if (isMultiBranch) {
+      return orderableGroupsForCheckout.reduce((sum, group) => {
+        const groupSubtotal = group.orderableItems.reduce((s, i) => s + i.subtotal, 0);
+        const cost = selectedDeliveryByBranch[group.branchKey]?.cost ?? 0;
+        return sum + groupSubtotal + cost;
+      }, 0);
+    }
+    const deliveryCostPerOrder = selectedDeliveryType?.cost ?? 0;
+    return totalOrderable + deliveryCostPerOrder * numOrders;
+  }, [
+    isMultiBranch,
+    orderableGroupsForCheckout,
+    totalOrderable,
+    numOrders,
+    selectedDeliveryType,
+    selectedDeliveryByBranch,
+  ]);
 
   const openDeliveryDialog = useCallback(async () => {
     setShowDeliveryDialog(true);
-    if (deliveryTypes.length === 0) {
-      setLoadingDeliveryTypes(true);
-      try {
-        const types = await getDeliveryTypes();
-        setDeliveryTypes(types);
-        if (types.length > 0) setSelectedDeliveryType(types[0]);
-      } catch (e) {
-        showToast('No se pudieron cargar las opciones de entrega. Intenta de nuevo.', 'error');
-        setShowDeliveryDialog(false);
-      } finally {
-        setLoadingDeliveryTypes(false);
+    setLoadingDeliveryTypes(true);
+    try {
+      if (isMultiBranch) {
+        const byBranch = {};
+        const selected = {};
+        await Promise.all(
+          orderableGroupsForCheckout.map(async (group) => {
+            const types = await getDeliveryTypes(group.branchId);
+            const list = Array.isArray(types) ? types : [];
+            byBranch[group.branchKey] = list;
+            if (list.length === 1) selected[group.branchKey] = list[0];
+            else if (list.length > 0) selected[group.branchKey] = list[0];
+          })
+        );
+        setDeliveryTypesByBranch(byBranch);
+        setSelectedDeliveryByBranch(selected);
+      } else {
+        const firstGroup = orderableGroupsForCheckout[0];
+        const types = await getDeliveryTypes(firstGroup?.branchId ?? null);
+        const list = Array.isArray(types) ? types : [];
+        setDeliveryTypes(list);
+        if (list.length > 0) setSelectedDeliveryType(list[0]);
       }
+    } catch (e) {
+      showToast('No se pudieron cargar las opciones de entrega. Intenta de nuevo.', 'error');
+      setShowDeliveryDialog(false);
+    } finally {
+      setLoadingDeliveryTypes(false);
     }
-  }, [deliveryTypes.length, showToast]);
+  }, [isMultiBranch, orderableGroupsForCheckout, showToast]);
 
   const handleCheckout = () => {
     if (!isAuthenticated) {
@@ -169,23 +212,35 @@ export default function Cart() {
   };
 
   const handleDeliveryContinue = () => {
-    if (deliveryTypes.length > 0 && !selectedDeliveryType) {
+    if (isMultiBranch) {
+      const missing = orderableGroupsForCheckout.filter((g) => {
+        const types = deliveryTypesByBranch[g.branchKey] || [];
+        return types.length > 0 && !selectedDeliveryByBranch[g.branchKey];
+      });
+      if (missing.length > 0) {
+        showToast('Elige la forma de entrega para cada pedido (cada sucursal).', 'info');
+        return;
+      }
+    } else if (deliveryTypes.length > 0 && !selectedDeliveryType) {
       showToast('Elige una forma de entrega.', 'info');
       return;
     }
     setShowDeliveryDialog(false);
-    const delivery = selectedDeliveryType ?? null;
-    const isDelivery = delivery?.code === 'delivery';
-    const isPickup = delivery?.code === 'pickup';
+    const deliveryPayload = isMultiBranch ? selectedDeliveryByBranch : selectedDeliveryType ?? null;
+    const firstDelivery = isMultiBranch
+      ? orderableGroupsForCheckout[0] && selectedDeliveryByBranch[orderableGroupsForCheckout[0].branchKey]
+      : selectedDeliveryType;
+    const isDelivery = firstDelivery?.code === 'delivery';
+    const isPickup = firstDelivery?.code === 'pickup';
     const message =
       numOrders > 1
-        ? `Se generarán ${numOrders} pedidos. Total: ${formatPrice(totalWithDelivery)}${deliveryCostPerOrder > 0 ? ` (incl. envío)` : ''}.`
+        ? `Se generarán ${numOrders} pedidos (uno por sucursal). Total: ${formatPrice(totalWithDelivery)}.`
         : `Total a pagar: ${formatPrice(totalWithDelivery)}.`;
     const step2 =
       isDelivery
         ? 'En "Mis pedidos" podrás ver el estado y, cuando esté listo, confirmar tu dirección de envío para que te enviemos a domicilio.'
         : isPickup
-          ? 'En el menu de "Mis Pedidos" podrás ver estatus y dar seguimiento a tu pedido.'
+          ? 'En el menú de "Mis Pedidos" podrás ver estatus y dar seguimiento a tu pedido.'
           : 'En "Mis pedidos" podrás ver el estado y, cuando esté listo, confirmar si enviamos a domicilio o recoges en sucursal.';
     const step3 =
       isDelivery
@@ -194,16 +249,19 @@ export default function Cart() {
           ? 'Te avisaremos cuando tu pedido esté listo para recoger en sucursal.'
           : 'Te avisaremos cuando tu pedido esté en camino o listo para recoger.';
     const flowDescription = `1) La tienda revisará la disponibilidad de los productos y te notificará para que nos apoyes a confirmar el pedido. 2) ${step2} 3) ${step3}`;
-    openConfirm('Confirmar pedido', message, 'Generar pedido', () => submitOrder(delivery), flowDescription);
+    openConfirm('Confirmar pedido', message, 'Generar pedido', () => submitOrder(deliveryPayload), flowDescription);
   };
 
-  const submitOrder = async (deliveryType) => {
+  const submitOrder = async (deliveryTypeOrByBranch) => {
     try {
       setCreatingOrder(true);
+      const isByBranch = deliveryTypeOrByBranch && typeof deliveryTypeOrByBranch === 'object' && !Array.isArray(deliveryTypeOrByBranch) && deliveryTypeOrByBranch.id == null;
 
       for (const group of orderableGroupsForCheckout) {
         const { branchName, orderableItems: groupItems } = group;
         if (groupItems.length === 0) continue;
+
+        const deliveryType = isByBranch ? deliveryTypeOrByBranch[group.branchKey] : deliveryTypeOrByBranch;
 
         const orderItems = groupItems.map((item) => {
           const payload = {
@@ -294,10 +352,54 @@ export default function Cart() {
       >
         <div className="cart-delivery-content">
           <h2 id="cart-delivery-title" className="cart-delivery-title">
-            {deliveryTypes.length === 1 ? 'Forma de entrega' : 'Elige la forma de entrega'}
+            {isMultiBranch ? 'Elige la forma de entrega de cada pedido' : deliveryTypes.length === 1 ? 'Forma de entrega' : 'Elige la forma de entrega'}
           </h2>
           {loadingDeliveryTypes ? (
             <p className="cart-delivery-loading">Cargando opciones...</p>
+          ) : isMultiBranch ? (
+            <>
+              <p className="cart-delivery-multi-intro" role="status">
+                Tienes productos de <strong>{numOrders} sucursales</strong>. Cada pedido se enviará por separado.
+                Elige cómo quieres recibir o recoger los productos de cada sucursal.
+              </p>
+              <div className="cart-delivery-by-branch">
+                {orderableGroupsForCheckout.map((group, index) => {
+                  const types = deliveryTypesByBranch[group.branchKey] || [];
+                  const selected = selectedDeliveryByBranch[group.branchKey];
+                  return (
+                    <fieldset key={group.branchKey} className="cart-delivery-branch-block">
+                      <legend className="cart-delivery-branch-legend">
+                        Pedido {index + 1} – {group.branchName}
+                      </legend>
+                      {types.length === 0 ? (
+                        <p className="cart-delivery-empty">Sin opciones de entrega configuradas.</p>
+                      ) : (
+                        <div className="cart-delivery-options" role="group" aria-label={`Entrega para ${group.branchName}`}>
+                          {types.map((type) => (
+                            <button
+                              key={type.id}
+                              type="button"
+                              className={`cart-delivery-option ${selected?.id === type.id ? 'selected' : ''}`}
+                              onClick={() =>
+                                setSelectedDeliveryByBranch((prev) => ({ ...prev, [group.branchKey]: type }))
+                              }
+                            >
+                              <span className="cart-delivery-option-name">{type.name}</span>
+                              <span className="cart-delivery-option-cost">
+                                {type.cost > 0 ? formatPrice(type.cost) : 'Sin costo'}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </fieldset>
+                  );
+                })}
+              </div>
+              <p className="cart-delivery-total cart-delivery-total--multi">
+                Total: <strong>{formatPrice(totalWithDelivery)}</strong>
+              </p>
+            </>
           ) : deliveryTypes.length === 0 ? (
             <p className="cart-delivery-empty">No hay opciones de entrega configuradas. Puedes continuar sin seleccionar.</p>
           ) : (
@@ -308,33 +410,29 @@ export default function Cart() {
                 </p>
               )}
               <div className="cart-delivery-options" role="group" aria-label="Forma de entrega">
-              {deliveryTypes.map((type) => (
-                <button
-                  key={type.id}
-                  type="button"
-                  className={`cart-delivery-option ${selectedDeliveryType?.id === type.id ? 'selected' : ''}`}
-                  onClick={() => setSelectedDeliveryType(type)}
-                >
-                  <span className="cart-delivery-option-name">{type.name}</span>
-                  <span className="cart-delivery-option-cost">
-                    {type.cost > 0 ? formatPrice(type.cost) : 'Sin costo'}
-                  </span>
-                </button>
-              ))}
-            </div>
-            </>
-          )}
-          {deliveryTypes.length > 0 && selectedDeliveryType && (
-            <>
-              {selectedDeliveryType.code === 'delivery' && (
+                {deliveryTypes.map((type) => (
+                  <button
+                    key={type.id}
+                    type="button"
+                    className={`cart-delivery-option ${selectedDeliveryType?.id === type.id ? 'selected' : ''}`}
+                    onClick={() => setSelectedDeliveryType(type)}
+                  >
+                    <span className="cart-delivery-option-name">{type.name}</span>
+                    <span className="cart-delivery-option-cost">
+                      {type.cost > 0 ? formatPrice(type.cost) : 'Sin costo'}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              {selectedDeliveryType?.code === 'delivery' && (
                 <>
                   <p className="cart-delivery-address-note" role="status">
                     La dirección de envío la indicarás cuando la tienda confirme tu pedido.
                   </p>
                   <p className="cart-delivery-total">
                     Total con envío: <strong>{formatPrice(totalWithDelivery)}</strong>
-                    {deliveryCostPerOrder > 0 && numOrders > 0 && (
-                      <span className="cart-delivery-note"> (incl. {formatPrice(deliveryCostPerOrder)} por pedido)</span>
+                    {selectedDeliveryType?.cost > 0 && (
+                      <span className="cart-delivery-note"> (incl. envío)</span>
                     )}
                   </p>
                 </>

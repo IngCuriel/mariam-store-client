@@ -1,8 +1,12 @@
 import api from '../config/api';
 
-/** Tipos de entrega activos (recoger en sucursal, envío a domicilio, etc.) */
-export const getDeliveryTypes = async () => {
-  const response = await api.get('/orders/delivery-types');
+/**
+ * Tipos de entrega activos. Si se pasa branchId, devuelve solo los configurados para esa sucursal.
+ * @param {number|null} [branchId] - ID de sucursal (opcional)
+ */
+export const getDeliveryTypes = async (branchId = null) => {
+  const params = branchId != null ? { branchId } : {};
+  const response = await api.get('/orders/delivery-types', { params });
   return response.data;
 };
 

@@ -713,6 +713,50 @@
   line-height: 1.45;
 }
 
+.cart-delivery-multi-intro {
+  margin: 0 0 20px 0;
+  padding: 12px 14px;
+  font-size: 0.9375rem;
+  color: #334155;
+  line-height: 1.5;
+  background: #f1f5f9;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.cart-delivery-by-branch {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.cart-delivery-branch-block {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fafafa;
+}
+
+.cart-delivery-branch-legend {
+  padding: 0 8px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 12px;
+}
+
+.cart-delivery-branch-block .cart-delivery-options {
+  margin-bottom: 0;
+}
+
+.cart-delivery-total--multi {
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
 .cart-delivery-options {
   display: flex;
   flex-direction: column;
