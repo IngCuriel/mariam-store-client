@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getProductById } from '../services/productsService';
 import { useCart } from '../contexts/CartContext';
 import { getBestProductImage, getProductEmoji } from '../services/imageService';
+import { Toast } from '../components/Toast';
 import './ProductDetail.css';
 
 const formatPrice = (price) => {
@@ -31,6 +32,8 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [toast, setToast] = useState({ open: false, message: '', type: 'info' });
   const [fallbackImage, setFallbackImage] = useState(null);
   const [imageError, setImageError] = useState(false);
 
@@ -70,12 +73,17 @@ export default function ProductDetail() {
   const handleAddToCart = () => {
     if (!product) return;
     if (product.presentations?.length > 0 && !selectedPresentation) {
-      alert('Elige una presentación antes de agregar al carrito.');
+      setToast({ open: true, message: 'Elige una presentación antes de agregar al carrito.', type: 'info' });
       return;
     }
+    setIsAdding(true);
     addToCart(product, selectedPresentation, quantity);
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 3000);
+    setToast({ open: true, message: '¡Agregado al carrito!', type: 'success' });
+    setTimeout(() => {
+      setIsAdding(false);
+      setShowSuccess(true);
+    }, 350);
+    setTimeout(() => setShowSuccess(false), 2800);
   };
 
   /** Precio de una unidad de presentación (total = piezas × precio por pieza). Sin presentación: precio del producto. */
@@ -98,6 +106,12 @@ export default function ProductDetail() {
   const effectiveAvailability = availability || 'local_delivery';
   const isOnlinePickup = effectiveAvailability === 'online_pickup';
   const isLocalDelivery = effectiveAvailability === 'local_delivery';
+
+  const addToCartButtonText = isAdding
+    ? 'Agregando...'
+    : showSuccess
+      ? '✓ Agregado al carrito'
+      : 'Agregar al carrito';
   const isInStoreOnly = effectiveAvailability === 'in_store_only';
   const availabilityLabel = availability ? PRODUCT_AVAILABILITY_LABELS[availability] : null;
 
@@ -135,6 +149,13 @@ export default function ProductDetail() {
 
   return (
     <div className="pdp-page">
+      <Toast
+        open={toast.open}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast((t) => ({ ...t, open: false }))}
+        duration={toast.type === 'success' ? 2500 : 4000}
+      />
       <div className="pdp-container">
         <nav className="pdp-breadcrumb">
           <Link to="/">Inicio</Link>
@@ -214,7 +235,7 @@ export default function ProductDetail() {
                   <>
                     <h3 className="pdp-delivery-card-title">Entrega</h3>
                     <p className="pdp-delivery-card-line">
-                      🚚 A domicilio hoy ó Recoger en tienda
+                      🚚 A domicilio ó Recoger en tienda
                     </p>
                     <p className="pdp-delivery-card-note">Una vez confirmada disponibilidad</p>
                   </>
@@ -385,11 +406,17 @@ export default function ProductDetail() {
                 </div>
                 <button
                   type="button"
-                  className={`pdp-add-to-cart ${showSuccess ? 'success' : ''}`}
+                  className={`pdp-add-to-cart ${isAdding ? 'adding' : ''} ${showSuccess ? 'success' : ''}`}
                   onClick={handleAddToCart}
-                  disabled={!hasStock}
+                  disabled={!hasStock || isAdding}
+                  aria-live="polite"
+                  aria-busy={isAdding}
                 >
-                  {showSuccess ? '✓ Agregado al carrito' : 'Agregar al carrito'}
+                  <span
+                    className={`pdp-add-to-cart-text ${showSuccess && !isAdding ? 'pdp-add-to-cart-text--success' : ''}`}
+                  >
+                    {addToCartButtonText}
+                  </span>
                 </button>
                 {showSuccess && (
                   <Link to="/cart" className="pdp-view-cart-link">

@@ -57,6 +57,7 @@ export default function Cart() {
     title: '',
     message: '',
     confirmLabel: 'Aceptar',
+    flowDescription: null,
   });
   const [deliveryTypes, setDeliveryTypes] = useState([]);
   const [selectedDeliveryType, setSelectedDeliveryType] = useState(null);
@@ -90,9 +91,9 @@ export default function Cart() {
     setToast((prev) => ({ ...prev, open: false }));
   }, []);
 
-  const openConfirm = useCallback((title, message, confirmLabel, onConfirm) => {
+  const openConfirm = useCallback((title, message, confirmLabel, onConfirm, flowDescription = null) => {
     pendingConfirmRef.current = onConfirm;
-    setConfirmDialog({ open: true, title, message, confirmLabel });
+    setConfirmDialog({ open: true, title, message, confirmLabel, flowDescription });
   }, []);
   const closeConfirm = useCallback(() => {
     setConfirmDialog((prev) => ({ ...prev, open: false }));
@@ -174,11 +175,26 @@ export default function Cart() {
     }
     setShowDeliveryDialog(false);
     const delivery = selectedDeliveryType ?? null;
+    const isDelivery = delivery?.code === 'delivery';
+    const isPickup = delivery?.code === 'pickup';
     const message =
       numOrders > 1
-        ? `Se generarán ${numOrders} pedidos. Total: ${formatPrice(totalWithDelivery)}${deliveryCostPerOrder > 0 ? ` (incl. envío)` : ''}. ¿Deseas continuar?`
-        : `Total a pagar: ${formatPrice(totalWithDelivery)}. La tienda revisará la disponibilidad y te notificará. ¿Deseas generar el pedido?`;
-    openConfirm('Confirmar pedido', message, 'Generar pedido', () => submitOrder(delivery));
+        ? `Se generarán ${numOrders} pedidos. Total: ${formatPrice(totalWithDelivery)}${deliveryCostPerOrder > 0 ? ` (incl. envío)` : ''}.`
+        : `Total a pagar: ${formatPrice(totalWithDelivery)}.`;
+    const step2 =
+      isDelivery
+        ? 'En "Mis pedidos" podrás ver el estado y, cuando esté listo, confirmar tu dirección de envío para que te enviemos a domicilio.'
+        : isPickup
+          ? 'En el menu de "Mis Pedidos" podrás ver estatus y dar seguimiento a tu pedido.'
+          : 'En "Mis pedidos" podrás ver el estado y, cuando esté listo, confirmar si enviamos a domicilio o recoges en sucursal.';
+    const step3 =
+      isDelivery
+        ? 'Te avisaremos cuando tu pedido esté en camino a tu domicilio.'
+        : isPickup
+          ? 'Te avisaremos cuando tu pedido esté listo para recoger en sucursal.'
+          : 'Te avisaremos cuando tu pedido esté en camino o listo para recoger.';
+    const flowDescription = `1) La tienda revisará la disponibilidad de los productos y te notificará para que nos apoyes a confirmar el pedido. 2) ${step2} 3) ${step3}`;
+    openConfirm('Confirmar pedido', message, 'Generar pedido', () => submitOrder(delivery), flowDescription);
   };
 
   const submitOrder = async (deliveryType) => {
@@ -345,6 +361,12 @@ export default function Cart() {
         <div className="cart-confirm-content">
           <h2 id="cart-confirm-title" className="cart-confirm-title">{confirmDialog.title}</h2>
           <p className="cart-confirm-message">{confirmDialog.message}</p>
+          {confirmDialog.flowDescription && (
+            <div className="cart-confirm-flow" role="region" aria-label="Qué pasa después">
+              <h3 className="cart-confirm-flow-title">¿Qué pasa después?</h3>
+              <p className="cart-confirm-flow-text">{confirmDialog.flowDescription}</p>
+            </div>
+          )}
           <div className="cart-confirm-actions">
             <button
               type="button"

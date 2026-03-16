@@ -603,10 +603,32 @@
 }
 
 .cart-confirm-message {
-  margin: 0 0 24px 0;
+  margin: 0 0 16px 0;
   font-size: 0.9375rem;
   line-height: 1.5;
   color: #475569;
+}
+
+.cart-confirm-flow {
+  margin: 0 0 20px 0;
+  padding: 14px 16px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+}
+
+.cart-confirm-flow-title {
+  margin: 0 0 8px 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0369a1;
+}
+
+.cart-confirm-flow-text {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #0c4a6e;
 }
 
 .cart-confirm-actions {

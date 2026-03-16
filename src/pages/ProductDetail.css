@@ -624,14 +624,21 @@
   font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
+  transition: background 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
 }
 
-.pdp-add-to-cart:hover:not(:disabled) {
+.pdp-add-to-cart .pdp-add-to-cart-text {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.pdp-add-to-cart:hover:not(:disabled):not(.adding):not(.success) {
   background: #b8122f;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 20, 60, 0.4);
 }
 
-.pdp-add-to-cart:active:not(:disabled) {
+.pdp-add-to-cart:active:not(:disabled):not(.adding) {
   transform: scale(0.98);
 }
 
@@ -640,8 +647,42 @@
   cursor: not-allowed;
 }
 
+.pdp-add-to-cart.adding {
+  cursor: wait;
+  opacity: 0.92;
+}
+
+.pdp-add-to-cart.adding .pdp-add-to-cart-text {
+  animation: pdp-add-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes pdp-add-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
 .pdp-add-to-cart.success {
-  background: #28a745;
+  background: #22c55e;
+  cursor: default;
+  transform: none;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+  animation: pdp-add-success 0.4s ease-out;
+}
+
+.pdp-add-to-cart.success .pdp-add-to-cart-text--success {
+  display: inline-block;
+  animation: pdp-add-check 0.35s ease-out 0.1s both;
+}
+
+@keyframes pdp-add-success {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+  50% { transform: scale(1.02); box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3); }
+}
+
+@keyframes pdp-add-check {
+  0% { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
 .pdp-view-cart-link {
