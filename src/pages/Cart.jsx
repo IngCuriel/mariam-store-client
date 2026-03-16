@@ -282,6 +282,15 @@ export default function Cart() {
 
   return (
     <div className="cart-page">
+      {creatingOrder && (
+        <div className="cart-order-loading-overlay" role="status" aria-live="polite" aria-label="Generando pedido">
+          <div className="cart-order-loading-card">
+            <div className="cart-order-loading-spinner" aria-hidden />
+            <p className="cart-order-loading-text">Generando tu pedido</p>
+            <p className="cart-order-loading-subtext">Un momento, por favor...</p>
+          </div>
+        </div>
+      )}
       <dialog
         ref={confirmDialogRef}
         className="cart-confirm-dialog"

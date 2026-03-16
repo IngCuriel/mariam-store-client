@@ -125,6 +125,56 @@
   color: #DC143C;
 }
 
+/* ========== Loader al generar pedido ========== */
+.cart-order-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.cart-order-loading-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  padding: 40px 48px;
+  text-align: center;
+  min-width: 280px;
+}
+
+.cart-order-loading-spinner {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 20px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #3483fa;
+  border-radius: 50%;
+  animation: cart-order-spin 0.85s linear infinite;
+}
+
+@keyframes cart-order-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.cart-order-loading-text {
+  margin: 0 0 6px 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.cart-order-loading-subtext {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: #64748b;
+}
+
 /* ========== Pantalla de éxito post-pedido (estilo Mercado Libre) ========== */
 .cart-page--success {
   display: flex;

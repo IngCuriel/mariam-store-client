@@ -697,7 +697,7 @@ export default function OrderDetail() {
             <div className="order-detail-actions">
               {needsDeliveryTypeSelection && (
                 <p className="order-detail-delivery-address-hint">
-                  Al aceptar el pedido elegirás la forma de entrega (envío a domicilio o recoger en sucursal).
+                  Al aceptar el pedido elegirás la forma de entrega.
                 </p>
               )}
               {needsDeliveryAddress && (
@@ -855,14 +855,11 @@ export default function OrderDetail() {
           >
             ×
           </button>
-          <div className="order-detail-delivery-type-dialog-icon" aria-hidden="true">
-            📦
-          </div>
           <h2 id="order-detail-delivery-type-title" className="order-detail-delivery-type-dialog-title">
-            Forma de entrega
+          📦 Forma de entrega
           </h2>
           <p id="order-detail-delivery-type-desc" className="order-detail-delivery-type-dialog-desc">
-            Elige cómo quieres recibir tu pedido: envío a domicilio o recoger en sucursal.
+            Elige cómo quieres recibir tu pedido.
           </p>
           {loadingDeliveryTypes ? (
             <p className="order-detail-delivery-type-loading">Cargando opciones...</p>
@@ -870,6 +867,11 @@ export default function OrderDetail() {
             <p className="order-detail-delivery-type-empty">No hay opciones de entrega configuradas. Contacta a la tienda.</p>
           ) : (
             <>
+              {deliveryTypes.length === 1 && (
+                <p className="order-detail-delivery-type-single-note" role="status">
+                  Por el momento solo contamos con la siguiente forma de entrega. Confírmala para continuar.
+                </p>
+              )}
               <div className="order-detail-delivery-type-options" role="group" aria-label="Opciones de entrega">
                 {deliveryTypes.map((type) => (
                   <button
