@@ -220,6 +220,7 @@
 .cart-group-local .cart-group-title { color: #2e7d32; }
 .cart-group-online .cart-group-title { color: #e65100; }
 .cart-group-store .cart-group-title { color: #1565c0; }
+.cart-group-branch .cart-group-title { color: #1a1a1a; }
 
 .cart-items-list {
   display: flex;

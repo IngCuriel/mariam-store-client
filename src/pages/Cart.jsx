@@ -20,31 +20,18 @@ const EFFECTIVE_AVAILABILITY = (product) =>
   product?.productAvailability ? String(product.productAvailability).trim() : 'local_delivery';
 
 const CART_AVAILABILITY_SECTIONS = {
-  local_delivery: {
-    title: 'Disponible en sucursal',
-    subtitle: 'Entrega a domicilio o recoger en tienda',
-    description: 'Estos productos tienen inventario local. Una vez confirmado tu pedido, puedes recibirlos a domicilio o recogerlos en sucursal.',
-    icon: '🚚',
-    orderable: true,
-    className: 'cart-group-local',
-  },
-  online_pickup: {
-    title: 'Disponible solo en Tienda Online',
-    subtitle: 'Listo en 6 a 12 días',
-    description: 'Compra online y recoge en sucursal. Te avisaremos cuando esté listo.',
-    icon: '🛒',
-    orderable: true,
-    className: 'cart-group-online',
-  },
-  in_store_only: {
-    title: 'Solo en sucursal',
-    subtitle: 'Servicio presencial',
-    description: 'Estos productos o servicios no se envían. Visita la sucursal para adquirirlos. No se incluyen en el pedido online.',
-    icon: '📍',
-    orderable: false,
-    className: 'cart-group-store',
-  },
+  local_delivery: { orderable: true },
+  online_pickup: { orderable: true },
+  in_store_only: { orderable: false },
 };
+
+/** Indica si el producto se puede incluir en un pedido en línea. */
+const isOrderable = (product) =>
+  CART_AVAILABILITY_SECTIONS[EFFECTIVE_AVAILABILITY(product)]?.orderable !== false;
+
+/** Clave de sucursal para agrupar: nombre de sucursal o "General" si no tiene. */
+const getBranchKey = (item) =>
+  item?.product?.branch || item?.product?.branchInfo?.name || 'General';
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -108,27 +95,40 @@ export default function Cart() {
     closeConfirm();
   }, [closeConfirm]);
 
-  const itemsByAvailability = useMemo(() => {
-    const groups = { local_delivery: [], online_pickup: [], in_store_only: [] };
+  /** Productos agrupados por sucursal (orden estable por nombre). */
+  const itemsByBranch = useMemo(() => {
+    const map = new Map();
     items.forEach((item) => {
-      const key = EFFECTIVE_AVAILABILITY(item.product);
-      if (groups[key]) groups[key].push(item);
-      else groups.local_delivery.push(item);
+      const key = getBranchKey(item);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(item);
     });
-    return groups;
+    return Array.from(map.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([branchKey, branchItems]) => ({
+        branchKey,
+        branchName: branchKey,
+        items: branchItems,
+      }));
   }, [items]);
 
+  /** Sucursales que tienen al menos un producto pedible en línea → un pedido por sucursal. */
+  const orderableGroupsForCheckout = useMemo(() => {
+    return itemsByBranch
+      .filter((group) => group.items.some((item) => isOrderable(item.product)))
+      .map((group) => ({
+        branchKey: group.branchKey,
+        branchName: group.branchName,
+        orderableItems: group.items.filter((item) => isOrderable(item.product)),
+      }));
+  }, [itemsByBranch]);
+
   const orderableItems = useMemo(
-    () => items.filter((item) => CART_AVAILABILITY_SECTIONS[EFFECTIVE_AVAILABILITY(item.product)]?.orderable !== false),
+    () => items.filter((item) => isOrderable(item.product)),
     [items]
   );
   const totalOrderable = orderableItems.reduce((sum, item) => sum + item.subtotal, 0);
-
-  const orderableGroups = useMemo(
-    () => ['local_delivery', 'online_pickup'].filter((key) => (itemsByAvailability[key] || []).length > 0),
-    [itemsByAvailability]
-  );
-  const numOrders = orderableGroups.length;
+  const numOrders = orderableGroupsForCheckout.length;
   const deliveryCostPerOrder = selectedDeliveryType?.cost ?? 0;
   const totalWithDelivery = totalOrderable + deliveryCostPerOrder * numOrders;
 
@@ -201,11 +201,10 @@ export default function Cart() {
     try {
       setCreatingOrder(true);
 
-      for (const groupKey of orderableGroups) {
-        const groupItems = itemsByAvailability[groupKey] || [];
+      for (const group of orderableGroupsForCheckout) {
+        const { branchName, orderableItems: groupItems } = group;
         if (groupItems.length === 0) continue;
 
-        const config = CART_AVAILABILITY_SECTIONS[groupKey];
         const orderItems = groupItems.map((item) => {
           const payload = {
             productId: item.product.id,
@@ -221,10 +220,11 @@ export default function Cart() {
           return payload;
         });
 
+        const firstAvailability = EFFECTIVE_AVAILABILITY(groupItems[0].product);
         const payload = {
           items: orderItems,
-          notes: `Pedido web - ${config.title} (${groupItems.length} ${groupItems.length === 1 ? 'producto' : 'productos'})`,
-          orderAvailability: groupKey,
+          notes: `Pedido web - ${branchName} (${groupItems.length} ${groupItems.length === 1 ? 'producto' : 'productos'})`,
+          orderAvailability: firstAvailability,
         };
         if (deliveryType?.id) {
           payload.deliveryTypeId = deliveryType.id;
@@ -401,30 +401,42 @@ export default function Cart() {
 
         <div className="cart-layout">
           <div className="cart-items-section">
-            {(['local_delivery', 'online_pickup', 'in_store_only']).map((groupKey) => {
-              const groupItems = itemsByAvailability[groupKey] || [];
-              if (groupItems.length === 0) return null;
-
-              const config = CART_AVAILABILITY_SECTIONS[groupKey];
+            {itemsByBranch.map((group) => {
+              const { branchKey, branchName, items: groupItems } = group;
               const groupSubtotal = groupItems.reduce((s, i) => s + i.subtotal, 0);
+              const orderableInBranch = groupItems.filter((i) => isOrderable(i.product));
+              const onlyInStore = orderableInBranch.length === 0;
+              const pedidoIndex = orderableGroupsForCheckout.findIndex((g) => g.branchKey === branchKey);
+              const pedidoLabel =
+                pedidoIndex >= 0
+                  ? `Pedido ${pedidoIndex + 1} – ${branchName}`
+                  : `${branchName} (Solo en sucursal)`;
 
               return (
                 <section
-                  key={groupKey}
-                  className={`cart-availability-group ${config.className}`}
-                  aria-labelledby={`cart-group-title-${groupKey}`}
+                  key={branchKey}
+                  className="cart-availability-group cart-group-branch"
+                  aria-labelledby={`cart-group-title-${branchKey.replaceAll(/\s+/g, '-')}`}
                 >
                   <div className="cart-group-header">
-                    <span className="cart-group-icon" aria-hidden>{config.icon}</span>
+                    <span className="cart-group-icon" aria-hidden>
+                      {pedidoIndex >= 0 ? '📦' : '📍'}
+                    </span>
                     <div className="cart-group-heading">
-                      <h3 id={`cart-group-title-${groupKey}`} className="cart-group-title">
-                        {config.title}
+                      <h3
+                        id={`cart-group-title-${branchKey.replaceAll(/\s+/g, '-')}`}
+                        className="cart-group-title"
+                      >
+                        {pedidoLabel}
                       </h3>
-                      <p className="cart-group-subtitle">{config.subtitle}</p>
+                      {onlyInStore && (
+                        <p className="cart-group-subtitle">
+                          No se incluye en el pedido online. Visita la sucursal para adquirirlos.
+                        </p>
+                      )}
                     </div>
                     <span className="cart-group-subtotal">{formatPrice(groupSubtotal)}</span>
                   </div>
-                  <p className="cart-group-description">{config.description}</p>
                   <div className="cart-items-list">
                     {groupItems.map((item) => {
                       const imageUrl = item.product.images?.length > 0 ? item.product.images[0].url : null;
@@ -489,25 +501,22 @@ export default function Cart() {
           <aside className="cart-summary-card">
             <h2 className="cart-summary-title">Resumen</h2>
             <div className="cart-summary-rows">
-              {(['local_delivery', 'online_pickup']).map((key) => {
-                const groupItems = itemsByAvailability[key] || [];
-                if (groupItems.length === 0) return null;
-                const config = CART_AVAILABILITY_SECTIONS[key];
-                const subtotal = groupItems.reduce((s, i) => s + i.subtotal, 0);
+              {orderableGroupsForCheckout.map((group, index) => {
+                const subtotal = group.orderableItems.reduce((s, i) => s + i.subtotal, 0);
                 return (
-                  <div key={key} className="cart-summary-row">
+                  <div key={group.branchKey} className="cart-summary-row">
                     <span className="cart-summary-row-label">
-                      {config.icon} {config.title}
+                      📦 Pedido {index + 1} – {group.branchName}
                     </span>
                     <span>{formatPrice(subtotal)}</span>
                   </div>
                 );
               })}
-              {itemsByAvailability.in_store_only?.length > 0 && (
+              {itemsByBranch.some(
+                (g) => g.items.length > 0 && !g.items.some((item) => isOrderable(item.product))
+              ) && (
                 <div className="cart-summary-row cart-summary-row--info">
-                  <span className="cart-summary-row-label">
-                    {CART_AVAILABILITY_SECTIONS.in_store_only.icon} Solo en sucursal
-                  </span>
+                  <span className="cart-summary-row-label">📍 Solo en sucursal</span>
                   <span className="cart-summary-row-note">No se incluye en el pedido</span>
                 </div>
               )}
