@@ -105,6 +105,28 @@
   opacity: 0.95;
 }
 
+.order-detail-availability-badge--delivery {
+  background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+  border: 1px solid #a5d6a7;
+  border-left: 4px solid #2e7d32;
+  color: #1b5e20;
+}
+
+.order-detail-availability-badge--delivery .order-detail-availability-badge-label {
+  color: #1b5e20;
+}
+
+.order-detail-availability-badge--pickup {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border: 1px solid #90caf9;
+  border-left: 4px solid #1565c0;
+  color: #1565c0;
+}
+
+.order-detail-availability-badge--pickup .order-detail-availability-badge-label {
+  color: #1565c0;
+}
+
 .order-detail-availability-badge--local_delivery {
   background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
   border: 1px solid #a5d6a7;
@@ -249,11 +271,22 @@
   background: #22c55e;
 }
 
-/* Estado actual + mensaje siguiente paso */
+/* Estado del pedido + mensaje siguiente paso */
 .order-detail-status-section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+.order-detail-status-label {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .order-detail-status-badge {
@@ -264,7 +297,6 @@
   border-radius: 999px;
   font-size: 1rem;
   font-weight: 700;
-  align-self: flex-start;
 }
 
 .order-detail-next-step-msg {
@@ -272,6 +304,7 @@
   font-size: 0.95rem;
   color: #475569;
   line-height: 1.5;
+  max-width: 420px;
 }
 
 .order-detail-ready-banner {
@@ -819,6 +852,83 @@
 .order-detail-back-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(21, 101, 192, 0.35);
+}
+
+.order-detail-btn-cancel-confirm {
+  background: #dc2626;
+  border: none;
+  color: #fff;
+}
+
+.order-detail-btn-cancel-confirm:hover:not(:disabled) {
+  background: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
+}
+
+/* ----- Modal confirmar cancelación de pedido ----- */
+.order-detail-cancel-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  max-width: 96vw;
+  width: 400px;
+  padding: 0;
+  border: none;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+.order-detail-cancel-dialog::backdrop {
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.order-detail-cancel-dialog-content {
+  padding: 28px 24px 24px;
+  text-align: center;
+}
+
+.order-detail-cancel-dialog-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 1.75rem;
+}
+
+.order-detail-cancel-dialog-title {
+  margin: 0 0 10px 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.order-detail-cancel-dialog-desc {
+  margin: 0 0 24px 0;
+  font-size: 0.9375rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.order-detail-cancel-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.order-detail-cancel-dialog-actions .order-detail-btn {
+  min-width: 140px;
 }
 
 /* ----- Modal dirección de envío (centrado) ----- */

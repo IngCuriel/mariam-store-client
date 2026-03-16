@@ -364,7 +364,37 @@
   opacity: 0.9;
 }
 
-/* Entrega a domicilio o en tienda */
+/* Entrega a domicilio (deliveryType) */
+.orders-order-flag--delivery {
+  background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+  border-left-color: #2e7d32;
+  color: #1b5e20;
+}
+
+.orders-order-flag--delivery .orders-order-flag-label {
+  color: #1b5e20;
+}
+
+.orders-order-flag--delivery .orders-order-flag-subtitle {
+  color: #388e3c;
+}
+
+/* Recoger en sucursal (deliveryType) */
+.orders-order-flag--pickup {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border-left-color: #1565c0;
+  color: #0d47a1;
+}
+
+.orders-order-flag--pickup .orders-order-flag-label {
+  color: #1565c0;
+}
+
+.orders-order-flag--pickup .orders-order-flag-subtitle {
+  color: #1976d2;
+}
+
+/* Entrega a domicilio o en tienda (desde notas, legacy) */
 .orders-order-flag--local_delivery {
   background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
   border-left-color: #2e7d32;

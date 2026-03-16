@@ -16,7 +16,6 @@ import {
   getTimelineStepIndex,
   STATUS_NEXT_STEP_MESSAGE,
 } from '../constants/orderStatus';
-import { getOrderAvailabilityFromNotes } from '../utils/orderAvailability';
 import { Toast } from '../components/Toast';
 import './OrderDetail.css';
 
@@ -88,7 +87,9 @@ export default function OrderDetail() {
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const addressDialogRef = useRef(null);
+  const cancelDialogRef = useRef(null);
 
   const showToast = useCallback((message, type = 'info') => {
     setToast({ open: true, message, type });
@@ -124,6 +125,13 @@ export default function OrderDetail() {
     if (showAddressModal) dialog.showModal();
     else dialog.close();
   }, [showAddressModal]);
+
+  useEffect(() => {
+    const dialog = cancelDialogRef.current;
+    if (!dialog) return;
+    if (showCancelConfirm) dialog.showModal();
+    else dialog.close();
+  }, [showCancelConfirm]);
 
   useEffect(() => {
     if (!showAddressModal) return;
@@ -217,11 +225,13 @@ export default function OrderDetail() {
     }
   };
 
-  const handleCancelOrder = async () => {
+  const openCancelConfirm = () => setShowCancelConfirm(true);
+
+  const handleConfirmCancelOrder = async () => {
     if (!id || !order) return;
-    if (!window.confirm('¿Cancelar este pedido? Esta acción no se puede deshacer.')) return;
     try {
       setActionLoading(true);
+      setShowCancelConfirm(false);
       await cancelOrder(id);
       showToast('Pedido cancelado.', 'info');
       await loadOrder();
@@ -281,8 +291,6 @@ export default function OrderDetail() {
       (i) => i.isAvailable === false || (i.confirmedQuantity != null && i.confirmedQuantity !== i.quantity)
     );
 
-  const orderAvailability = getOrderAvailabilityFromNotes(order.notes);
-
   return (
     <div className="order-detail-page">
       <Toast open={toast.open} message={toast.message} type={toast.type} onClose={closeToast} />
@@ -297,20 +305,11 @@ export default function OrderDetail() {
           </button>
           <div className="order-detail-header-center">
             <h1 className="order-detail-title">Detalle del pedido</h1>
-            {order.folio && (
-              <span className="order-detail-folio-header">Folio {order.folio}</span>
-            )}
-            {orderAvailability && (
-              <div className={`order-detail-availability-badge order-detail-availability-badge--${orderAvailability.type}`} role="status">
-                <span className="order-detail-availability-badge-icon" aria-hidden>{orderAvailability.icon}</span>
-                <div className="order-detail-availability-badge-text">
-                  <strong className="order-detail-availability-badge-label">{orderAvailability.label}</strong>
-                  <span className="order-detail-availability-badge-subtitle">{orderAvailability.subtitle}</span>
-                </div>
-              </div>
-            )}
+            <span className="order-detail-folio-header">Folio {order.folio ?? order.id}</span>
             <span className="order-detail-meta">
-              {formatShortDate(order.createdAt)}
+              <time dateTime={order.createdAt} title="Fecha y hora del pedido">
+                Pedido del {formatDate(order.createdAt)}
+              </time>
               {order.branch && ` · ${order.branch.name}`}
             </span>
           </div>
@@ -344,8 +343,9 @@ export default function OrderDetail() {
             </section>
           )}
 
-          {/* Estado actual + mensaje según estado */}
-          <section className="order-detail-status-section">
+          {/* Estado del pedido + mensaje según estado */}
+          <section className="order-detail-status-section" aria-label="Estado del pedido">
+            <p className="order-detail-status-label">Estado del pedido</p>
             <div
               className="order-detail-status-badge"
               style={{ backgroundColor: `${statusColor}20`, color: statusColor }}
@@ -365,28 +365,6 @@ export default function OrderDetail() {
                 <span> · {formatPrice(order.deliveryCost)}</span>
               )}
             </p>
-          )}
-
-          {/* Historial de estados (timeline con fechas, tipo Mercado Libre) */}
-          {order.statusHistory && order.statusHistory.length > 0 && (
-            <section className="order-detail-history" aria-label="Historial del pedido">
-              <h3 className="order-detail-history-title">Seguimiento</h3>
-              <ul className="order-detail-history-list">
-                {order.statusHistory.map((entry, index) => (
-                  <li key={`${entry.status}-${entry.createdAt}`} className="order-detail-history-item">
-                    <span className="order-detail-history-dot" aria-hidden="true" />
-                    <div className="order-detail-history-content">
-                      <span className="order-detail-history-label">
-                        {STATUS_LABELS[entry.status] ?? entry.status}
-                      </span>
-                      <time className="order-detail-history-date" dateTime={entry.createdAt}>
-                        {formatDate(entry.createdAt)}
-                      </time>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </section>
           )}
 
           {/* Banner: Listo para recoger */}
@@ -570,15 +548,77 @@ export default function OrderDetail() {
               <button
                 type="button"
                 className="order-detail-btn order-detail-btn-cancel"
-                onClick={handleCancelOrder}
+                onClick={openCancelConfirm}
                 disabled={actionLoading}
               >
                 Cancelar pedido
               </button>
             </div>
           )}
+
+          {/* Historial de estados (timeline con fechas/horas) — al final */}
+          {order.statusHistory && order.statusHistory.length > 0 && (
+            <section className="order-detail-history" aria-label="Historial del pedido">
+              <h3 className="order-detail-history-title">Seguimiento</h3>
+              <ul className="order-detail-history-list">
+                {order.statusHistory.map((entry) => (
+                  <li key={`${entry.status}-${entry.createdAt}`} className="order-detail-history-item">
+                    <span className="order-detail-history-dot" aria-hidden="true" />
+                    <div className="order-detail-history-content">
+                      <span className="order-detail-history-label">
+                        {STATUS_LABELS[entry.status] ?? entry.status}
+                      </span>
+                      <time className="order-detail-history-date" dateTime={entry.createdAt}>
+                        {formatDate(entry.createdAt)}
+                      </time>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
         </div>
       </div>
+
+      {/* Modal: confirmar cancelación de pedido */}
+      <dialog
+        ref={cancelDialogRef}
+        className="order-detail-cancel-dialog"
+        aria-labelledby="order-detail-cancel-title"
+        aria-describedby="order-detail-cancel-desc"
+        onClose={() => setShowCancelConfirm(false)}
+        onCancel={() => setShowCancelConfirm(false)}
+      >
+        <div className="order-detail-cancel-dialog-content">
+          <div className="order-detail-cancel-dialog-icon" aria-hidden="true">
+            ⚠️
+          </div>
+          <h2 id="order-detail-cancel-title" className="order-detail-cancel-dialog-title">
+            ¿Cancelar pedido?
+          </h2>
+          <p id="order-detail-cancel-desc" className="order-detail-cancel-dialog-desc">
+            Esta acción no se puede deshacer. El pedido quedará cancelado y no podrás recuperarlo.
+          </p>
+          <div className="order-detail-cancel-dialog-actions">
+            <button
+              type="button"
+              className="order-detail-btn order-detail-btn-cancel"
+              onClick={() => setShowCancelConfirm(false)}
+              disabled={actionLoading}
+            >
+              No, mantener pedido
+            </button>
+            <button
+              type="button"
+              className="order-detail-btn order-detail-btn-cancel-confirm"
+              onClick={handleConfirmCancelOrder}
+              disabled={actionLoading}
+            >
+              {actionLoading ? 'Cancelando...' : 'Sí, cancelar pedido'}
+            </button>
+          </div>
+        </div>
+      </dialog>
 
       {/* Modal: dirección de envío (solo cuando es envío a domicilio y falta dirección) */}
       <dialog

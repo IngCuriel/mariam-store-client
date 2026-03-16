@@ -1,4 +1,39 @@
 /**
+ * Obtiene la leyenda e ícono de entrega a partir del deliveryType del pedido (API).
+ * @param {{ code?: string, name?: string } | null} [deliveryType] - deliveryType del pedido
+ * @returns {{ type: string, label: string, subtitle: string, icon: string } | null}
+ */
+export function getOrderDeliveryDisplay(deliveryType) {
+  if (!deliveryType || !deliveryType.code) return null;
+  const code = String(deliveryType.code).toLowerCase();
+  if (code === 'delivery') {
+    return {
+      type: 'delivery',
+      label: 'Entrega a domicilio',
+      subtitle: '',
+      icon: '🚚',
+    };
+  }
+  if (code === 'pickup') {
+    return {
+      type: 'pickup',
+      label: 'Recoger en sucursal',
+      subtitle: '',
+      icon: '📍',
+    };
+  }
+  if (deliveryType.name) {
+    return {
+      type: code || 'other',
+      label: deliveryType.name,
+      subtitle: '',
+      icon: '📦',
+    };
+  }
+  return null;
+}
+
+/**
  * Deriva el tipo de entrega/disponibilidad de un pedido a partir de sus notas.
  * Las notas se guardan al crear el pedido desde el carrito.
  * @param {string} [notes] - Campo notes del pedido

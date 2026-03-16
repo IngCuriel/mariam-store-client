@@ -8,7 +8,7 @@ import {
   STATUS_OPTIONS_FILTER,
   STATUS_LIST_MESSAGE,
 } from '../constants/orderStatus';
-import { getOrderAvailabilityFromNotes } from '../utils/orderAvailability';
+import { getOrderDeliveryDisplay, getOrderAvailabilityFromNotes } from '../utils/orderAvailability';
 import './Orders.css';
 
 const STATUS_OPTIONS = STATUS_OPTIONS_FILTER;
@@ -201,7 +201,7 @@ export default function Orders() {
       ) : (
         <section className="orders-list" aria-label="Lista de pedidos">
           {orders.map((item) => {
-            const availability = getOrderAvailabilityFromNotes(item.notes);
+            const availability = getOrderDeliveryDisplay(item.deliveryType) ?? getOrderAvailabilityFromNotes(item.notes);
             return (
               <article
                 key={item.id}
@@ -212,11 +212,9 @@ export default function Orders() {
                   <div className="orders-order-top">
                     <div className="orders-order-meta">
                       <span className="orders-order-date">
-                        {formatShortDate(item.createdAt)}
+                        Creado: {formatShortDate(item.createdAt)}
                       </span>
-                      {item.folio && (
-                        <span className="orders-order-folio">Pedido {item.folio}</span>
-                      )}
+                      <span className="orders-order-folio">Pedido {item.folio ?? item.id}</span>
                     </div>
                     <span
                       className="orders-order-status"

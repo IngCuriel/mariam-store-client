@@ -277,13 +277,21 @@ export default function Cart() {
         onCancel={() => setShowDeliveryDialog(false)}
       >
         <div className="cart-delivery-content">
-          <h2 id="cart-delivery-title" className="cart-delivery-title">Elige la forma de entrega</h2>
+          <h2 id="cart-delivery-title" className="cart-delivery-title">
+            {deliveryTypes.length === 1 ? 'Forma de entrega' : 'Elige la forma de entrega'}
+          </h2>
           {loadingDeliveryTypes ? (
             <p className="cart-delivery-loading">Cargando opciones...</p>
           ) : deliveryTypes.length === 0 ? (
             <p className="cart-delivery-empty">No hay opciones de entrega configuradas. Puedes continuar sin seleccionar.</p>
           ) : (
-            <div className="cart-delivery-options" role="group" aria-label="Forma de entrega">
+            <>
+              {deliveryTypes.length === 1 && (
+                <p className="cart-delivery-single-note" role="status">
+                  Por el momento solo contamos con la siguiente forma de entrega. Confírmala para continuar con tu compra.
+                </p>
+              )}
+              <div className="cart-delivery-options" role="group" aria-label="Forma de entrega">
               {deliveryTypes.map((type) => (
                 <button
                   key={type.id}
@@ -298,20 +306,23 @@ export default function Cart() {
                 </button>
               ))}
             </div>
+            </>
           )}
           {deliveryTypes.length > 0 && selectedDeliveryType && (
             <>
               {selectedDeliveryType.code === 'delivery' && (
-                <p className="cart-delivery-address-note" role="status">
-                  La dirección de envío la indicarás cuando la tienda confirme tu pedido.
-                </p>
+                <>
+                  <p className="cart-delivery-address-note" role="status">
+                    La dirección de envío la indicarás cuando la tienda confirme tu pedido.
+                  </p>
+                  <p className="cart-delivery-total">
+                    Total con envío: <strong>{formatPrice(totalWithDelivery)}</strong>
+                    {deliveryCostPerOrder > 0 && numOrders > 0 && (
+                      <span className="cart-delivery-note"> (incl. {formatPrice(deliveryCostPerOrder)} por pedido)</span>
+                    )}
+                  </p>
+                </>
               )}
-              <p className="cart-delivery-total">
-                Total con envío: <strong>{formatPrice(totalWithDelivery)}</strong>
-                {deliveryCostPerOrder > 0 && numOrders > 0 && (
-                  <span className="cart-delivery-note"> (incl. {formatPrice(deliveryCostPerOrder)} por pedido)</span>
-                )}
-              </p>
             </>
           )}
           <div className="cart-delivery-actions">

@@ -683,6 +683,13 @@
   color: #64748b;
 }
 
+.cart-delivery-single-note {
+  margin: 0 0 14px 0;
+  font-size: 0.9375rem;
+  color: #475569;
+  line-height: 1.45;
+}
+
 .cart-delivery-options {
   display: flex;
   flex-direction: column;
