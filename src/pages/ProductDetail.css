@@ -210,6 +210,37 @@
   font-weight: 400;
 }
 
+.pdp-delivery-card-options {
+  margin: 0 0 4px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pdp-delivery-card-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+  color: #333;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.pdp-delivery-card-option:not(:last-child) {
+  border-bottom: 1px solid #eee;
+}
+
+.pdp-delivery-card-option-name {
+  flex: 1;
+}
+
+.pdp-delivery-card-option-cost {
+  font-size: 0.875rem;
+  color: #3483fa;
+  font-weight: 600;
+}
+
 .pdp-delivery-card-branch {
   display: flex;
   align-items: flex-start;

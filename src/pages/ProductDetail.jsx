@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getProductById } from '../services/productsService';
+import { getDeliveryTypes } from '../services/ordersService';
 import { useCart } from '../contexts/CartContext';
 import { getBestProductImage, getProductEmoji } from '../services/imageService';
 import { Toast } from '../components/Toast';
@@ -36,10 +37,35 @@ export default function ProductDetail() {
   const [toast, setToast] = useState({ open: false, message: '', type: 'info' });
   const [fallbackImage, setFallbackImage] = useState(null);
   const [imageError, setImageError] = useState(false);
+  const [deliveryTypes, setDeliveryTypes] = useState([]);
+  const [deliveryTypesLoading, setDeliveryTypesLoading] = useState(false);
 
   useEffect(() => {
     if (id) loadProduct();
   }, [id]);
+
+  /** Cuando el producto es "Disponible ahora" (inventario local), cargar tipos de entrega para el card. */
+  useEffect(() => {
+    const availability = product?.productAvailability ? String(product.productAvailability).trim() : null;
+    const isLocalDelivery = (availability || 'local_delivery') === 'local_delivery';
+    if (!product || !isLocalDelivery) {
+      setDeliveryTypes([]);
+      return;
+    }
+    let cancelled = false;
+    setDeliveryTypesLoading(true);
+    getDeliveryTypes()
+      .then((types) => {
+        if (!cancelled && Array.isArray(types)) setDeliveryTypes(types);
+      })
+      .catch(() => {
+        if (!cancelled) setDeliveryTypes([]);
+      })
+      .finally(() => {
+        if (!cancelled) setDeliveryTypesLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [product?.id, product?.productAvailability]);
 
   const loadProduct = async () => {
     try {
@@ -233,10 +259,28 @@ export default function ProductDetail() {
               <section className="pdp-delivery-card" aria-label="Entrega y disponibilidad">
                 {isLocalDelivery && (
                   <>
-                    <h3 className="pdp-delivery-card-title">Entrega</h3>
-                    <p className="pdp-delivery-card-line">
-                      🚚 A domicilio ó Recoger en tienda
-                    </p>
+                    <h3 className="pdp-delivery-card-title">Forma{deliveryTypes.length > 0 ? 's' : ''} de Entrega</h3>
+                    {deliveryTypesLoading ? (
+                      <p className="pdp-delivery-card-line">Cargando opciones de entrega...</p>
+                    ) : deliveryTypes.length > 0 ? (
+                      <ul className="pdp-delivery-card-options" aria-label="Opciones de entrega">
+                        {deliveryTypes.map((type) => (
+                          <li key={type.id} className="pdp-delivery-card-option">
+                            <span className="pdp-delivery-card-option-name">
+                              {type.code === 'delivery' ? '🚚 ' : '📍 '}
+                              {type.name}
+                            </span>
+                            {type.cost != null && Number(type.cost) > 0 ? (
+                              <span className="pdp-delivery-card-option-cost">Costo adicional</span>
+                            ) : (<span className="pdp-delivery-card-option-cost">Gratis</span>)}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="pdp-delivery-card-line">
+                        🚚 A domicilio ó Recoger en tienda
+                      </p>
+                    )}
                     <p className="pdp-delivery-card-note">Una vez confirmada disponibilidad</p>
                   </>
                 )}
