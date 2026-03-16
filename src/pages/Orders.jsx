@@ -214,7 +214,7 @@ export default function Orders() {
                       <span className="orders-order-date">
                         Creado: {formatShortDate(item.createdAt)}
                       </span>
-                      <span className="orders-order-folio">Pedido {item.folio ?? item.id}</span>
+                      <span className="orders-order-folio">Pedido {item.id}</span>
                     </div>
                     <span
                       className="orders-order-status"

@@ -36,9 +36,13 @@ export const confirmOrderByCustomer = async (id, data = {}) => {
   return response.data;
 };
 
-/** Cliente o admin cancela el pedido */
-export const cancelOrder = async (id) => {
-  const response = await api.post(`/orders/${id}/cancel`);
+/**
+ * Cliente o admin cancela el pedido.
+ * @param {string|number} id - Order id
+ * @param {{ reason?: string }} [data] - Motivo de cancelación (opcional)
+ */
+export const cancelOrder = async (id, data = {}) => {
+  const response = await api.post(`/orders/${id}/cancel`, data);
   return response.data;
 };
 

@@ -15,6 +15,7 @@ import {
   ORDER_TIMELINE_STEPS,
   getTimelineStepIndex,
   STATUS_NEXT_STEP_MESSAGE,
+  NO_AVAILABILITY_MESSAGE,
 } from '../constants/orderStatus';
 import { Toast } from '../components/Toast';
 import './OrderDetail.css';
@@ -88,8 +89,18 @@ export default function OrderDetail() {
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelReasonOther, setCancelReasonOther] = useState('');
   const addressDialogRef = useRef(null);
   const cancelDialogRef = useRef(null);
+
+  const CANCEL_REASON_OPTIONS = [
+    { value: '', label: 'Seleccionar motivo (opcional)' },
+    { value: 'Ya no necesito el pedido', label: 'Ya no necesito el pedido' },
+    { value: 'Encontré los productos en otro lugar', label: 'Encontré los productos en otro lugar' },
+    { value: 'Cambié de opinión', label: 'Cambié de opinión' },
+    { value: 'Otro', label: 'Otro' },
+  ];
 
   const showToast = useCallback((message, type = 'info') => {
     setToast({ open: true, message, type });
@@ -229,10 +240,13 @@ export default function OrderDetail() {
 
   const handleConfirmCancelOrder = async () => {
     if (!id || !order) return;
+    const reasonToSend = cancelReason === 'Otro' ? cancelReasonOther.trim() : (cancelReason || null);
     try {
       setActionLoading(true);
       setShowCancelConfirm(false);
-      await cancelOrder(id);
+      setCancelReason('');
+      setCancelReasonOther('');
+      await cancelOrder(id, reasonToSend ? { reason: reasonToSend } : {});
       showToast('Pedido cancelado.', 'info');
       await loadOrder();
     } catch (err) {
@@ -291,6 +305,14 @@ export default function OrderDetail() {
       (i) => i.isAvailable === false || (i.confirmedQuantity != null && i.confirmedQuantity !== i.quantity)
     );
 
+  const noProductsAvailable =
+    canAcceptOrCancel &&
+    (order.total === 0 ||
+      (order.items?.length > 0 &&
+        order.items.every((item) => (item.confirmedQuantity ?? 0) === 0)));
+
+  const statusMessageText = noProductsAvailable ? null : nextStepMessage;
+
   return (
     <div className="order-detail-page">
       <Toast open={toast.open} message={toast.message} type={toast.type} onClose={closeToast} />
@@ -305,7 +327,7 @@ export default function OrderDetail() {
           </button>
           <div className="order-detail-header-center">
             <h1 className="order-detail-title">Detalle del pedido</h1>
-            <span className="order-detail-folio-header">Folio {order.folio ?? order.id}</span>
+            <span className="order-detail-folio-header">Folio {order.id}</span>
             <span className="order-detail-meta">
               <time dateTime={order.createdAt} title="Fecha y hora del pedido">
                 Pedido del {formatDate(order.createdAt)}
@@ -352,10 +374,40 @@ export default function OrderDetail() {
             >
               <span className="order-detail-status-text">{statusLabel}</span>
             </div>
-            {nextStepMessage && (
-              <p className="order-detail-next-step-msg">{nextStepMessage}</p>
+            {statusMessageText && (
+              <p className="order-detail-next-step-msg">{statusMessageText}</p>
+            )}
+            {order.status === ORDER_STATUS.CANCELLED && order.cancellationReason && (
+              <p className="order-detail-cancellation-reason" role="status">
+                {order.cancellationReason}
+              </p>
             )}
           </section>
+
+          {/* Bloque especial: ningún producto disponible — mensaje amigable y acciones */}
+          {noProductsAvailable && (
+            <div className="order-detail-no-availability-card" role="status">
+              <p className="order-detail-no-availability-title">{NO_AVAILABILITY_MESSAGE.title}</p>
+              <p className="order-detail-no-availability-body">{NO_AVAILABILITY_MESSAGE.body}</p>
+              <div className="order-detail-no-availability-actions">
+                <button
+                  type="button"
+                  className="order-detail-btn order-detail-btn-accept"
+                  onClick={() => navigate('/products')}
+                >
+                  {NO_AVAILABILITY_MESSAGE.ctaExplore}
+                </button>
+                <button
+                  type="button"
+                  className="order-detail-btn order-detail-btn-cancel"
+                  onClick={openCancelConfirm}
+                  disabled={actionLoading}
+                >
+                  {NO_AVAILABILITY_MESSAGE.ctaCancel}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Tipo de entrega (si aplica) */}
           {order.deliveryType && (
@@ -529,8 +581,8 @@ export default function OrderDetail() {
             </div>
           </section>
 
-          {/* Acciones: Aceptar / Cancelar */}
-          {canAcceptOrCancel && (
+          {/* Acciones: Aceptar / Cancelar (solo cuando hay productos disponibles para aceptar) */}
+          {canAcceptOrCancel && !noProductsAvailable && (
             <div className="order-detail-actions">
               {needsDeliveryAddress && (
                 <p className="order-detail-delivery-address-hint">
@@ -586,8 +638,16 @@ export default function OrderDetail() {
         className="order-detail-cancel-dialog"
         aria-labelledby="order-detail-cancel-title"
         aria-describedby="order-detail-cancel-desc"
-        onClose={() => setShowCancelConfirm(false)}
-        onCancel={() => setShowCancelConfirm(false)}
+        onClose={() => {
+          setShowCancelConfirm(false);
+          setCancelReason('');
+          setCancelReasonOther('');
+        }}
+        onCancel={() => {
+          setShowCancelConfirm(false);
+          setCancelReason('');
+          setCancelReasonOther('');
+        }}
       >
         <div className="order-detail-cancel-dialog-content">
           <div className="order-detail-cancel-dialog-icon" aria-hidden="true">
@@ -599,11 +659,42 @@ export default function OrderDetail() {
           <p id="order-detail-cancel-desc" className="order-detail-cancel-dialog-desc">
             Esta acción no se puede deshacer. El pedido quedará cancelado y no podrás recuperarlo.
           </p>
+          <label htmlFor="order-detail-cancel-reason" className="order-detail-cancel-reason-label">
+            Motivo de cancelación (opcional)
+          </label>
+          <select
+            id="order-detail-cancel-reason"
+            className="order-detail-cancel-reason-select"
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            aria-describedby="order-detail-cancel-desc"
+          >
+            {CANCEL_REASON_OPTIONS.map((opt) => (
+              <option key={opt.value || 'empty'} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          {cancelReason === 'Otro' && (
+            <input
+              type="text"
+              className="order-detail-cancel-reason-other"
+              placeholder="Escribe el motivo"
+              value={cancelReasonOther}
+              onChange={(e) => setCancelReasonOther(e.target.value)}
+              maxLength={200}
+              aria-label="Motivo de cancelación (otro)"
+            />
+          )}
           <div className="order-detail-cancel-dialog-actions">
             <button
               type="button"
               className="order-detail-btn order-detail-btn-cancel"
-              onClick={() => setShowCancelConfirm(false)}
+              onClick={() => {
+                setShowCancelConfirm(false);
+                setCancelReason('');
+                setCancelReasonOther('');
+              }}
               disabled={actionLoading}
             >
               No, mantener pedido

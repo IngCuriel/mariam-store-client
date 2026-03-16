@@ -78,7 +78,15 @@ export const STATUS_NEXT_STEP_MESSAGE = {
   [ORDER_STATUS.READY_FOR_PICKUP]: 'Tu pedido está listo. Pásate por la sucursal a recogerlo.',
   [ORDER_STATUS.IN_TRANSIT]: 'Tu pedido está en camino a tu domicilio.',
   [ORDER_STATUS.COMPLETED]: 'Gracias por tu compra.',
-  [ORDER_STATUS.CANCELLED]: 'Este pedido fue cancelado.',
+  [ORDER_STATUS.CANCELLED]: 'Este pedido fue cancelado. Te invitamos a explorar más productos cuando quieras.',
+};
+
+/** Mensaje cuando no hay ningún producto disponible (Parcialmente disponible con total 0) */
+export const NO_AVAILABILITY_MESSAGE = {
+  title: 'En este momento no tenemos disponibilidad',
+  body: 'Los productos de tu pedido no están disponibles por el momento. Puedes cancelar este pedido y te invitamos a explorar otros productos; estamos seguros de que encontrarás algo que te guste.',
+  ctaExplore: 'Explorar productos',
+  ctaCancel: 'Cancelar pedido',
 };
 
 /** Mensaje corto para lista de pedidos */

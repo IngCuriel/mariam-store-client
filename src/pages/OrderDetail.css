@@ -307,6 +307,17 @@
   max-width: 420px;
 }
 
+.order-detail-cancellation-reason {
+  margin: 8px 0 0 0;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  color: #64748b;
+  line-height: 1.45;
+  background: #f8fafc;
+  border-radius: 8px;
+  border-left: 3px solid #94a3b8;
+}
+
 .order-detail-ready-banner {
   display: flex;
   align-items: flex-start;
@@ -372,6 +383,39 @@
 
 .order-detail-delivery-type strong {
   color: #1e293b;
+}
+
+/* Tarjeta cuando no hay ningún producto disponible */
+.order-detail-no-availability-card {
+  margin: 0 0 24px 0;
+  padding: 20px;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1px solid #fcd34d;
+  border-radius: 12px;
+}
+
+.order-detail-no-availability-title {
+  margin: 0 0 8px 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #92400e;
+}
+
+.order-detail-no-availability-body {
+  margin: 0 0 16px 0;
+  font-size: 0.9375rem;
+  color: #b45309;
+  line-height: 1.5;
+}
+
+.order-detail-no-availability-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.order-detail-no-availability-actions .order-detail-btn {
+  min-width: 140px;
 }
 
 /* Historial del pedido (timeline con fechas) */
@@ -914,10 +958,43 @@
 }
 
 .order-detail-cancel-dialog-desc {
-  margin: 0 0 24px 0;
+  margin: 0 0 16px 0;
   font-size: 0.9375rem;
   color: #64748b;
   line-height: 1.5;
+}
+
+.order-detail-cancel-reason-label {
+  display: block;
+  margin: 0 0 6px 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+  text-align: left;
+}
+
+.order-detail-cancel-reason-select {
+  display: block;
+  width: 100%;
+  margin: 0 0 12px 0;
+  padding: 10px 12px;
+  font-size: 0.9375rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #1e293b;
+  box-sizing: border-box;
+}
+
+.order-detail-cancel-reason-other {
+  display: block;
+  width: 100%;
+  margin: 0 0 16px 0;
+  padding: 10px 12px;
+  font-size: 0.9375rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-sizing: border-box;
 }
 
 .order-detail-cancel-dialog-actions {
