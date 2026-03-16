@@ -508,10 +508,14 @@ export default function Cart() {
               const orderableInBranch = groupItems.filter((i) => isOrderable(i.product));
               const onlyInStore = orderableInBranch.length === 0;
               const pedidoIndex = orderableGroupsForCheckout.findIndex((g) => g.branchKey === branchKey);
-              const pedidoLabel =
-                pedidoIndex >= 0
-                  ? `Pedido ${pedidoIndex + 1} – ${branchName}`
-                  : `${branchName} (Solo en sucursal)`;
+              let pedidoLabel;
+              if (pedidoIndex < 0) {
+                pedidoLabel = `${branchName} (Solo en sucursal)`;
+              } else if (isMultiBranch) {
+                pedidoLabel = `Pedido ${pedidoIndex + 1} – ${branchName}`;
+              } else {
+                pedidoLabel = branchName;
+              }
 
               return (
                 <section
@@ -604,11 +608,12 @@ export default function Cart() {
             <div className="cart-summary-rows">
               {orderableGroupsForCheckout.map((group, index) => {
                 const subtotal = group.orderableItems.reduce((s, i) => s + i.subtotal, 0);
+                const summaryLabel = isMultiBranch
+                  ? `📦 Pedido ${index + 1} – ${group.branchName}`
+                  : `📦 ${group.branchName}`;
                 return (
                   <div key={group.branchKey} className="cart-summary-row">
-                    <span className="cart-summary-row-label">
-                      📦 Pedido {index + 1} – {group.branchName}
-                    </span>
+                    <span className="cart-summary-row-label">{summaryLabel}</span>
                     <span>{formatPrice(subtotal)}</span>
                   </div>
                 );
