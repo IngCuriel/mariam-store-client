@@ -1,0 +1,34 @@
+.address-map-picker {
+  margin: 16px 0;
+}
+
+.address-map-picker-hint {
+  margin: 0 0 10px 0;
+  font-size: 0.9375rem;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.address-map-picker-map-wrap {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.address-map-picker-map {
+  height: 280px;
+  width: 100%;
+  min-height: 240px;
+}
+
+.address-map-picker-coords {
+  margin: 8px 0 0 0;
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+/* Ajustes para tiles de Leaflet */
+.address-map-picker-map .leaflet-container {
+  font-family: inherit;
+}

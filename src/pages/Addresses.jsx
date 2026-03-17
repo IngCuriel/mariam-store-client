@@ -8,6 +8,7 @@ import {
   setDefaultAddress,
 } from '../services/addressesService';
 import { Toast } from '../components/Toast';
+import AddressMapPicker from '../components/AddressMapPicker';
 import { DELIVERY_POSTAL_CODE, DELIVERY_CITY, DELIVERY_STATE } from '../constants/deliveryZone';
 import './Addresses.css';
 
@@ -16,6 +17,8 @@ const INITIAL_FORM = {
   street: '',
   colony: '',
   references: '',
+  latitude: null,
+  longitude: null,
 };
 
 export default function Addresses() {
@@ -61,6 +64,8 @@ export default function Addresses() {
       street: addr.street || '',
       colony: addr.colony || '',
       references: addr.references || '',
+      latitude: addr.latitude ?? null,
+      longitude: addr.longitude ?? null,
     });
     setShowForm(true);
   };
@@ -81,23 +86,25 @@ export default function Addresses() {
     }
     setSaving(true);
     try {
+      const payload = {
+        label: form.label?.trim() || 'Casa',
+        street,
+        colony,
+        references: form.references?.trim() || undefined,
+      };
+      if (form.latitude != null && form.longitude != null) {
+        payload.latitude = form.latitude;
+        payload.longitude = form.longitude;
+      }
       if (editingId) {
-        await updateAddress(editingId, {
-          label: form.label?.trim() || 'Casa',
-          street,
-          colony,
-          references: form.references?.trim() || undefined,
-        });
+        await updateAddress(editingId, payload);
         showToast('Dirección actualizada.', 'success');
       } else {
         await createAddress({
-          label: form.label?.trim() || 'Casa',
-          street,
-          colony,
+          ...payload,
           postalCode: DELIVERY_POSTAL_CODE,
           city: DELIVERY_CITY,
           state: DELIVERY_STATE,
-          references: form.references?.trim() || undefined,
           isDefault: list.length === 0,
         });
         showToast('Dirección guardada.', 'success');
@@ -165,6 +172,9 @@ export default function Addresses() {
                     </p>
                     {addr.references?.trim() && (
                       <p className="addresses-card-ref">Ref: {addr.references}</p>
+                    )}
+                    {addr.latitude != null && addr.longitude != null && (
+                      <p className="addresses-card-map-note">📍 Ubicación en mapa registrada</p>
                     )}
                   </div>
                   <div className="addresses-card-actions">
@@ -243,6 +253,14 @@ export default function Addresses() {
                     onChange={(e) => setForm((p) => ({ ...p, references: e.target.value }))}
                     placeholder="Entre X y Y"
                   />
+                  <div className="addresses-form-map-section" id="addresses-map-section" role="group" aria-labelledby="addresses-map-label">
+                    <span id="addresses-map-label" className="addresses-form-label">Ubicación en el mapa (opcional)</span>
+                    <AddressMapPicker
+                      latitude={form.latitude}
+                      longitude={form.longitude}
+                      onLocationChange={(lat, lng) => setForm((p) => ({ ...p, latitude: lat, longitude: lng }))}
+                    />
+                  </div>
                   <div className="addresses-form-actions">
                     <button type="button" className="addresses-btn addresses-btn--secondary" onClick={closeForm} disabled={saving}>
                       Cancelar

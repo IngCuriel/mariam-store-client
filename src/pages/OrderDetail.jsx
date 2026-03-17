@@ -18,6 +18,7 @@ import {
   STATUS_NEXT_STEP_MESSAGE,
   NO_AVAILABILITY_MESSAGE,
 } from '../constants/orderStatus';
+import { getReadyAtAvailabilityMessage } from '../utils/orderAvailability';
 import { Toast } from '../components/Toast';
 import './OrderDetail.css';
 
@@ -501,11 +502,12 @@ export default function OrderDetail() {
             <div className="order-detail-ready-banner">
               <span className="order-detail-ready-icon">✓</span>
               <div className="order-detail-ready-content">
-                {/*<strong>Listo para recoger</strong>*/}
                 <p>
-                  {order.readyAt
-                    ? `Disponible apartir del ${formatDate(order.readyAt)}.`
-                    : 'Pásate por la sucursal a recoger tu pedido.'}
+                  {(() => {
+                    const readyMsg = getReadyAtAvailabilityMessage(order.readyAt);
+                    if (readyMsg.message) return readyMsg.message;
+                    return 'Pásate por la sucursal a recoger tu pedido.';
+                  })()}
                 </p>
                 {(order.branch || order.deliveryType?.code === 'pickup') && (
                   <div className="order-detail-branch-pickup" role="region" aria-label="Datos de la sucursal">
@@ -544,9 +546,11 @@ export default function OrderDetail() {
               <div>
                 <strong>Tu pedido está en camino</strong>
                 <p>
-                  {order.readyAt
-                    ? `Enviado el ${formatDate(order.readyAt)}. Llegará pronto a tu domicilio.`
-                    : 'Te avisaremos cuando esté cerca.'}
+                  {(() => {
+                    const readyMsg = getReadyAtAvailabilityMessage(order.readyAt);
+                    if (readyMsg.message) return readyMsg.message;
+                    return 'Te avisaremos cuando esté cerca.';
+                  })()}
                 </p>
               </div>
             </div>
@@ -833,14 +837,8 @@ export default function OrderDetail() {
         className="order-detail-delivery-type-dialog"
         aria-labelledby="order-detail-delivery-type-title"
         aria-describedby="order-detail-delivery-type-desc"
-        onClose={() => {
-          setShowDeliveryTypeModal(false);
-          setSelectedDeliveryType(null);
-        }}
-        onCancel={() => {
-          setShowDeliveryTypeModal(false);
-          setSelectedDeliveryType(null);
-        }}
+        onClose={() => setShowDeliveryTypeModal(false)}
+        onCancel={() => setShowDeliveryTypeModal(false)}
       >
         <div className="order-detail-delivery-type-dialog-content">
           <button

@@ -8,7 +8,7 @@ import {
   STATUS_OPTIONS_FILTER,
   STATUS_LIST_MESSAGE,
 } from '../constants/orderStatus';
-import { getOrderDeliveryDisplay, getOrderAvailabilityFromNotes } from '../utils/orderAvailability';
+import { getOrderDeliveryDisplay, getOrderAvailabilityFromNotes, getReadyAtAvailabilityMessage } from '../utils/orderAvailability';
 import './Orders.css';
 
 const STATUS_OPTIONS = STATUS_OPTIONS_FILTER;
@@ -227,19 +227,27 @@ export default function Orders() {
                     </span>
                   </div>
 
-                  {/* Fecha listo para recoger (solo si aplica) */}
-                  {item.status === ORDER_STATUS.READY_FOR_PICKUP && item.readyAt && (
-                    <p className="orders-order-ready-at" role="status">
-                      Listo desde {formatShortDateTime(item.readyAt)}
-                    </p>
-                  )}
+                  {/* Disponibilidad listo para recoger (solo si aplica) */}
+                  {item.status === ORDER_STATUS.READY_FOR_PICKUP && (() => {
+                    const readyMsg = getReadyAtAvailabilityMessage(item.readyAt);
+                    if (!readyMsg.shortMessage) return null;
+                    return (
+                      <p className="orders-order-ready-at" role="status">
+                        {readyMsg.shortMessage}
+                      </p>
+                    );
+                  })()}
 
-                  {/* Fecha en camino (solo si aplica) */}
-                  {item.status === ORDER_STATUS.IN_TRANSIT && item.readyAt && (
-                    <p className="orders-order-ready-at" role="status">
-                      En camino desde {formatShortDateTime(item.readyAt)}
-                    </p>
-                  )}
+                  {/* Disponibilidad en camino (solo si aplica) */}
+                  {item.status === ORDER_STATUS.IN_TRANSIT && (() => {
+                    const readyMsg = getReadyAtAvailabilityMessage(item.readyAt);
+                    if (!readyMsg.shortMessage) return null;
+                    return (
+                      <p className="orders-order-ready-at" role="status">
+                        {readyMsg.shortMessage}
+                      </p>
+                    );
+                  })()}
 
                   {/* Fecha entregado (solo si aplica) */}
                   {item.status === ORDER_STATUS.COMPLETED && item.deliveredAt && (

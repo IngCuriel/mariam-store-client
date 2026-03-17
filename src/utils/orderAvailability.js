@@ -68,3 +68,45 @@ export function getOrderAvailabilityFromNotes(notes) {
   }
   return null;
 }
+
+/**
+ * Mensaje de disponibilidad para pedidos listos (READY_FOR_PICKUP / IN_TRANSIT) según readyAt vs ahora.
+ * - Si readyAt <= ahora: "Disponible desde este momento"
+ * - Si mismo día pero hora futura: "Disponible a partir de las [hora]"
+ * - Si es otro día: "Disponible a partir del [día]"
+ * @param {string|Date} [readyAt] - Fecha/hora en que está listo para entrega/recoger
+ * @returns {{ message: string, shortMessage: string } | { message: null, shortMessage: null }}
+ */
+export function getReadyAtAvailabilityMessage(readyAt) {
+  if (!readyAt) return { message: null, shortMessage: null };
+  const ready = new Date(readyAt);
+  if (Number.isNaN(ready.getTime())) return { message: null, shortMessage: null };
+  const now = new Date();
+  if (ready <= now) {
+    return {
+      message: 'Disponible desde este momento.',
+      shortMessage: 'Disponible desde este momento',
+    };
+  }
+  const sameDay =
+    ready.getFullYear() === now.getFullYear() &&
+    ready.getMonth() === now.getMonth() &&
+    ready.getDate() === now.getDate();
+  if (sameDay) {
+    const timeStr = ready.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+    return {
+      message: `Disponible a partir de las ${timeStr}.`,
+      shortMessage: `Disponible a partir de las ${timeStr}`,
+    };
+  }
+  const dateStr = ready.toLocaleDateString('es-MX', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+  const dayStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+  return {
+    message: `Disponible a partir del ${dayStr}.`,
+    shortMessage: `Disponible a partir del ${dayStr}`,
+  };
+}
