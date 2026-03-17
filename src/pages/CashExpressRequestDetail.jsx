@@ -791,14 +791,14 @@ export default function CashExpressRequestDetail() {
               <h3 className="form-title">
                 {request.status === 'DEPOSITO_VALIDADO'
                   ? 'Completar Datos de Entrega'
-                  : 'Datos del Destinatario'}
+                  : 'Datos de quien recibe'}
               </h3>
             </div>
             <p className="form-description">
               {request.status === 'DEPOSITO_VALIDADO'
                 ? 'Por favor, proporciona los datos del destinatario para proceder con la entrega.'
                 : request.depositReceipt
-                  ? 'Completa los datos del destinatario. Al guardar, también enviarás tu comprobante a validación en un solo paso.'
+                  ? 'Completa los datos del destinatario del efectivo. despues click en guardar y se enviará a validación.'
                   : 'Completa los datos del destinatario. Después podrás subir y enviar tu comprobante a revisión.'}
             </p>
 
