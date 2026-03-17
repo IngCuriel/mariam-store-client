@@ -240,11 +240,10 @@ export default function Orders() {
 
                   {/* Disponibilidad en camino (solo si aplica) */}
                   {item.status === ORDER_STATUS.IN_TRANSIT && (() => {
-                    const readyMsg = getReadyAtAvailabilityMessage(item.readyAt);
-                    if (!readyMsg.shortMessage) return null;
+                    const readyMsg = "En breve llegará a tu domicilio"; 
                     return (
                       <p className="orders-order-ready-at" role="status">
-                        {readyMsg.shortMessage}
+                        {readyMsg}
                       </p>
                     );
                   })()}
