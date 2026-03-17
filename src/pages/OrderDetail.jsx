@@ -61,6 +61,19 @@ const formatShortDate = (dateString) => {
   }
 };
 
+/** Solo la hora (ej. "14:30") para mostrar cuándo salió el pedido de sucursal */
+const formatTimeOnly = (dateString) => {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('es-MX', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch (e) {
+    return dateString;
+  }
+};
+
 /** Cantidad efectiva para mostrar (confirmada o solicitada según disponibilidad) */
 function effectiveQuantity(item) {
   if (item.confirmedQuantity != null) return item.confirmedQuantity;
@@ -544,13 +557,11 @@ export default function OrderDetail() {
             <div className="order-detail-ready-banner order-detail-transit-banner">
               <span className="order-detail-ready-icon">🚚</span>
               <div>
-                <strong>Tu pedido está en camino</strong>
+                <strong>En breve llegará a tu domicilio</strong>
                 <p>
-                  {(() => {
-                    const readyMsg = getReadyAtAvailabilityMessage(order.readyAt);
-                    if (readyMsg.message) return readyMsg.message;
-                    return 'Te avisaremos cuando esté cerca.';
-                  })()}
+                  {order.readyAt
+                    ? `Salió de sucursal a las ${formatTimeOnly(order.readyAt)}`
+                    : 'Tu pedido está en camino.'}
                 </p>
               </div>
             </div>
