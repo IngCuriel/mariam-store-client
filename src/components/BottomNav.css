@@ -49,15 +49,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     transition: background 0.2s ease, color 0.2s ease;
+    flex-shrink: 0;
   }
 
   .bottom-nav-icon svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
   }
 
   .bottom-nav-item--active .bottom-nav-icon {
@@ -76,11 +77,11 @@
   }
 
   .bottom-nav-label {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
+    white-space: normal;
+    line-height: 1.15;
+    max-width: 52px;
     text-align: center;
+    word-break: break-word;
   }
 
   .bottom-nav-badge {

@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useCart } from '../contexts/CartContext';
 import './BottomNav.css';
 
 /** Íconos simples para la barra inferior (inline SVG para consistencia visual) */
@@ -16,11 +15,13 @@ const IconFlash = () => (
     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
   </svg>
 );
-const IconCart = () => (
+const IconClipboard = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-    <circle cx="9" cy="21" r="1" />
-    <circle cx="20" cy="21" r="1" />
-    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+    <path d="M9 14h6" />
+    <path d="M9 18h6" />
+    <path d="M9 10h6" />
   </svg>
 );
 const IconBox = () => (
@@ -40,11 +41,8 @@ const IconMore = () => (
 
 export default function BottomNav() {
   const { user, logout } = useAuth();
-  const { getTotalItems } = useCart();
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const moreMenuRef = useRef(null);
-
-  const cartCount = getTotalItems();
 
   useEffect(() => {
     if (!showMoreMenu) return;
@@ -70,10 +68,10 @@ export default function BottomNav() {
   };
 
   const navItems = [
-    { to: '/', label: 'Inicio', icon: IconHome },
+    { to: '/', label: 'Tienda Online', icon: IconHome },
+    { to: '/orders', label: 'Compras', icon: IconBox, protected: true },
     { to: '/cash-express', label: 'Efectivo Express', icon: IconFlash },
-    { to: '/cart', label: 'Carrito', icon: IconCart, badge: cartCount },
-    { to: '/orders', label: 'Pedidos', icon: IconBox, protected: true },
+    { to: '/cash-express/requests', label: 'Solicitudes', icon: IconClipboard, protected: true },
   ];
 
   return (
