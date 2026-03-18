@@ -487,12 +487,12 @@ export default function Orders() {
             <>
               <p className="orders-confirm-dialog-message">
                 {confirmModalOrder.status === ORDER_STATUS.AVAILABLE
-                  ? 'Todos los productos de tu pedido están disponibles. Confírmalo para que lo preparemos.'
-                  : 'Revisa la disponibilidad de cada producto. Puedes confirmar con el total actual o cancelar el pedido.'}
+                  ? 'Todo disponible. Elige cómo recibirlo y confirma.'
+                  : 'Revisa los productos. Confirma con el total actual o cancela.'}
               </p>
               {confirmModalOrder.items?.length > 0 && (
                 <div className="orders-confirm-dialog-products">
-                  <p className="orders-confirm-dialog-products-title">Productos en tu pedido</p>
+                  <p className="orders-confirm-dialog-products-title">Tu pedido</p>
                   <ul className="orders-confirm-dialog-products-scroll" aria-label="Lista de productos del pedido">
                     {confirmModalOrder.items.map((item) => {
                       const { statusClass, statusLabel, statusIcon } = getItemAvailabilityDisplay(item);
@@ -539,7 +539,7 @@ export default function Orders() {
               disabled={actionLoading}
               aria-label="Cancelar este pedido"
             >
-              Cancelar pedido
+              Cancelar
             </button>
             <button
               type="button"
@@ -548,7 +548,7 @@ export default function Orders() {
               disabled={actionLoading}
               aria-label="Continuar a finalizar pedido"
             >
-              Continuar
+              Continuar a finalizar
             </button>
           </div>
           <button

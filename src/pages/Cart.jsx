@@ -130,7 +130,7 @@ export default function Cart() {
     if (!isAuthenticated) {
       openConfirm(
         'Iniciar sesión',
-        'Necesitas iniciar sesión para generar tu pedido. ¿Deseas ir a la página de acceso?',
+        'Inicia sesión para generar tu pedido.',
         'Ir a iniciar sesión',
         () => navigate('/login', { state: { from: '/cart' } })
       );
@@ -138,21 +138,21 @@ export default function Cart() {
     }
 
     if (orderableItems.length === 0) {
-      showToast('Agrega al menos un producto que se pueda pedir en línea para generar tu pedido.', 'info');
+      showToast('Agrega al menos un producto disponible en línea.', 'info');
       return;
     }
 
     const message =
       numOrders > 1
-        ? `Se generarán ${numOrders} pedidos (uno por sucursal). Total aproximado: ${formatPrice(totalOrderable)}.`
-        : `Total a pagar: ${formatPrice(totalOrderable)}.`;
+        ? `${numOrders} pedidos (uno por sucursal). Total: ${formatPrice(totalOrderable)}`
+        : `Total: ${formatPrice(totalOrderable)}`;
     const flowSteps = [
-      'La sucursal revisará la disponibilidad de los productos. y te notificará.',
-      'Ayudanos aceptando o rechazando el pedido, ya que puede o no tener modificación (según disponibilidad).',
-      'Elige alguna de las formas de entrega disponibles.',
-      'Solo espera a que la sucursal te notifique que el pedido esté listo para entrega.',
+      'Revisamos disponibilidad y te notificamos.',
+      'Aceptas o cancelas el pedido según lo disponible.',
+      'Eliges cómo recibirlo (recoger o envío).',
+      'Te avisamos cuando esté listo.',
     ];
-    openConfirm('Confirmar pedido', message, 'Generar pedido', () => submitOrder(), null, flowSteps);
+    openConfirm('Generar pedido', message, 'Generar pedido', () => submitOrder(), null, flowSteps);
   };
 
   const submitOrder = async () => {
@@ -216,10 +216,10 @@ export default function Cart() {
               <span className="cart-order-success-check">✓</span>
             </div>
             <h1 id="cart-order-success-title" className="cart-order-success-title">
-              ¡Tus productos casi ya son tuyos!
+              Pedido creado
             </h1>
             <p className="cart-order-success-subtitle">
-              Solo falta que la sucursal confirme disponibilidad y tú nos apoyes a aceptar el pedido.
+              Revisaremos disponibilidad y te notificamos. Luego confirma y elige cómo recibirlo.
             </p>
             <div className="cart-order-success-actions">
               <button
@@ -230,7 +230,7 @@ export default function Cart() {
                   navigate('/orders');
                 }}
               >
-                Ir a mis pedidos
+                Ver mis pedidos
               </button>
               <button
                 type="button"
@@ -286,7 +286,7 @@ export default function Cart() {
         <div className="cart-order-loading-overlay" role="status" aria-live="polite" aria-label="Generando pedido">
           <div className="cart-order-loading-card">
             <div className="cart-order-loading-spinner" aria-hidden />
-            <p className="cart-order-loading-text">Generando tu pedido</p>
+            <p className="cart-order-loading-text">Generando pedido</p>
             <p className="cart-order-loading-subtext">Un momento, por favor...</p>
           </div>
         </div>
@@ -303,7 +303,7 @@ export default function Cart() {
           <p className="cart-confirm-message">{confirmDialog.message}</p>
           {(confirmDialog.flowSteps?.length > 0 || confirmDialog.flowDescription) && (
             <section className="cart-confirm-flow" aria-labelledby="cart-confirm-flow-title">
-              <h3 id="cart-confirm-flow-title" className="cart-confirm-flow-title">¿Qué pasa después?</h3>
+              <h3 id="cart-confirm-flow-title" className="cart-confirm-flow-title">Después</h3>
               {confirmDialog.flowSteps?.length > 0 ? (
                 <ol className="cart-confirm-flow-list">
                   {confirmDialog.flowSteps.map((step, index) => (
@@ -486,7 +486,7 @@ export default function Cart() {
               onClick={handleCheckout}
               disabled={creatingOrder || orderableItems.length === 0}
             >
-              {creatingOrder ? 'Generando pedido...' : 'Continuar Compra'}
+              {creatingOrder ? 'Generando...' : 'Continuar compra'}
             </button>
             {orderableItems.length === 0 && items.length > 0 && (
               <p className="cart-info-only-store">
@@ -495,7 +495,7 @@ export default function Cart() {
             )}
             {!isAuthenticated && (
               <p className="cart-login-reminder">
-                <Link to="/login">Inicia sesión</Link> para poder generar tu pedido
+                <Link to="/login">Inicia sesión</Link> para continuar
               </p>
             )}
             <Link to="/products" className="cart-continue-link">

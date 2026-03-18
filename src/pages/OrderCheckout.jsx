@@ -219,9 +219,9 @@ export default function OrderCheckout() {
   }
 
   const steps = [
-    { num: STEP_DELIVERY, label: 'Cómo lo recibes' },
-    ...(isDelivery ? [{ num: STEP_ADDRESS, label: '¿A dónde?' }] : []),
-    { num: STEP_REVIEW, label: 'Revisar y confirmar' },
+    { num: STEP_DELIVERY, label: 'Entrega' },
+    ...(isDelivery ? [{ num: STEP_ADDRESS, label: 'Dirección' }] : []),
+    { num: STEP_REVIEW, label: 'Revisar' },
   ];
   const currentStepIndex = steps.findIndex((s) => s.num === step);
 
@@ -234,11 +234,11 @@ export default function OrderCheckout() {
           <div className="order-checkout-success-icon" aria-hidden="true">
             ✓
           </div>
-          <h1 className="order-checkout-success-title">¡Pedido confirmado!</h1>
+          <h1 className="order-checkout-success-title">Pedido confirmado</h1>
           <p className="order-checkout-success-message">
             {isPickup
-              ? 'En breve te notificaremos para que pases a recoger tu pedido.'
-              : 'Te notificaremos cuando tu pedido esté en camino.'}
+              ? 'Te avisamos cuando esté listo para recoger.'
+              : 'Te avisamos cuando esté en camino.'}
           </p>
           {isPickup && branch && (
             <div className="order-checkout-success-branch">
@@ -271,7 +271,7 @@ export default function OrderCheckout() {
     <div className="order-checkout-page">
       <header className="order-checkout-header">
         <Link to={`/orders/${order.id}`} className="order-checkout-back">
-          ← Volver al pedido
+          ← Volver
         </Link>
         <h1 className="order-checkout-title">Finalizar pedido</h1>
         <p className="order-checkout-subtitle">Pedido #{order.id}</p>
@@ -295,7 +295,7 @@ export default function OrderCheckout() {
         {step === STEP_DELIVERY && (
           <section className="order-checkout-section" aria-labelledby="checkout-delivery-title">
             <h2 id="checkout-delivery-title" className="order-checkout-section-title">
-              ¿Cómo quieres recibir tu pedido?
+              ¿Cómo recibes tu pedido?
             </h2>
             {loadingDeliveryTypes ? (
               <p className="order-checkout-muted">Cargando opciones...</p>
@@ -331,7 +331,7 @@ export default function OrderCheckout() {
                 onClick={goToReview}
                 disabled={!selectedDeliveryType}
               >
-                {isDelivery ? 'Siguiente: indicar dirección' : 'Revisar pedido'}
+                Continuar
               </button>
             </div>
           </section>
@@ -341,10 +341,10 @@ export default function OrderCheckout() {
         {step === STEP_ADDRESS && isDelivery && (
           <section className="order-checkout-section" aria-labelledby="checkout-address-title">
             <h2 id="checkout-address-title" className="order-checkout-section-title">
-              ¿A dónde lo enviamos?
+              Dirección de envío
             </h2>
             <p className="order-checkout-section-desc">
-              Elige una dirección guardada o agrega una nueva. Envío a C.P. {DELIVERY_POSTAL_CODE}.
+              Elige o agrega una dirección. C.P. {DELIVERY_POSTAL_CODE}.
             </p>
             {loadingAddresses ? (
               <p className="order-checkout-muted">Cargando direcciones...</p>
@@ -386,7 +386,7 @@ export default function OrderCheckout() {
                     className="order-checkout-btn order-checkout-btn--outline"
                     onClick={() => setShowNewAddressForm(true)}
                   >
-                    + {savedAddresses.length > 0 ? 'Agregar nueva dirección' : 'Registrar mi dirección'}
+                    + {savedAddresses.length > 0 ? 'Nueva dirección' : 'Agregar dirección'}
                   </button>
                   <button
                     type="button"
@@ -394,7 +394,7 @@ export default function OrderCheckout() {
                     onClick={handleUseSavedAddressAndContinue}
                     disabled={savedAddresses.length > 0 && selectedAddressId == null}
                   >
-                    Usar esta dirección
+                    Continuar
                   </button>
                 </div>
               </>
@@ -460,7 +460,7 @@ export default function OrderCheckout() {
                     className="order-checkout-btn order-checkout-btn--primary"
                     disabled={actionLoading}
                   >
-                    {actionLoading ? 'Guardando...' : 'Guardar y continuar'}
+                    {actionLoading ? 'Guardando...' : 'Continuar'}
                   </button>
                 </div>
               </form>
@@ -474,11 +474,11 @@ export default function OrderCheckout() {
           return (
           <section className="order-checkout-section" aria-labelledby="checkout-review-title">
             <h2 id="checkout-review-title" className="order-checkout-section-title">
-              Revisa tu pedido
+              Revisar y confirmar
             </h2>
             {availableItems.length > 0 && (
               <div className="order-checkout-review-delivery-block">
-                <p className="order-checkout-review-delivery-title">Se te entregará</p>
+                <p className="order-checkout-review-delivery-title">Recibirás</p>
                 <ul className="order-checkout-review-products" aria-label="Productos que recibirás">
                   {availableItems.map((item) => {
                     const qty = item.confirmedQuantity ?? item.quantity;
@@ -552,7 +552,7 @@ export default function OrderCheckout() {
                 onClick={handleConfirmOrder}
                 disabled={actionLoading}
               >
-                {actionLoading ? 'Confirmando...' : 'Confirmar pedido'}
+                {actionLoading ? 'Confirmando...' : 'Confirmar'}
               </button>
             </div>
           </section>
