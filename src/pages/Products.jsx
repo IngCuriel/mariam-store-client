@@ -520,13 +520,10 @@ export default function Products() {
           </div>
         </section>
       )}
-      {(recommendedBySearchLoading || (recommendedSearchTerm && recommendedBySearch.length > 0)) && (
+      {showRecentSection && (recommendedBySearchLoading || (recommendedSearchTerm && recommendedBySearch.length > 0)) && (
         <section className="products-recommended-section" aria-label="Recomendados para ti">
           <div className="products-recommended-inner">
             <h2 className="products-recommended-title">Recomendados para ti</h2>
-            <p className="products-recommended-subtitle">
-              Basado en tu búsqueda de &quot;{recommendedSearchTerm}&quot;
-            </p>
             {recommendedBySearchLoading ? (
               <div className="products-recommended-loading">
                 <div className="products-loading-spinner" />
