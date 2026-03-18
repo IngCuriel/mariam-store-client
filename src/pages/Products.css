@@ -961,6 +961,17 @@
   outline-offset: 2px;
 }
 
+.products-recent-category-card--active {
+  border-color: #DC143C;
+  background: #DC143C;
+  color: #fff;
+}
+
+.products-recent-category-card--active .products-recent-category-card-name,
+.products-recent-category-card--active .products-recent-category-card-cta {
+  color: #fff;
+}
+
 .products-recent-category-card-image {
   width: 64px;
   height: 64px;

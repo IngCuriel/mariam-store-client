@@ -106,9 +106,9 @@ export function getRecentSearches() {
  * @param {RecentCategory | { id: number, name?: string, image?: string }} category
  */
 export function addRecentlyViewedCategory(category) {
-  if (!category?.id) return;
+  if (category?.id == null || category?.id === '') return;
   const entry = {
-    id: Number(category.id),
+    id: category.id,
     name: category.name ?? 'Categoría',
     image: category.image ?? undefined,
   };

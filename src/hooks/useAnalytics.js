@@ -133,6 +133,21 @@ export function useAnalytics() {
     trackProductViewBackend(product);
   };
 
+  /**
+   * Registra la selección de una categoría (para ver cuáles son las más seleccionadas en GA4).
+   * @param {string|number} categoryId - ID de la categoría
+   * @param {string} categoryName - Nombre de la categoría
+   */
+  const logCategorySelect = (categoryId, categoryName) => {
+    if (categoryId == null || !categoryName?.trim()) return;
+    logAnalyticsEvent('select_content', {
+      content_type: 'category',
+      content_id: String(categoryId),
+      item_name: categoryName.trim(),
+      category_name: categoryName.trim(),
+    });
+  };
+
   return {
     logAnalyticsEvent,
     logLogin,
@@ -143,6 +158,7 @@ export function useAnalytics() {
     logCashExpressCompleted,
     logSearch,
     logViewItem,
+    logCategorySelect,
   };
 }
 

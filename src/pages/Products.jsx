@@ -34,7 +34,7 @@ const NOVEDADES_BRANCH_ID = 10;
 
 export default function Products() {
   const location = useLocation();
-  const { logSearch } = useAnalytics();
+  const { logSearch, logCategorySelect } = useAnalytics();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -139,7 +139,15 @@ export default function Products() {
   useEffect(() => {
     if (showNewProductsView || showNovedadesView) return;
     loadProducts();
-  }, [searchQuery, selectedCategory, selectedBranch, currentPage, showNewProductsView, showNovedadesView]);
+  }, [
+    searchQuery,
+    selectedCategory,
+    selectedBranch,
+    currentPage,
+    showNewProductsView,
+    showNovedadesView,
+    searchFallbackCategoryId,
+  ]);
 
   useEffect(() => {
     if (!showNewProductsView) return;
@@ -378,7 +386,10 @@ export default function Products() {
   };
 
   const handleSelectCategory = (categoryId, categoryObject = null) => {
-    if (categoryObject) addRecentlyViewedCategory(categoryObject);
+    if (categoryObject) {
+      addRecentlyViewedCategory(categoryObject);
+      logCategorySelect(categoryId, categoryObject.name);
+    }
     setSearchInput('');
     setSearchQuery('');
     setSearchFallbackCategoryId(null);
@@ -643,6 +654,8 @@ export default function Products() {
                 type="button"
                 className={`category-chip ${selectedCategory === category.id ? 'active' : ''}`}
                 onClick={() => {
+                  const isSelecting = selectedCategory !== category.id;
+                  if (isSelecting) logCategorySelect(category.id, category.name);
                   addRecentlyViewedCategory(category);
                   setRecentlyViewedCategories(getRecentlyViewedCategories());
                   setSearchInput('');
@@ -651,7 +664,7 @@ export default function Products() {
                   setSearchFallbackCategoryName(null);
                   setShowNewProductsView(false);
                   setShowNovedadesView(false);
-                  setSelectedCategory(selectedCategory === category.id ? null : category.id);
+                  setSelectedCategory(isSelecting ? category.id : null);
                   setShowRecentSection(false);
                   setCurrentPage(1);
                 }}
@@ -792,25 +805,48 @@ export default function Products() {
           <div className="products-recent-inner">
             <h2 className="products-recent-title">Categorías vistas recientemente</h2>
             <div className="products-recent-viewed-scroll products-recent-categories-scroll">
-              {recentlyViewedCategories.map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  className="products-recent-category-card"
-                  onClick={() => handleSelectCategory(cat.id, cat)}
-                  aria-label={`Ver categoría ${cat.name}`}
-                >
-                  <div className="products-recent-category-card-image">
-                    {cat.image ? (
-                      <img src={cat.image} alt="" />
-                    ) : (
-                      <span className="products-recent-category-card-icon" aria-hidden>📁</span>
-                    )}
-                  </div>
-                  <span className="products-recent-category-card-name">{cat.name}</span>
-                  <span className="products-recent-category-card-cta">Ver productos →</span>
-                </button>
-              ))}
+              {recentlyViewedCategories.map((cat) => {
+                const isSelected = selectedCategory == null ? false : String(selectedCategory) === String(cat.id);
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    className={`products-recent-category-card ${isSelected ? 'products-recent-category-card--active' : ''}`}
+                    onClick={() => {
+                      const isCurrentlySelected =
+                        selectedCategory != null && String(selectedCategory) === String(cat.id);
+                      if (isCurrentlySelected) {
+                        setSearchInput('');
+                        setSearchQuery('');
+                        setSearchFallbackCategoryId(null);
+                        setSearchFallbackCategoryName(null);
+                        setShowNewProductsView(false);
+                        setShowNovedadesView(false);
+                        setSelectedCategory(null);
+                        setShowRecentSection(false);
+                        setCurrentPage(1);
+                      } else {
+                        handleSelectCategory(cat.id, cat);
+                      }
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    aria-label={isSelected ? `Quitar filtro ${cat.name}` : `Ver categoría ${cat.name}`}
+                    aria-pressed={isSelected}
+                  >
+                    <div className="products-recent-category-card-image">
+                      {cat.image ? (
+                        <img src={cat.image} alt="" />
+                      ) : (
+                        <span className="products-recent-category-card-icon" aria-hidden>📁</span>
+                      )}
+                    </div>
+                    <span className="products-recent-category-card-name">{cat.name}</span>
+                    <span className="products-recent-category-card-cta">
+                      {isSelected ? 'Quitar filtro' : 'Ver productos →'}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </section>
