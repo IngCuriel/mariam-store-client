@@ -883,12 +883,11 @@
 /* ========== Recomendados para ti (basado en búsquedas) ========== */
 .products-recommended-section {
   max-width: 1280px;
-  margin: 0 auto;
+  margin: 5px auto;
   padding: 24px 24px 28px;
   background: linear-gradient(180deg, #fff9f9 0%, #fff 100%);
   border: 1px solid rgba(220, 20, 60, 0.12);
-  border-left: 4px solid #DC143C;
-  border-radius: 12px;
+  border-left: 4px solid #DC143C; 
   margin-bottom: 8px;
   box-shadow: 0 2px 12px rgba(220, 20, 60, 0.06);
 }
