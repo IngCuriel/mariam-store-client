@@ -5,6 +5,8 @@ import { getBestProductImage, getProductEmoji } from '../services/imageService';
 import { useAnalytics } from '../hooks/useAnalytics';
 import {
   getRecentlyViewed,
+  getRecentlyViewedCategories,
+  addRecentlyViewedCategory,
   getRecentSearches,
   addRecentSearch,
 } from '../services/userActivityService';
@@ -49,7 +51,10 @@ export default function Products() {
   const [totalProducts, setTotalProducts] = useState(0);
   const [listLoading, setListLoading] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState(() => getRecentlyViewed());
-  /** Si es true, se muestra "Visto recientemente"; se oculta al aplicar búsqueda (Enter o Buscar) y vuelve a mostrarse solo al recargar */
+  const [recentlyViewedCategories, setRecentlyViewedCategories] = useState(() =>
+    getRecentlyViewedCategories()
+  );
+  /** Si es true, se muestra "Visto recientemente" y secciones relacionadas; se oculta al aplicar búsqueda o categoría */
   const [showRecentSection, setShowRecentSection] = useState(true);
   /** Texto visible en el input; la búsqueda real (searchQuery) se aplica al pulsar Enter o Buscar */
   const [searchInput, setSearchInput] = useState('');
@@ -58,6 +63,9 @@ export default function Products() {
   const [recommendedBySearch, setRecommendedBySearch] = useState([]);
   const [recommendedBySearchLoading, setRecommendedBySearchLoading] = useState(false);
   const [recommendedSearchTerm, setRecommendedSearchTerm] = useState('');
+  /** Cuando la búsqueda por nombre no devuelve nada, se usa una categoría por nombre (departamento) */
+  const [searchFallbackCategoryId, setSearchFallbackCategoryId] = useState(null);
+  const [searchFallbackCategoryName, setSearchFallbackCategoryName] = useState(null);
 
   /** Agrupa categorías por nombre de sucursal (para la pantalla de categorías) */
   const categoriesByBranch = useMemo(() => {
@@ -81,10 +89,11 @@ export default function Products() {
     loadData();
   }, []);
 
-  /** Al volver al listado, refrescar "Visto recientemente" y búsquedas recientes */
+  /** Al volver al listado, refrescar "Visto recientemente", categorías vistas y búsquedas recientes */
   useEffect(() => {
     if (location.pathname === '/' || location.pathname === '/products') {
       setRecentlyViewed(getRecentlyViewed());
+      setRecentlyViewedCategories(getRecentlyViewedCategories());
       setRecentSearches(getRecentSearches());
     }
   }, [location.pathname]);
@@ -241,27 +250,77 @@ export default function Products() {
   const loadProducts = async () => {
     try {
       setListLoading(true);
-      const data = await getAllProducts({
+      const params = {
         includePresentations: true,
         includeInventory: true,
         showInStoreOnly: true,
-        search: searchQuery || undefined,
-        categoryId: selectedCategory || undefined,
         branch: selectedBranch || undefined,
         limit: PAGE_SIZE,
         offset: (currentPage - 1) * PAGE_SIZE,
-      });
-      const list = Array.isArray(data) ? data : data.products || [];
-      const total = typeof data?.total === 'number' ? data.total : list.length;
-      setProducts(list);
-      setTotalProducts(total);
-      if (searchQuery?.trim()) {
-        logSearch({
-          searchTerm: searchQuery.trim(),
-          resultsCount: total,
-          categoryId: selectedCategory || null,
-          branch: selectedBranch || null,
+      };
+
+      if (searchFallbackCategoryId != null) {
+        const data = await getAllProducts({
+          ...params,
+          categoryId: searchFallbackCategoryId,
         });
+        const list = Array.isArray(data) ? data : data.products || [];
+        const total = typeof data?.total === 'number' ? data.total : list.length;
+        setProducts(list);
+        setTotalProducts(total);
+      } else if (searchQuery?.trim()) {
+        const data = await getAllProducts({
+          ...params,
+          search: searchQuery.trim(),
+          categoryId: selectedCategory || undefined,
+        });
+        let list = Array.isArray(data) ? data : data.products || [];
+        let total = typeof data?.total === 'number' ? data.total : list.length;
+
+        const term = searchQuery.trim().toLowerCase();
+        const categoryMatch =
+          list.length < 2 &&
+          categories.length > 0 &&
+          categories.find(
+            (cat) =>
+              cat.name &&
+              (cat.name.toLowerCase().includes(term) || term.includes(cat.name.toLowerCase()))
+          );
+
+        if (categoryMatch) {
+          setSearchFallbackCategoryId(categoryMatch.id);
+          setSearchFallbackCategoryName(categoryMatch.name);
+          setProducts(list);
+          setTotalProducts(list.length);
+          setListLoading(false);
+          const fallbackData = await getAllProducts({
+            ...params,
+            categoryId: categoryMatch.id,
+            limit: PAGE_SIZE,
+            offset: 0,
+          });
+          const categoryList =
+            Array.isArray(fallbackData) ? fallbackData : fallbackData.products || [];
+          const nameIds = new Set(list.map((p) => p.id));
+          const merged = [
+            ...list,
+            ...categoryList.filter((p) => !nameIds.has(p.id)),
+          ].slice(0, PAGE_SIZE);
+          setProducts(merged);
+          setTotalProducts(merged.length);
+        } else {
+          setProducts(list);
+          setTotalProducts(total);
+        }
+      } else {
+        const data = await getAllProducts({
+          ...params,
+          categoryId: selectedCategory || undefined,
+        });
+        const list = Array.isArray(data) ? data : data.products || [];
+        const total = typeof data?.total === 'number' ? data.total : list.length;
+        setProducts(list);
+        setTotalProducts(total);
       }
     } catch (error) {
       console.error('Error cargando productos:', error);
@@ -318,21 +377,27 @@ export default function Products() {
     return null;
   };
 
-  const handleSelectCategory = (categoryId) => {
+  const handleSelectCategory = (categoryId, categoryObject = null) => {
+    if (categoryObject) addRecentlyViewedCategory(categoryObject);
     setSearchInput('');
     setSearchQuery('');
+    setSearchFallbackCategoryId(null);
+    setSearchFallbackCategoryName(null);
     setSelectedCategory(categoryId);
     setShowCategoriesView(false);
     setShowNewProductsView(false);
     setShowNovedadesView(false);
     setShowRecentSection(false);
     setCurrentPage(1);
+    setRecentlyViewedCategories(getRecentlyViewedCategories());
   };
 
   /** Aplica la búsqueda con el texto del input (al pulsar Enter o clic en Buscar) */
   const applySearch = () => {
     const term = searchInput.trim();
     setSearchQuery(term);
+    setSearchFallbackCategoryId(null);
+    setSearchFallbackCategoryName(null);
     setSelectedCategory(null);
     setSelectedBranch(null);
     setShowNewProductsView(false);
@@ -343,6 +408,12 @@ export default function Products() {
     if (term) {
       addRecentSearch(term);
       setRecentSearches(getRecentSearches());
+      logSearch({
+        searchTerm: term,
+        resultsCount: 0,
+        categoryId: null,
+        branch: null,
+      });
     }
   };
 
@@ -467,7 +538,7 @@ export default function Products() {
                           key={category.id}
                           type="button"
                           className="products-category-card"
-                          onClick={() => handleSelectCategory(category.id)}
+                          onClick={() => handleSelectCategory(category.id, category)}
                         >
                           <div className="products-category-card-image-wrap">
                             {category.image ? (
@@ -572,8 +643,12 @@ export default function Products() {
                 type="button"
                 className={`category-chip ${selectedCategory === category.id ? 'active' : ''}`}
                 onClick={() => {
+                  addRecentlyViewedCategory(category);
+                  setRecentlyViewedCategories(getRecentlyViewedCategories());
                   setSearchInput('');
                   setSearchQuery('');
+                  setSearchFallbackCategoryId(null);
+                  setSearchFallbackCategoryName(null);
                   setShowNewProductsView(false);
                   setShowNovedadesView(false);
                   setSelectedCategory(selectedCategory === category.id ? null : category.id);
@@ -594,7 +669,6 @@ export default function Products() {
           </div>
         </div>
       )}
-
       <div className="products-grid-wrap">
         {listLoading && (
           <div className="products-grid-loading" aria-hidden>
@@ -708,6 +782,38 @@ export default function Products() {
             Siguiente
           </button>
         </nav>
+      )}
+
+      {showRecentSection && recentlyViewedCategories.length > 0 && (
+        <section
+          className="products-recent-section products-recent-categories-section"
+          aria-label="Categorías vistas recientemente"
+        >
+          <div className="products-recent-inner">
+            <h2 className="products-recent-title">Categorías vistas recientemente</h2>
+            <div className="products-recent-viewed-scroll products-recent-categories-scroll">
+              {recentlyViewedCategories.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  className="products-recent-category-card"
+                  onClick={() => handleSelectCategory(cat.id, cat)}
+                  aria-label={`Ver categoría ${cat.name}`}
+                >
+                  <div className="products-recent-category-card-image">
+                    {cat.image ? (
+                      <img src={cat.image} alt="" />
+                    ) : (
+                      <span className="products-recent-category-card-icon" aria-hidden>📁</span>
+                    )}
+                  </div>
+                  <span className="products-recent-category-card-name">{cat.name}</span>
+                  <span className="products-recent-category-card-cta">Ver productos →</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
       )}
         </>
       )}

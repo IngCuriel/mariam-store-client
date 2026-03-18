@@ -6,10 +6,12 @@
 const STORAGE_KEYS = {
   RECENTLY_VIEWED: 'mariam_recently_viewed',
   RECENT_SEARCHES: 'mariam_recent_searches',
+  RECENTLY_VIEWED_CATEGORIES: 'mariam_recently_viewed_categories',
 };
 
 const MAX_RECENTLY_VIEWED = 12;
 const MAX_RECENT_SEARCHES = 10;
+const MAX_RECENTLY_VIEWED_CATEGORIES = 8;
 
 function safeParse(key, fallback) {
   try {
@@ -92,4 +94,34 @@ export function addRecentSearch(term) {
  */
 export function getRecentSearches() {
   return safeParse(STORAGE_KEYS.RECENT_SEARCHES, []);
+}
+
+/**
+ * Snapshot mínimo de una categoría para "Categorías vistas recientemente".
+ * @typedef {{ id: number, name: string, image?: string }} RecentCategory
+ */
+
+/**
+ * Añade una categoría a la lista de vistas recientemente (el más reciente primero, sin duplicados por id).
+ * @param {RecentCategory | { id: number, name?: string, image?: string }} category
+ */
+export function addRecentlyViewedCategory(category) {
+  if (!category?.id) return;
+  const entry = {
+    id: Number(category.id),
+    name: category.name ?? 'Categoría',
+    image: category.image ?? undefined,
+  };
+
+  const list = safeParse(STORAGE_KEYS.RECENTLY_VIEWED_CATEGORIES, []);
+  const filtered = list.filter((c) => c.id !== entry.id);
+  const next = [entry, ...filtered].slice(0, MAX_RECENTLY_VIEWED_CATEGORIES);
+  safeSet(STORAGE_KEYS.RECENTLY_VIEWED_CATEGORIES, next);
+}
+
+/**
+ * @returns {RecentCategory[]}
+ */
+export function getRecentlyViewedCategories() {
+  return safeParse(STORAGE_KEYS.RECENTLY_VIEWED_CATEGORIES, []);
 }
