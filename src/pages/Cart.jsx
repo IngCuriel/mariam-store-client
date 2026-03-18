@@ -147,10 +147,10 @@ export default function Cart() {
         ? `Se generarán ${numOrders} pedidos (uno por sucursal). Total aproximado: ${formatPrice(totalOrderable)}.`
         : `Total a pagar: ${formatPrice(totalOrderable)}.`;
     const flowSteps = [
-      'La sucursal confirma disponibilidad del producto.',
-      'Acepta o rechaza el pedido, ya que puede o no tener modificación (según disponibilidad).',
+      'La sucursal revisará la disponibilidad de los productos. y te notificará.',
+      'Ayudanos aceptando o rechazando el pedido, ya que puede o no tener modificación (según disponibilidad).',
       'Elige alguna de las formas de entrega disponibles.',
-      'Solo esperar que el pedido esté listo para entrega.',
+      'Solo espera a que la sucursal te notifique que el pedido esté listo para entrega.',
     ];
     openConfirm('Confirmar pedido', message, 'Generar pedido', () => submitOrder(), null, flowSteps);
   };

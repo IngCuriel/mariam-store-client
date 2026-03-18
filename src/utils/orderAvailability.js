@@ -1,15 +1,17 @@
 /**
  * Obtiene la leyenda e ícono de entrega a partir del deliveryType del pedido (API).
+ * shortLabel: texto breve para pill en lista (Mis Pedidos).
  * @param {{ code?: string, name?: string } | null} [deliveryType] - deliveryType del pedido
- * @returns {{ type: string, label: string, subtitle: string, icon: string } | null}
+ * @returns {{ type: string, label: string, shortLabel: string, subtitle: string, icon: string } | null}
  */
 export function getOrderDeliveryDisplay(deliveryType) {
-  if (!deliveryType || !deliveryType.code) return null;
+  if (!deliveryType?.code) return null;
   const code = String(deliveryType.code).toLowerCase();
   if (code === 'delivery') {
     return {
       type: 'delivery',
       label: 'Entrega a domicilio',
+      shortLabel: 'Domicilio',
       subtitle: '',
       icon: '🚚',
     };
@@ -18,6 +20,7 @@ export function getOrderDeliveryDisplay(deliveryType) {
     return {
       type: 'pickup',
       label: 'Recoger en sucursal',
+      shortLabel: 'Recoger',
       subtitle: '',
       icon: '📍',
     };
@@ -26,6 +29,7 @@ export function getOrderDeliveryDisplay(deliveryType) {
     return {
       type: code || 'other',
       label: deliveryType.name,
+      shortLabel: deliveryType.name.length > 12 ? deliveryType.name.slice(0, 12) + '…' : deliveryType.name,
       subtitle: '',
       icon: '📦',
     };
@@ -46,6 +50,7 @@ export function getOrderAvailabilityFromNotes(notes) {
     return {
       type: 'local_delivery',
       label: 'Entrega a domicilio o en tienda',
+      shortLabel: 'Domicilio',
       subtitle: '',
       icon: '🚚',
     };
@@ -54,6 +59,7 @@ export function getOrderAvailabilityFromNotes(notes) {
     return {
       type: 'online_pickup',
       label: 'Venta solo en tienda Online',
+      shortLabel: 'Recoger',
       subtitle: 'Recoges en sucursal en 6 a 12 días',
       icon: '🛒',
     };
@@ -62,6 +68,7 @@ export function getOrderAvailabilityFromNotes(notes) {
     return {
       type: 'in_store_only',
       label: 'Solo en sucursal',
+      shortLabel: 'Recoger',
       subtitle: 'Servicio presencial · Recoge en tienda',
       icon: '📍',
     };

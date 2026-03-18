@@ -1,7 +1,7 @@
 /* ========== Variables y contenedor ========== */
 .orders-page {
   min-height: 100%;
-  background-color: #f5f5f5;
+  background-color: #fff;
   padding-bottom: 2rem;
 }
 
@@ -9,7 +9,198 @@
   box-sizing: border-box;
 }
 
-/* ========== Hero / Encabezado ========== */
+/* ========== Layout compacto (estilo Mis Solicitudes) ========== */
+.orders-page--compact {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  padding-bottom: 2rem;
+}
+
+.orders-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.orders-header-title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.orders-header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: #fff3e0;
+  border: 1px solid #ffb74d;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e65100;
+}
+
+.orders-header-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff9800;
+  animation: orders-pulse 1.5s ease-in-out infinite;
+}
+
+.orders-filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.orders-filter-btn {
+  padding: 8px 18px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #666;
+  transition: all 0.2s ease;
+}
+
+.orders-filter-btn:hover:not(:disabled) {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.orders-filter-btn.active {
+  background: #3483fa;
+  color: #fff;
+  border-color: #3483fa;
+}
+
+.orders-filter-btn.active:hover:not(:disabled) {
+  background: #2968c8;
+  border-color: #2968c8;
+}
+
+.orders-filter-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.orders-list--compact {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+  max-width: 100%;
+}
+
+.orders-order-card--compact {
+  margin-bottom: 0;
+}
+
+.orders-order-card--compact .orders-order-card-link {
+  padding: 14px 16px;
+}
+
+.orders-order-card--compact .orders-order-top {
+  margin-bottom: 8px;
+}
+
+.orders-order-card--compact .orders-order-folio {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.orders-order-card--compact .orders-order-date {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #666;
+}
+
+.orders-order-card--compact .orders-order-status {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+}
+
+.orders-order-card--compact .orders-order-ready-at,
+.orders-order-card--compact .orders-order-delivered-at {
+  margin: 0 0 6px 0;
+  font-size: 0.8rem;
+}
+
+/* Pill tipo de entrega (discreto, una línea) */
+.orders-order-delivery-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  margin-bottom: 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  min-height: 28px;
+}
+
+.orders-order-delivery-pill-icon {
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+.orders-order-delivery-pill-text {
+  white-space: nowrap;
+}
+
+.orders-order-delivery-pill--delivery,
+.orders-order-delivery-pill--local_delivery {
+  background: rgba(46, 125, 50, 0.12);
+  color: #1b5e20;
+}
+
+.orders-order-delivery-pill--pickup,
+.orders-order-delivery-pill--online_pickup,
+.orders-order-delivery-pill--in_store_only {
+  background: rgba(21, 101, 192, 0.12);
+  color: #0d47a1;
+}
+
+.orders-order-delivery-pill--other {
+  background: rgba(0, 0, 0, 0.06);
+  color: #555;
+}
+
+.orders-order-card--compact .orders-order-body {
+  margin-bottom: 0;
+}
+
+.orders-order-card--compact .orders-order-summary,
+.orders-order-card--compact .orders-order-status-message {
+  font-size: 0.85rem;
+}
+
+.orders-order-card--compact .orders-order-total {
+  font-size: 1rem;
+}
+
+.orders-order-card--compact .orders-order-footer {
+  padding-top: 8px;
+  margin-top: 8px;
+}
+
+.orders-order-card--compact .orders-order-cta {
+  font-size: 0.875rem;
+}
+
+/* ========== Hero / Encabezado (legacy) ========== */
 .orders-hero {
   background: linear-gradient(180deg, #fff 0%, #fafafa 100%);
   padding: 1.5rem 1.25rem 1.25rem;
@@ -291,15 +482,17 @@
   gap: 0.2rem;
 }
 
-.orders-order-date {
-  font-size: 0.9375rem;
-  font-weight: 600;
+.orders-order-folio {
+  font-size: 1rem;
+  font-weight: 700;
   color: #1a1a1a;
+  letter-spacing: -0.02em;
 }
 
-.orders-order-folio {
+.orders-order-date {
   font-size: 0.8125rem;
-  color: #888;
+  font-weight: 500;
+  color: #666;
 }
 
 .orders-order-status {
@@ -480,13 +673,30 @@
   white-space: nowrap;
 }
 
-/* CTA "Ver detalle" */
+/* CTA "Ver detalle" y botón Confirmar pedido */
 .orders-order-footer {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.35rem;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
   padding-top: 0.75rem;
+}
+
+.orders-order-btn-confirm {
+  padding: 0.5rem 1rem;
+  background: #1565c0;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.orders-order-btn-confirm:hover {
+  background: #0d47a1;
 }
 
 .orders-order-cta {
@@ -838,11 +1048,265 @@
     padding: 1.25rem 1.5rem;
   }
 
-  .orders-order-date {
-    font-size: 1rem;
+  .orders-order-folio {
+    font-size: 1.0625rem;
   }
 
   .orders-order-total {
     font-size: 1.375rem;
   }
+}
+
+/* ========== Modal confirmar / cancelar pedido ========== */
+.orders-confirm-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  max-width: 96vw;
+  width: 420px;
+  max-height: 90vh;
+  padding: 0;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.orders-confirm-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.orders-confirm-dialog-content {
+  position: relative;
+  padding: 1.5rem 1.5rem 1.25rem;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.orders-confirm-dialog-title {
+  margin: 0 0 1rem 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.orders-confirm-dialog-message {
+  margin: 0 0 1rem 0;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: #444;
+}
+
+/* Lista de productos en el modal (touch-friendly) */
+.orders-confirm-dialog-products {
+  margin: 0 0 1rem 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.orders-confirm-dialog-products-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.orders-confirm-dialog-products-scroll {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 220px;
+  padding: 2px 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.orders-confirm-dialog-products-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.orders-confirm-dialog-products-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.orders-confirm-dialog-products-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.orders-confirm-dialog-product {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  margin-bottom: 0.5rem;
+  border-radius: 10px;
+  border: 1px solid #e8e8e8;
+  background: #fafafa;
+  min-height: 52px;
+}
+
+.orders-confirm-dialog-product:last-child {
+  margin-bottom: 0;
+}
+
+.orders-confirm-dialog-product-icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.orders-confirm-dialog-product--available .orders-confirm-dialog-product-icon {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.orders-confirm-dialog-product--unavailable .orders-confirm-dialog-product-icon {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.orders-confirm-dialog-product--pending .orders-confirm-dialog-product-icon {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.orders-confirm-dialog-product-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.orders-confirm-dialog-product-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  line-height: 1.3;
+}
+
+.orders-confirm-dialog-product-presentation {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.orders-confirm-dialog-product-qty {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.orders-confirm-dialog-product-badge {
+  flex-shrink: 0;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.orders-confirm-dialog-product--available .orders-confirm-dialog-product-badge {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.orders-confirm-dialog-product--unavailable .orders-confirm-dialog-product-badge {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.orders-confirm-dialog-product--pending .orders-confirm-dialog-product-badge {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.orders-confirm-dialog-total {
+  margin: 0 0 1.25rem 0;
+  font-size: 1rem;
+  color: #333;
+  flex-shrink: 0;
+}
+
+.orders-confirm-dialog-total strong {
+  color: #1a1a1a;
+}
+
+.orders-confirm-dialog-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.orders-confirm-dialog-btn {
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+  min-height: 44px;
+}
+
+.orders-confirm-dialog-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.orders-confirm-dialog-btn--secondary {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  color: #333;
+}
+
+.orders-confirm-dialog-btn--secondary:hover:not(:disabled) {
+  background: #eee;
+}
+
+.orders-confirm-dialog-btn--primary {
+  background: #1565c0;
+  border: none;
+  color: #fff;
+}
+
+.orders-confirm-dialog-btn--primary:hover:not(:disabled) {
+  background: #0d47a1;
+}
+
+.orders-confirm-dialog-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #666;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.orders-confirm-dialog-close:hover {
+  background: #f0f0f0;
+  color: #1a1a1a;
 }

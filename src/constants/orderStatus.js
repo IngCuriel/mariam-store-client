@@ -89,19 +89,21 @@ export const NO_AVAILABILITY_MESSAGE = {
   ctaCancel: 'Cancelar pedido',
 };
 
+/** Filtro especial (solo cliente): pedidos que requieren confirmación (AVAILABLE + PARTIALLY_AVAILABLE) */
+export const FILTER_NEEDS_CONFIRMATION = 'NEEDS_CONFIRMATION';
+
 /** Mensaje corto para lista de pedidos */
 export const STATUS_LIST_MESSAGE = {
   [ORDER_STATUS.UNDER_REVIEW]: 'Estamos revisando la disponibilidad de tus productos.',
+  [ORDER_STATUS.PARTIALLY_AVAILABLE]: 'Algunos productos no están disponibles. Confirma o cancela tu pedido.',
+  [ORDER_STATUS.AVAILABLE]: 'Productos disponibles. Confirma tu pedido para continuar.',
   [ORDER_STATUS.READY_FOR_PICKUP]: 'Tu pedido ya está listo para recoger en sucursal.',
   [ORDER_STATUS.IN_TRANSIT]: 'Tu pedido está en camino.',
 };
 
+/** Solo dos opciones: Todos y Confirma tus pedidos (requieren atención inmediata) */
 export const STATUS_OPTIONS_FILTER = [
   { value: '', label: 'Todos' },
-  { value: ORDER_STATUS.UNDER_REVIEW, label: 'En revisión' },
-  { value: ORDER_STATUS.PARTIALLY_AVAILABLE, label: 'Parcialmente disponible' },
-  { value: ORDER_STATUS.IN_PREPARATION, label: 'En preparación' },
-  { value: ORDER_STATUS.READY_FOR_PICKUP, label: 'Listo para recoger' },
-  { value: ORDER_STATUS.IN_TRANSIT, label: 'En camino' },
+  { value: FILTER_NEEDS_CONFIRMATION, label: 'Confirma tus pedidos' },
 ];
  
