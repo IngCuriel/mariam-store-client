@@ -1,13 +1,15 @@
 /**
  * Servicio de actividad del usuario para personalizar la experiencia (tipo e-commerce).
- * Persiste en localStorage: productos vistos recientemente.
+ * Persiste en localStorage: productos vistos recientemente y búsquedas recientes (para recomendaciones).
  */
 
 const STORAGE_KEYS = {
   RECENTLY_VIEWED: 'mariam_recently_viewed',
+  RECENT_SEARCHES: 'mariam_recent_searches',
 };
 
 const MAX_RECENTLY_VIEWED = 12;
+const MAX_RECENT_SEARCHES = 10;
 
 function safeParse(key, fallback) {
   try {
@@ -69,4 +71,25 @@ export function addRecentlyViewed(product) {
  */
 export function getRecentlyViewed() {
   return safeParse(STORAGE_KEYS.RECENTLY_VIEWED, []);
+}
+
+/**
+ * Guarda un término de búsqueda para recomendaciones "Basado en tus búsquedas".
+ * @param {string} term
+ */
+export function addRecentSearch(term) {
+  const normalized = typeof term === 'string' ? term.trim() : '';
+  if (!normalized) return;
+
+  const list = safeParse(STORAGE_KEYS.RECENT_SEARCHES, []);
+  const filtered = list.filter((t) => t !== normalized);
+  const next = [normalized, ...filtered].slice(0, MAX_RECENT_SEARCHES);
+  safeSet(STORAGE_KEYS.RECENT_SEARCHES, next);
+}
+
+/**
+ * @returns {string[]} Últimas búsquedas (más reciente primero)
+ */
+export function getRecentSearches() {
+  return safeParse(STORAGE_KEYS.RECENT_SEARCHES, []);
 }

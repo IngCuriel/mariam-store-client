@@ -3,7 +3,11 @@ import { Link, useLocation } from 'react-router-dom';
 import { getAllProducts, getAllCategories, getAllBranches } from '../services/productsService';
 import { getBestProductImage, getProductEmoji } from '../services/imageService';
 import { useAnalytics } from '../hooks/useAnalytics';
-import { getRecentlyViewed } from '../services/userActivityService';
+import {
+  getRecentlyViewed,
+  getRecentSearches,
+  addRecentSearch,
+} from '../services/userActivityService';
 import './Products.css';
 
 const formatPrice = (price) => {
@@ -49,6 +53,11 @@ export default function Products() {
   const [showRecentSection, setShowRecentSection] = useState(true);
   /** Texto visible en el input; la búsqueda real (searchQuery) se aplica al pulsar Enter o Buscar */
   const [searchInput, setSearchInput] = useState('');
+  /** Búsquedas recientes para sección "Recomendados para ti" */
+  const [recentSearches, setRecentSearches] = useState(() => getRecentSearches());
+  const [recommendedBySearch, setRecommendedBySearch] = useState([]);
+  const [recommendedBySearchLoading, setRecommendedBySearchLoading] = useState(false);
+  const [recommendedSearchTerm, setRecommendedSearchTerm] = useState('');
 
   /** Agrupa categorías por nombre de sucursal (para la pantalla de categorías) */
   const categoriesByBranch = useMemo(() => {
@@ -72,12 +81,45 @@ export default function Products() {
     loadData();
   }, []);
 
-  /** Al volver al listado, refrescar "Visto recientemente" por si acaban de ver un producto */
+  /** Al volver al listado, refrescar "Visto recientemente" y búsquedas recientes */
   useEffect(() => {
     if (location.pathname === '/' || location.pathname === '/products') {
       setRecentlyViewed(getRecentlyViewed());
+      setRecentSearches(getRecentSearches());
     }
   }, [location.pathname]);
+
+  /** Recomendados para ti: productos basados en otra búsqueda reciente (diferente a la actual) */
+  useEffect(() => {
+    const currentQuery = searchQuery?.trim() ?? '';
+    const termForRecommendation = recentSearches.find((t) => t.trim() !== currentQuery);
+    if (!termForRecommendation?.trim() || showCategoriesView || showNewProductsView || showNovedadesView) {
+      setRecommendedBySearch([]);
+      setRecommendedSearchTerm('');
+      return;
+    }
+    let cancelled = false;
+    setRecommendedSearchTerm(termForRecommendation.trim());
+    setRecommendedBySearchLoading(true);
+    getAllProducts({
+      search: termForRecommendation.trim(),
+      showInStoreOnly: true,
+      includePresentations: true,
+      limit: 16,
+    })
+      .then((data) => {
+        if (cancelled) return;
+        const list = Array.isArray(data) ? data : data?.products ?? [];
+        setRecommendedBySearch(list.slice(0, 12));
+      })
+      .catch(() => {
+        if (!cancelled) setRecommendedBySearch([]);
+      })
+      .finally(() => {
+        if (!cancelled) setRecommendedBySearchLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [recentSearches, searchQuery, showCategoriesView, showNewProductsView, showNovedadesView]);
 
   /** Al cambiar filtros, volver a página 1 */
   useEffect(() => {
@@ -298,6 +340,10 @@ export default function Products() {
     setShowCategoriesView(false);
     setCurrentPage(1);
     setShowRecentSection(false);
+    if (term) {
+      addRecentSearch(term);
+      setRecentSearches(getRecentSearches());
+    }
   };
 
   if (loading) {
@@ -471,6 +517,52 @@ export default function Products() {
                 </Link>
               ))}
             </div>
+          </div>
+        </section>
+      )}
+      {(recommendedBySearchLoading || (recommendedSearchTerm && recommendedBySearch.length > 0)) && (
+        <section className="products-recommended-section" aria-label="Recomendados para ti">
+          <div className="products-recommended-inner">
+            <h2 className="products-recommended-title">Recomendados para ti</h2>
+            <p className="products-recommended-subtitle">
+              Basado en tu búsqueda de &quot;{recommendedSearchTerm}&quot;
+            </p>
+            {recommendedBySearchLoading ? (
+              <div className="products-recommended-loading">
+                <div className="products-loading-spinner" />
+                <span>Cargando recomendaciones...</span>
+              </div>
+            ) : (
+              <div className="products-recommended-scroll">
+                {recommendedBySearch.map((product) => {
+                  const imageUrl = getProductImage(product);
+                  const emoji = getProductEmoji(product);
+                  const defaultPrice = product.presentations?.find((p) => p.isDefault)
+                    ? product.presentations.find((p) => p.isDefault).unitPrice
+                    : product.price;
+                  return (
+                    <Link
+                      key={product.id}
+                      to={`/products/${product.id}`}
+                      className="product-card product-card--compact product-card--recommended"
+                    >
+                      <div className="product-card-image-wrap">
+                        {imageUrl ? (
+                          <img src={imageUrl} alt={product.name} loading="lazy" />
+                        ) : (
+                          <span className="product-card-emoji">{emoji}</span>
+                        )}
+                      </div>
+                      <div className="product-card-body">
+                        <h3 className="product-card-name">{product.name}</h3>
+                        <span className="product-card-price">{formatPrice(defaultPrice ?? 0)}</span>
+                        <span className="product-card-cta">Ver producto →</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </section>
       )}
