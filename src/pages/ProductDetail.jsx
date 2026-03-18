@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getProductById } from '../services/productsService';
+import { getProductById, getAllProducts } from '../services/productsService';
 import { getDeliveryTypes } from '../services/ordersService';
 import { useCart } from '../contexts/CartContext';
 import { useAnalytics } from '../hooks/useAnalytics';
+import { addRecentlyViewed } from '../services/userActivityService';
 import { getBestProductImage, getProductEmoji } from '../services/imageService';
 import { Toast } from '../components/Toast';
 import './ProductDetail.css';
@@ -41,6 +42,8 @@ export default function ProductDetail() {
   const [imageError, setImageError] = useState(false);
   const [deliveryTypes, setDeliveryTypes] = useState([]);
   const [deliveryTypesLoading, setDeliveryTypesLoading] = useState(false);
+  const [recommendations, setRecommendations] = useState([]);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
 
   useEffect(() => {
     if (id) loadProduct();
@@ -70,6 +73,37 @@ export default function ProductDetail() {
     return () => { cancelled = true; };
   }, [product?.id, product?.productAvailability, product?.branchId]);
 
+  /** Recomendaciones: productos de la misma categoría (excluyendo el actual) */
+  useEffect(() => {
+    const categoryId = product?.category?.id ?? product?.categoryId;
+    if (!product?.id || !categoryId) {
+      setRecommendations([]);
+      setRecommendationsLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setRecommendationsLoading(true);
+    getAllProducts({
+      categoryId,
+      showInStoreOnly: true,
+      includePresentations: true,
+      limit: 20,
+    })
+      .then((data) => {
+        if (cancelled) return;
+        const list = Array.isArray(data) ? data : data?.products ?? [];
+        const filtered = list.filter((p) => Number(p.id) !== Number(product.id));
+        setRecommendations(filtered.slice(0, 12));
+      })
+      .catch(() => {
+        if (!cancelled) setRecommendations([]);
+      })
+      .finally(() => {
+        if (!cancelled) setRecommendationsLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [product?.id, product?.category?.id, product?.categoryId]);
+
   const loadProduct = async () => {
     try {
       setLoading(true);
@@ -77,6 +111,7 @@ export default function ProductDetail() {
       const data = await getProductById(id, true, true);
       setProduct(data);
       logViewItem(data);
+      addRecentlyViewed(data);
 
       if (!data.images || data.images.length === 0) {
         try {
@@ -491,6 +526,58 @@ export default function ProductDetail() {
                 <li key={index}>{item}</li>
               ))}
             </ul>
+          </section>
+        )}
+
+        {(recommendationsLoading || recommendations.length > 0) && (
+          <section className="pdp-recommendations" aria-label="Productos recomendados">
+            <div className="pdp-recommendations-header">
+              <h2 className="pdp-recommendations-title">También te puede interesar</h2>
+              {product.category?.name && (
+                <span className="pdp-recommendations-subtitle">
+                  Más de {product.category.name}
+                </span>
+              )}
+            </div>
+            {recommendationsLoading ? (
+              <div className="pdp-recommendations-loading" aria-hidden>
+                <div className="pdp-loading-spinner" />
+                <span>Cargando recomendaciones...</span>
+              </div>
+            ) : (
+              <div className="pdp-recommendations-scroll">
+                {recommendations.map((rec) => {
+                  const imageUrl = rec.images?.[0]?.url ?? null;
+                  const defaultPrice = rec.presentations?.find((p) => p.isDefault)
+                    ? rec.presentations.find((p) => p.isDefault).unitPrice
+                    : rec.price;
+                  return (
+                    <Link
+                      key={rec.id}
+                      to={`/products/${rec.id}`}
+                      className="pdp-recommendations-card"
+                    >
+                      <div className="pdp-recommendations-card-image">
+                        {imageUrl ? (
+                          <img src={imageUrl} alt={rec.name} loading="lazy" />
+                        ) : (
+                          <span className="pdp-recommendations-card-emoji">
+                            {getProductEmoji(rec)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="pdp-recommendations-card-body">
+                        <h4 className="pdp-recommendations-card-name">{rec.name}</h4>
+                        <span className="pdp-recommendations-card-price">
+                          {formatPrice(defaultPrice ?? 0)}
+                        </span>
+                        <span className="pdp-recommendations-card-cta">Ver producto →</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </section>
         )}
       </div>

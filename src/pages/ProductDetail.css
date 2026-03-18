@@ -847,6 +847,182 @@
   margin-bottom: 0;
 }
 
+/* ========== Recomendaciones (carrusel) ========== */
+.pdp-recommendations {
+  margin-top: 32px;
+  padding: 28px 24px 32px;
+  background: linear-gradient(180deg, #fff 0%, #fafafa 50%, #f5f5f5 100%);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid #eee;
+}
+
+.pdp-recommendations-header {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 3px solid #DC143C;
+}
+
+.pdp-recommendations-title {
+  margin: 0 0 6px 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  letter-spacing: -0.02em;
+}
+
+.pdp-recommendations-subtitle {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.pdp-recommendations-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 40px 20px;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.pdp-recommendations-scroll {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 12px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.pdp-recommendations-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.pdp-recommendations-scroll::-webkit-scrollbar-track {
+  background: #eee;
+  border-radius: 4px;
+}
+
+.pdp-recommendations-scroll::-webkit-scrollbar-thumb {
+  background: #DC143C;
+  border-radius: 4px;
+}
+
+.pdp-recommendations-scroll::-webkit-scrollbar-thumb:hover {
+  background: #b81034;
+}
+
+.pdp-recommendations-card {
+  flex: 0 0 auto;
+  width: 200px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #eee;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.2s;
+}
+
+.pdp-recommendations-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(220, 20, 60, 0.15);
+  border-color: rgba(220, 20, 60, 0.3);
+}
+
+.pdp-recommendations-card:focus-visible {
+  outline: 2px solid #DC143C;
+  outline-offset: 2px;
+}
+
+.pdp-recommendations-card-image {
+  width: 100%;
+  aspect-ratio: 1;
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.pdp-recommendations-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 12px;
+}
+
+.pdp-recommendations-card-emoji {
+  font-size: 3.5rem;
+  opacity: 0.9;
+}
+
+.pdp-recommendations-card-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.pdp-recommendations-card-name {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.7em;
+}
+
+.pdp-recommendations-card-price {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #DC143C;
+}
+
+.pdp-recommendations-card-cta {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #DC143C;
+  margin-top: auto;
+  opacity: 0.9;
+}
+
+.pdp-recommendations-card:hover .pdp-recommendations-card-cta {
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .pdp-recommendations {
+    padding: 20px 16px 24px;
+    margin-top: 24px;
+  }
+
+  .pdp-recommendations-title {
+    font-size: 1.2rem;
+  }
+
+  .pdp-recommendations-card {
+    width: 160px;
+  }
+
+  .pdp-recommendations-scroll {
+    gap: 14px;
+  }
+}
+
 /* Loading y error */
 .pdp-loading,
 .pdp-error {

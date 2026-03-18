@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { getAllProducts, getAllCategories, getAllBranches } from '../services/productsService';
 import { getBestProductImage, getProductEmoji } from '../services/imageService';
 import { useAnalytics } from '../hooks/useAnalytics';
+import { getRecentlyViewed } from '../services/userActivityService';
 import './Products.css';
 
 const formatPrice = (price) => {
@@ -26,6 +27,7 @@ const PAGE_SIZE = 20;
 const NOVEDADES_BRANCH_ID = 10;
 
 export default function Products() {
+  const location = useLocation();
   const { logSearch } = useAnalytics();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -42,6 +44,11 @@ export default function Products() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
   const [listLoading, setListLoading] = useState(false);
+  const [recentlyViewed, setRecentlyViewed] = useState(() => getRecentlyViewed());
+  /** Si es true, se muestra "Visto recientemente"; se oculta al aplicar búsqueda (Enter o Buscar) y vuelve a mostrarse solo al recargar */
+  const [showRecentSection, setShowRecentSection] = useState(true);
+  /** Texto visible en el input; la búsqueda real (searchQuery) se aplica al pulsar Enter o Buscar */
+  const [searchInput, setSearchInput] = useState('');
 
   /** Agrupa categorías por nombre de sucursal (para la pantalla de categorías) */
   const categoriesByBranch = useMemo(() => {
@@ -65,6 +72,13 @@ export default function Products() {
     loadData();
   }, []);
 
+  /** Al volver al listado, refrescar "Visto recientemente" por si acaban de ver un producto */
+  useEffect(() => {
+    if (location.pathname === '/' || location.pathname === '/products') {
+      setRecentlyViewed(getRecentlyViewed());
+    }
+  }, [location.pathname]);
+
   /** Al cambiar filtros, volver a página 1 */
   useEffect(() => {
     setCurrentPage(1);
@@ -73,10 +87,7 @@ export default function Products() {
   /** Cargar productos (listado normal) con paginación */
   useEffect(() => {
     if (showNewProductsView || showNovedadesView) return;
-    const timeoutId = setTimeout(() => {
-      loadProducts();
-    }, searchQuery ? 500 : 0);
-    return () => clearTimeout(timeoutId);
+    loadProducts();
   }, [searchQuery, selectedCategory, selectedBranch, currentPage, showNewProductsView, showNovedadesView]);
 
   useEffect(() => {
@@ -266,10 +277,27 @@ export default function Products() {
   };
 
   const handleSelectCategory = (categoryId) => {
+    setSearchInput('');
+    setSearchQuery('');
     setSelectedCategory(categoryId);
     setShowCategoriesView(false);
     setShowNewProductsView(false);
     setShowNovedadesView(false);
+    setShowRecentSection(false);
+    setCurrentPage(1);
+  };
+
+  /** Aplica la búsqueda con el texto del input (al pulsar Enter o clic en Buscar) */
+  const applySearch = () => {
+    const term = searchInput.trim();
+    setSearchQuery(term);
+    setSelectedCategory(null);
+    setSelectedBranch(null);
+    setShowNewProductsView(false);
+    setShowNovedadesView(false);
+    setShowCategoriesView(false);
+    setCurrentPage(1);
+    setShowRecentSection(false);
   };
 
   if (loading) {
@@ -295,18 +323,25 @@ export default function Products() {
                 type="text"
                 className="products-search-input"
                 placeholder="Buscar productos, marcas y más..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setSelectedCategory(null);
-                  setSelectedBranch(null);
-                  setShowNewProductsView(false);
-                  setShowNovedadesView(false);
-                  setShowCategoriesView(false);
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    applySearch();
+                  }
                 }}
                 aria-label="Buscar productos"
               />
             </div>
+            <button
+              type="button"
+              className="products-search-btn"
+              onClick={applySearch}
+              aria-label="Aplicar búsqueda"
+            >
+              Buscar
+            </button>
           </div>
           <nav className="products-quick-nav" aria-label="Opciones rápidas">
             <button
@@ -407,7 +442,38 @@ export default function Products() {
           </div>
         </div>
       ) : (
-        <> 
+        <>
+      {showRecentSection && recentlyViewed.length > 0 && (
+        <section className="products-recent-section" aria-label="Visto recientemente">
+          <div className="products-recent-inner">
+            <h2 className="products-recent-title">Visto recientemente</h2>
+            <div className="products-recent-viewed-scroll">
+              {recentlyViewed.map((item) => (
+                <Link
+                  key={item.id}
+                  to={`/products/${item.id}`}
+                  className="product-card product-card--compact"
+                >
+                  <div className="product-card-image-wrap">
+                    {item.imageUrl ? (
+                      <img src={item.imageUrl} alt={item.name} />
+                    ) : (
+                      <span className="product-card-emoji">{getProductEmoji({ name: item.name })}</span>
+                    )}
+                  </div>
+                  <div className="product-card-body">
+                    <h3 className="product-card-name">{item.name}</h3>
+                    {item.price != null && (
+                      <span className="product-card-price">{formatPrice(item.price)}</span>
+                    )}
+                    <span className="product-card-cta">Ver producto →</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
       {categories.length > 0 && (
         <div className="products-categories-wrap">
           <div className="products-categories-scroll">
@@ -417,9 +483,13 @@ export default function Products() {
                 type="button"
                 className={`category-chip ${selectedCategory === category.id ? 'active' : ''}`}
                 onClick={() => {
+                  setSearchInput('');
+                  setSearchQuery('');
                   setShowNewProductsView(false);
                   setShowNovedadesView(false);
                   setSelectedCategory(selectedCategory === category.id ? null : category.id);
+                  setShowRecentSection(false);
+                  setCurrentPage(1);
                 }}
               >
                 {category.image && (
