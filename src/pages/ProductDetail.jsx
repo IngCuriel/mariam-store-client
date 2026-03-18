@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getProductById } from '../services/productsService';
 import { getDeliveryTypes } from '../services/ordersService';
 import { useCart } from '../contexts/CartContext';
+import { useAnalytics } from '../hooks/useAnalytics';
 import { getBestProductImage, getProductEmoji } from '../services/imageService';
 import { Toast } from '../components/Toast';
 import './ProductDetail.css';
@@ -27,6 +28,7 @@ export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { logViewItem } = useAnalytics();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedPresentation, setSelectedPresentation] = useState(null);
@@ -74,6 +76,7 @@ export default function ProductDetail() {
       setImageError(false);
       const data = await getProductById(id, true, true);
       setProduct(data);
+      logViewItem(data);
 
       if (!data.images || data.images.length === 0) {
         try {

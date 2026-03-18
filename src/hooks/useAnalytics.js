@@ -1,6 +1,9 @@
-import { useEffect } from 'react';
 import { logEvent } from 'firebase/analytics';
 import { analytics } from '../config/firebase';
+import {
+  trackSearch as trackSearchBackend,
+  trackProductView as trackProductViewBackend,
+} from '../services/analyticsService';
 
 /**
  * Hook personalizado para usar Firebase Analytics
@@ -83,6 +86,53 @@ export function useAnalytics() {
     });
   };
 
+  /**
+   * Registra una búsqueda de productos (Firebase + backend para reportes).
+   * @param {Object} params
+   * @param {string} params.searchTerm - Término buscado
+   * @param {number} [params.resultsCount] - Cantidad de resultados
+   * @param {string|null} [params.categoryId] - ID categoría si aplica
+   * @param {string|null} [params.branch] - Sucursal si aplica
+   */
+  const logSearch = ({ searchTerm, resultsCount = 0, categoryId = null, branch = null }) => {
+    const term = typeof searchTerm === 'string' ? searchTerm.trim() : '';
+    if (!term) return;
+
+    logAnalyticsEvent('search', {
+      search_term: term,
+      results_count: resultsCount,
+      ...(categoryId && { category_id: categoryId }),
+      ...(branch && { branch }),
+    });
+    trackSearchBackend({
+      query: term,
+      resultsCount,
+      categoryId,
+      branch,
+    });
+  };
+
+  /**
+   * Registra la vista de un producto (Firebase + backend para "más vistos").
+   * @param {Object} product - Objeto producto con id, name, category, price
+   */
+  const logViewItem = (product) => {
+    if (!product?.id) return;
+
+    logAnalyticsEvent('view_item', {
+      currency: 'MXN',
+      value: product.price,
+      items: [
+        {
+          item_id: String(product.id),
+          item_name: product.name,
+          ...(product.category?.name && { item_category: product.category.name }),
+        },
+      ],
+    });
+    trackProductViewBackend(product);
+  };
+
   return {
     logAnalyticsEvent,
     logLogin,
@@ -91,6 +141,8 @@ export function useAnalytics() {
     logCashExpressRequest,
     logDepositReceiptUpload,
     logCashExpressCompleted,
+    logSearch,
+    logViewItem,
   };
 }
 

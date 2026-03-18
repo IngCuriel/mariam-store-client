@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllProducts, getAllCategories, getAllBranches } from '../services/productsService';
 import { getBestProductImage, getProductEmoji } from '../services/imageService';
+import { useAnalytics } from '../hooks/useAnalytics';
 import './Products.css';
 
 const formatPrice = (price) => {
@@ -25,6 +26,7 @@ const PAGE_SIZE = 20;
 const NOVEDADES_BRANCH_ID = 10;
 
 export default function Products() {
+  const { logSearch } = useAnalytics();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -200,6 +202,14 @@ export default function Products() {
       const total = typeof data?.total === 'number' ? data.total : list.length;
       setProducts(list);
       setTotalProducts(total);
+      if (searchQuery?.trim()) {
+        logSearch({
+          searchTerm: searchQuery.trim(),
+          resultsCount: total,
+          categoryId: selectedCategory || null,
+          branch: selectedBranch || null,
+        });
+      }
     } catch (error) {
       console.error('Error cargando productos:', error);
     } finally {
