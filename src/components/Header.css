@@ -542,10 +542,10 @@
   background: #b8122f;
 }
 
-/* Responsive */
+/* Responsive: con barra inferior (BottomNav) se oculta menú lateral en móvil */
 @media (max-width: 768px) {
   .mobile-menu-button {
-    display: block;
+    display: none;
   }
 
   .desktop-nav {
@@ -553,11 +553,11 @@
   }
 
   .mobile-menu-overlay {
-    display: block;
+    display: none;
   }
 
   .mobile-sidebar {
-    display: flex;
+    display: none;
   }
 
   .header-container {

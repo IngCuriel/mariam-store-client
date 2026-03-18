@@ -6,6 +6,7 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import BottomNav from './components/BottomNav';
 import AnalyticsPageView from './components/AnalyticsPageView';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -76,6 +77,7 @@ function AppRoutes() {
         </Routes>
       </main>
       <Footer />
+      <BottomNav />
     </div>
   );
 }

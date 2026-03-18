@@ -263,3 +263,9 @@
   }
 }
 
+@media (max-width: 768px) {
+  .store-footer {
+    padding-bottom: calc(20px + 56px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
