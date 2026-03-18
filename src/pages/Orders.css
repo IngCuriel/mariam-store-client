@@ -1310,3 +1310,133 @@
   background: #f0f0f0;
   color: #1a1a1a;
 }
+
+/* ----- Modal motivo de cancelación (desde Confirmar pedido) ----- */
+.orders-cancel-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  max-width: 96vw;
+  width: 400px;
+  padding: 0;
+  border: none;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+.orders-cancel-dialog::backdrop {
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.orders-cancel-dialog-content {
+  padding: 28px 24px 24px;
+  text-align: center;
+}
+
+.orders-cancel-dialog-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 1.75rem;
+}
+
+.orders-cancel-dialog-title {
+  margin: 0 0 10px 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.orders-cancel-dialog-desc {
+  margin: 0 0 16px 0;
+  font-size: 0.9375rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.orders-cancel-reason-label {
+  display: block;
+  margin: 0 0 6px 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+  text-align: left;
+}
+
+.orders-cancel-reason-select {
+  display: block;
+  width: 100%;
+  margin: 0 0 12px 0;
+  padding: 10px 12px;
+  font-size: 0.9375rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #1e293b;
+  box-sizing: border-box;
+}
+
+.orders-cancel-reason-other {
+  display: block;
+  width: 100%;
+  margin: 0 0 16px 0;
+  padding: 10px 12px;
+  font-size: 0.9375rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.orders-cancel-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.orders-cancel-dialog-btn {
+  min-width: 140px;
+  padding: 10px 20px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.orders-cancel-dialog-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.orders-cancel-dialog-btn--secondary {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+}
+
+.orders-cancel-dialog-btn--secondary:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.orders-cancel-dialog-btn--confirm {
+  background: #b91c1c;
+  border: none;
+  color: #fff;
+}
+
+.orders-cancel-dialog-btn--confirm:hover:not(:disabled) {
+  background: #991b1b;
+}

@@ -240,17 +240,10 @@ export default function OrderDetail() {
     }
   };
 
-  const isDeliveryOrder = order?.deliveryType?.code === 'delivery';
-  const needsDeliveryAddress = isDeliveryOrder && !order?.deliveryAddress;
-  const needsDeliveryTypeSelection = order && order.deliveryType == null;
-
+  /** Con estado disponible o parcialmente disponible, ir al checkout (mismo flujo que "Confirmar pedido" en Mis pedidos). */
   const handleAcceptClick = () => {
-    if (needsDeliveryTypeSelection) {
-      setShowDeliveryTypeModal(true);
-    } else if (needsDeliveryAddress) {
-      setShowAddressModal(true);
-    } else {
-      handleAcceptOrder();
+    if (id) {
+      navigate(`/orders/${id}/checkout`);
     }
   };
 
@@ -324,6 +317,7 @@ export default function OrderDetail() {
   const handleConfirmCancelOrder = async () => {
     if (!id || !order) return;
     const reasonToSend = cancelReason === 'Otro' ? cancelReasonOther.trim() : (cancelReason || null);
+    const wasAvailableOrPartial = CAN_ACCEPT_OR_CANCEL.includes(order.status);
     try {
       setActionLoading(true);
       setShowCancelConfirm(false);
@@ -331,6 +325,10 @@ export default function OrderDetail() {
       setCancelReasonOther('');
       await cancelOrder(id, reasonToSend ? { reason: reasonToSend } : {});
       showToast('Pedido cancelado.', 'info');
+      if (wasAvailableOrPartial) {
+        navigate('/orders');
+        return;
+      }
       await loadOrder();
     } catch (err) {
       showToast(
@@ -710,31 +708,25 @@ export default function OrderDetail() {
           {/* Acciones: Aceptar / Cancelar (solo cuando hay productos disponibles para aceptar) */}
           {canAcceptOrCancel && !noProductsAvailable && (
             <div className="order-detail-actions">
-              {needsDeliveryTypeSelection && (
-                <p className="order-detail-delivery-address-hint">
-                  Al aceptar el pedido elegirás la forma de entrega.
-                </p>
-              )}
-              {needsDeliveryAddress && (
-                <p className="order-detail-delivery-address-hint">
-                  Es envío a domicilio. Al aceptar el pedido te pediremos tu dirección de entrega.
-                </p>
-              )}
+              <p className="order-detail-delivery-address-hint">
+                Clik en continuar para elejir cómo recibirlo y confirmar el pedido
+              </p>
               <button
                 type="button"
                 className="order-detail-btn order-detail-btn-accept"
                 onClick={handleAcceptClick}
                 disabled={actionLoading}
               >
-                {actionLoading ? 'Procesando...' : 'Aceptar pedido actualizado'}
+                {actionLoading ? 'Procesando...' : 'Continuar a finalizar'}
               </button>
               <button
                 type="button"
                 className="order-detail-btn order-detail-btn-cancel"
                 onClick={openCancelConfirm}
                 disabled={actionLoading}
+                aria-label="Cancelar este pedido"
               >
-                Cancelar pedido
+                Cancelar
               </button>
             </div>
           )}

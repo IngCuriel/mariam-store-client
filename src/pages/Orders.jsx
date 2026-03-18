@@ -101,8 +101,20 @@ export default function Orders() {
   const [confirmModalOrder, setConfirmModalOrder] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [toast, setToast] = useState({ open: false, message: '', type: 'info' });
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelReasonOther, setCancelReasonOther] = useState('');
   const confirmDialogRef = useRef(null);
+  const cancelDialogRef = useRef(null);
   const navigate = useNavigate();
+
+  const CANCEL_REASON_OPTIONS = [
+    { value: '', label: 'Seleccionar motivo (opcional)' },
+    { value: 'Ya no necesito el pedido', label: 'Ya no necesito el pedido' },
+    { value: 'Encontré los productos en otro lugar', label: 'Encontré los productos en otro lugar' },
+    { value: 'Cambié de opinión', label: 'Cambié de opinión' },
+    { value: 'Otro', label: 'Otro' },
+  ];
 
   const showToast = (message, type = 'info') => {
     setToast({ open: true, message, type });
@@ -166,6 +178,16 @@ export default function Orders() {
     }
   }, [confirmModalOrder]);
 
+  useEffect(() => {
+    const dialog = cancelDialogRef.current;
+    if (!dialog) return;
+    if (showCancelDialog) {
+      dialog.showModal();
+    } else {
+      dialog.close();
+    }
+  }, [showCancelDialog]);
+
   const refreshList = useCallback(() => {
     const page = selectedStatus === FILTER_NEEDS_CONFIRMATION ? 1 : pagination.page;
     loadOrders(selectedStatus, page);
@@ -178,12 +200,24 @@ export default function Orders() {
     navigate(`/orders/${orderId}/checkout`);
   };
 
-  const handleCancelOrderFromModal = async () => {
+  const openCancelDialogFromModal = () => {
+    setShowCancelDialog(true);
+  };
+
+  const closeCancelDialog = () => {
+    setShowCancelDialog(false);
+    setCancelReason('');
+    setCancelReasonOther('');
+  };
+
+  const handleConfirmCancelFromModal = async () => {
     if (!confirmModalOrder?.id) return;
+    const reasonToSend = cancelReason === 'Otro' ? cancelReasonOther.trim() : (cancelReason || null);
     try {
       setActionLoading(true);
-      await cancelOrder(confirmModalOrder.id, {});
+      await cancelOrder(confirmModalOrder.id, reasonToSend ? { reason: reasonToSend } : {});
       setConfirmModalOrder(null);
+      closeCancelDialog();
       showToast('Pedido cancelado.', 'info');
       refreshList();
     } catch (err) {
@@ -535,7 +569,7 @@ export default function Orders() {
             <button
               type="button"
               className="orders-confirm-dialog-btn orders-confirm-dialog-btn--secondary"
-              onClick={handleCancelOrderFromModal}
+              onClick={openCancelDialogFromModal}
               disabled={actionLoading}
               aria-label="Cancelar este pedido"
             >
@@ -559,6 +593,73 @@ export default function Orders() {
           >
             ✕
           </button>
+        </div>
+      </dialog>
+
+      {/* Modal: motivo de cancelación (desde Confirmar pedido) */}
+      <dialog
+        ref={cancelDialogRef}
+        className="orders-cancel-dialog"
+        aria-labelledby="orders-cancel-dialog-title"
+        aria-describedby="orders-cancel-dialog-desc"
+        onClose={closeCancelDialog}
+        onCancel={closeCancelDialog}
+      >
+        <div className="orders-cancel-dialog-content">
+          <div className="orders-cancel-dialog-icon" aria-hidden="true">
+            ⚠️
+          </div>
+          <h2 id="orders-cancel-dialog-title" className="orders-cancel-dialog-title">
+            ¿Cancelar pedido?
+          </h2>
+          <p id="orders-cancel-dialog-desc" className="orders-cancel-dialog-desc">
+            Esta acción no se puede deshacer. El pedido quedará cancelado y no podrás recuperarlo.
+          </p>
+          <label htmlFor="orders-cancel-reason" className="orders-cancel-reason-label">
+            Motivo de cancelación (opcional)
+          </label>
+          <select
+            id="orders-cancel-reason"
+            className="orders-cancel-reason-select"
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            aria-describedby="orders-cancel-dialog-desc"
+          >
+            {CANCEL_REASON_OPTIONS.map((opt) => (
+              <option key={opt.value || 'empty'} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          {cancelReason === 'Otro' && (
+            <input
+              type="text"
+              className="orders-cancel-reason-other"
+              placeholder="Escribe el motivo"
+              value={cancelReasonOther}
+              onChange={(e) => setCancelReasonOther(e.target.value)}
+              maxLength={200}
+              aria-label="Motivo de cancelación (otro)"
+            />
+          )}
+          <div className="orders-cancel-dialog-actions">
+            <button
+              type="button"
+              className="orders-cancel-dialog-btn orders-cancel-dialog-btn--secondary"
+              onClick={closeCancelDialog}
+              disabled={actionLoading}
+            >
+              No, mantener pedido
+            </button>
+            <button
+              type="button"
+              className="orders-cancel-dialog-btn orders-cancel-dialog-btn--confirm"
+              onClick={handleConfirmCancelFromModal}
+              disabled={actionLoading}
+            >
+              {actionLoading ? 'Cancelando...' : 'Sí, cancelar pedido'}
+            </button>
+          </div>
         </div>
       </dialog>
 
