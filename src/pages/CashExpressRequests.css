@@ -706,14 +706,24 @@
   }
 
   .requests-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: nowrap;
   }
 
   .requests-header h1 {
     font-size: 1.3em;
     line-height: 1.25;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .requests-header .refresh-button {
+    flex-shrink: 0;
+    padding: 8px 12px;
+    font-size: 0.8125rem;
   }
 
   .filters-container {

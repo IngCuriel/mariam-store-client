@@ -859,7 +859,7 @@ export default function CashExpress() {
               <div className="important-info">
                 <p><strong>⚠️ Información importante:</strong></p>
                 <ul>
-                  <li><strong>Zona de entrega:</strong> Solo realizamos entregas en nuestra sucursal ubicada en Yutanducho de Guerrero</li>
+                  <li><strong>Zona de entrega:</strong> Solo realizamos entregas en nuestra sucursal ubicada en Yutanduchi de Guerrero, Nochixtlán, Oaxaca, Calle Progreso 10, Centro </li>
                   <li><strong>Conserva tu comprobante:</strong> Es muy importante que guardes y conserves tu comprobante de depósito en buen estado. Si no podemos identificar claramente tu depósito en el comprobante, no nos hacemos responsables de la validación</li>
                   <li><strong>Seguimiento:</strong> Revisa regularmente "Mis Solicitudes" para ver el estado de tu solicitud y el seguimiento del proceso</li>
                 </ul>

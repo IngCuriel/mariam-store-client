@@ -995,10 +995,34 @@
     min-width: 0;
   }
 
-  /* Título principal más compacto que en escritorio */
+  .cash-express-header {
+    margin-bottom: 18px;
+  }
+
+  /* Título principal más compacto en móvil */
   .cash-express-header h1 {
-    font-size: 1.65em;
+    font-size: 1.3em;
     line-height: 1.2;
+  }
+
+  .how-it-works-button {
+    padding: 7px 10px;
+    font-size: 0.8125rem;
+    border-radius: 8px;
+    border-width: 1px;
+    line-height: 1.25;
+    gap: 6px;
+    justify-content: center;
+  }
+
+  .how-it-works-button span:first-child {
+    font-size: 0.95em;
+    line-height: 1;
+  }
+
+  .how-it-works-button span:last-child {
+    font-size: 0.85em;
+    opacity: 0.85;
   }
 
   .section-title {

@@ -51,7 +51,7 @@ export default function CashExpressRequests() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [statusFilter, setStatusFilter] = useState('EN_PROCESO');
+  const [statusFilter, setStatusFilter] = useState('TODAS');
 
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
@@ -77,13 +77,11 @@ export default function CashExpressRequests() {
   };
 
   const getFilteredRequests = () => {
-    if (statusFilter === 'EN_PROCESO') {
-      return requests.filter(
-        (req) => req.status !== 'ENTREGADO' && req.status !== 'CANCELADO'
-      );
-    }
     if (statusFilter === 'TODAS') return requests;
-    return requests.filter((req) => req.status === statusFilter);
+    if (statusFilter === 'PENDIENTE') {
+      return requests.filter((req) => req.status === 'PENDIENTE');
+    }
+    return requests;
   };
 
   const filteredRequests = getFilteredRequests();
@@ -133,38 +131,17 @@ export default function CashExpressRequests() {
       <div className="filters-container">
         <button
           type="button"
-          className={`filter-button ${statusFilter === 'EN_PROCESO' ? 'active' : ''}`}
-          onClick={() => setStatusFilter('EN_PROCESO')}
-        >
-          En proceso
-        </button>
-        <button
-          type="button"
           className={`filter-button ${statusFilter === 'TODAS' ? 'active' : ''}`}
           onClick={() => setStatusFilter('TODAS')}
         >
-          Todas
+          Todos
         </button>
         <button
           type="button"
           className={`filter-button ${statusFilter === 'PENDIENTE' ? 'active' : ''}`}
           onClick={() => setStatusFilter('PENDIENTE')}
         >
-          Pendientes
-        </button>
-        <button
-          type="button"
-          className={`filter-button ${statusFilter === 'DEPOSITO_VALIDADO' ? 'active' : ''}`}
-          onClick={() => setStatusFilter('DEPOSITO_VALIDADO')}
-        >
-          Validadas
-        </button>
-        <button
-          type="button"
-          className={`filter-button ${statusFilter === 'ENTREGADO' ? 'active' : ''}`}
-          onClick={() => setStatusFilter('ENTREGADO')}
-        >
-          Entregadas
+          Pendiente de depósito
         </button>
       </div>
 

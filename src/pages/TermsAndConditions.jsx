@@ -40,7 +40,7 @@ export default function TermsAndConditions() {
         <section className="terms-section">
           <h2>3. Zona de Cobertura</h2>
           <p>
-            El servicio solo está disponible para entregas dentro de Yutanducho de Guerrero, Oaxaca.
+            El servicio solo está disponible para entregas dentro de Yutanduchi de Guerrero, Nochixtlán, Oaxaca.
             No realizamos entregas fuera de esta zona.
           </p>
         </section>
