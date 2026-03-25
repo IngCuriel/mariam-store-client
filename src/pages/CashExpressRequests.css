@@ -712,7 +712,8 @@
   }
 
   .requests-header h1 {
-    font-size: 1.5em;
+    font-size: 1.3em;
+    line-height: 1.25;
   }
 
   .filters-container {

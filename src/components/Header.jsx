@@ -110,6 +110,13 @@ export default function Header() {
                 {showUserMenu && (
                   <div className="user-menu-dropdown">
                     <Link
+                      to="/profile"
+                      className="menu-item"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      👤 Mi perfil
+                    </Link>
+                    <Link
                       to="/cash-express/requests"
                       className="menu-item"
                       onClick={() => setShowUserMenu(false)}

@@ -32,6 +32,26 @@ const PAGE_SIZE = 20;
 /** ID de sucursal para el menú "Novedades" */
 const NOVEDADES_BRANCH_ID = 10;
 
+function SearchSubmitIcon() {
+  return (
+    <svg
+      className="products-search-btn-icon-svg"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.25"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.35-4.35" />
+    </svg>
+  );
+}
+
 export default function Products() {
   const location = useLocation();
   const { logSearch, logCategorySelect } = useAnalytics();
@@ -445,31 +465,36 @@ export default function Products() {
       <div className="products-top-bar">
         <div className="products-top-inner">
           <div className="products-search-row">
-            <div className="products-search-wrap">
-              <span className="products-search-icon" aria-hidden>🔍</span>
-              <input
-                type="text"
-                className="products-search-input"
-                placeholder="Buscar productos, marcas y más..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    applySearch();
-                  }
-                }}
-                aria-label="Buscar productos"
-              />
+            <div className="products-search-group">
+              <div className="products-search-wrap">
+                <span className="products-search-icon" aria-hidden>🔍</span>
+                <input
+                  type="text"
+                  className="products-search-input"
+                  placeholder="Buscar productos, marcas y más..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      applySearch();
+                    }
+                  }}
+                  aria-label="Buscar productos"
+                />
+              </div>
+              <button
+                type="button"
+                className="products-search-btn"
+                onClick={applySearch}
+                aria-label="Buscar"
+              >
+                <span className="products-search-btn-icon-wrap">
+                  <SearchSubmitIcon />
+                </span>
+                <span className="products-search-btn-text-desktop">Buscar</span>
+              </button>
             </div>
-            <button
-              type="button"
-              className="products-search-btn"
-              onClick={applySearch}
-              aria-label="Aplicar búsqueda"
-            >
-              Buscar
-            </button>
           </div>
           <nav className="products-quick-nav" aria-label="Opciones rápidas">
             <button

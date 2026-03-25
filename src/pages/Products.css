@@ -20,14 +20,31 @@
 
 .products-search-row {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
+  align-items: stretch;
+  width: 100%;
+}
+
+/* Input + botón siempre en la misma fila; se encogen juntos en pantallas angostas */
+.products-search-group {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  border: 2px solid #e0e0e0;
+  background: #f5f5f5;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.products-search-group:focus-within {
+  border-color: #dc143c;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.15);
 }
 
 .products-search-wrap {
   flex: 1;
-  min-width: 200px;
+  min-width: 0;
   position: relative;
 }
 
@@ -45,11 +62,11 @@
 .products-search-input {
   width: 100%;
   padding: 14px 16px 14px 44px;
-  border: 2px solid #e0e0e0;
-  border-radius: 24px;
+  border: none;
+  border-radius: 0;
   font-size: 1rem;
-  background: #f5f5f5;
-  transition: all 0.2s ease;
+  background: transparent;
+  transition: background 0.2s ease;
 }
 
 .products-search-input::placeholder {
@@ -58,22 +75,44 @@
 
 .products-search-input:focus {
   outline: none;
-  border-color: #DC143C;
-  background: #fff;
-  box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.15);
 }
 
 .products-search-btn {
   flex-shrink: 0;
-  padding: 12px 24px;
+  padding: 12px 20px;
   font-size: 0.95rem;
   font-weight: 600;
   color: #fff;
-  background: #DC143C;
+  background: #dc143c;
   border: none;
-  border-radius: 24px;
+  border-left: 2px solid #c41230;
+  border-radius: 0;
   cursor: pointer;
   transition: background 0.2s, transform 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 88px;
+}
+
+.products-search-btn-icon-wrap {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.products-search-btn-icon-svg {
+  display: block;
+}
+
+.products-search-btn-text-desktop {
+  display: inline;
+}
+
+.products-search-group:focus-within .products-search-btn {
+  border-left-color: #b81034;
 }
 
 .products-search-btn:hover {
@@ -87,6 +126,35 @@
 
 .products-search-btn:active {
   transform: scale(0.98);
+}
+
+@media (max-width: 768px) {
+  .products-search-wrap .products-search-icon {
+    display: none;
+  }
+
+  .products-search-input {
+    padding: 14px 16px;
+  }
+
+  .products-search-btn {
+    padding: 8px 10px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .products-search-btn-text-desktop {
+    display: none;
+  }
+
+  .products-search-btn-icon-wrap {
+    display: flex;
+  }
+
+  .products-search-btn-icon-svg {
+    width: 18px;
+    height: 18px;
+  }
 }
 
 /* Menú rápido debajo del search: Categorías, Ofertas, Productos Nuevo, Sucursales */

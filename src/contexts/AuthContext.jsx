@@ -1,5 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { login as apiLogin, register as apiRegister, verifyToken } from '../services/authService';
+import {
+  login as apiLogin,
+  register as apiRegister,
+  verifyToken,
+  updateProfile as apiUpdateProfile,
+} from '../services/authService';
 
 const AuthContext = createContext(null);
 
@@ -63,6 +68,13 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const updateUserName = async (name) => {
+    const updated = await apiUpdateProfile(name);
+    localStorage.setItem('auth_user', JSON.stringify(updated));
+    setUser(updated);
+    return updated;
+  };
+
   const isAuthenticated = !!user && !!token;
 
   return (
@@ -75,6 +87,7 @@ export function AuthProvider({ children }) {
         login: handleLogin,
         register: handleRegister,
         logout: handleLogout,
+        updateUserName,
       }}
     >
       {children}

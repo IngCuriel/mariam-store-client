@@ -3,25 +3,17 @@ import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './BottomNav.css';
 
-/** Íconos simples para la barra inferior (inline SVG para consistencia visual) */
 const IconHome = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
     <polyline points="9 22 9 12 15 12 15 22" />
   </svg>
 );
-const IconFlash = () => (
+/** Icono “enviar” (avión de papel) para Efectivo Express */
+const IconSend = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-  </svg>
-);
-const IconClipboard = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-    <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
-    <path d="M9 14h6" />
-    <path d="M9 18h6" />
-    <path d="M9 10h6" />
+    <path d="M22 2L11 13" />
+    <path d="M22 2l-7 20-4-9-9-4 20-7z" />
   </svg>
 );
 const IconBox = () => (
@@ -31,136 +23,193 @@ const IconBox = () => (
     <line x1="12" y1="22.08" x2="12" y2="12" />
   </svg>
 );
-const IconMore = () => (
+const IconUser = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-    <circle cx="12" cy="12" r="1" />
-    <circle cx="19" cy="12" r="1" />
-    <circle cx="5" cy="12" r="1" />
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
   </svg>
 );
 
+/**
+ * Barra inferior móvil — orden pensado para la jornada del usuario:
+ * Tienda → Pedidos → Efectivo Express → Cuenta (carrito, perfil, etc.)
+ */
 export default function BottomNav() {
   const { user, logout } = useAuth();
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const moreMenuRef = useRef(null);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const accountMenuRef = useRef(null);
 
   useEffect(() => {
-    if (!showMoreMenu) return;
+    if (!showAccountMenu) return;
     const handleClickOutside = (e) => {
-      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target)) {
-        setShowMoreMenu(false);
+      if (accountMenuRef.current && !accountMenuRef.current.contains(e.target)) {
+        setShowAccountMenu(false);
       }
     };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
-  }, [showMoreMenu]);
+  }, [showAccountMenu]);
 
-  const handleMoreClick = (e) => {
+  const toggleAccountMenu = (e) => {
     e.preventDefault();
-    setShowMoreMenu((v) => !v);
+    setShowAccountMenu((v) => !v);
   };
 
-  const closeMoreMenu = () => setShowMoreMenu(false);
+  const closeAccountMenu = () => setShowAccountMenu(false);
 
   const handleLogout = () => {
-    closeMoreMenu();
+    closeAccountMenu();
     logout();
   };
 
-  const navItems = [
-    { to: '/', label: 'Tienda Online', icon: IconHome },
-    { to: '/orders', label: 'Compras', icon: IconBox, protected: true },
-    { to: '/cash-express', label: 'Efectivo Express', icon: IconFlash },
-    { to: '/cash-express/requests', label: 'Solicitudes', icon: IconClipboard, protected: true },
+  const mainNavItems = [
+    { to: '/', label: 'Tienda', icon: IconHome, end: true },
+    { to: '/orders', label: 'Pedidos', icon: IconBox },
+    { to: '/cash-express', label: 'Efectivo', icon: IconSend },
   ];
 
   return (
     <nav className="bottom-nav" aria-label="Navegación principal">
-      {navItems.map((item) => {
-        if (item.protected && !user) return null;
-        return (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) => `bottom-nav-item ${isActive ? 'bottom-nav-item--active' : ''}`}
-            end={item.to === '/'}
-          >
-            <span className="bottom-nav-icon">
-              <item.icon />
-              {item.badge != null && item.badge > 0 && (
-                <span className="bottom-nav-badge" aria-label={`${item.badge} en carrito`}>
-                  {item.badge > 99 ? '99+' : item.badge}
-                </span>
-              )}
-            </span>
-            <span className="bottom-nav-label">{item.label}</span>
-          </NavLink>
-        );
-      })}
-
-      <div className="bottom-nav-item bottom-nav-item--more" ref={moreMenuRef}>
-        <button
-          type="button"
-          className="bottom-nav-button"
-          onClick={handleMoreClick}
-          aria-expanded={showMoreMenu}
-          aria-haspopup="true"
-          aria-label="Ver más opciones"
+      {mainNavItems.map((item) => (
+        <NavLink
+          key={item.to}
+          to={item.to}
+          className={({ isActive }) => `bottom-nav-item ${isActive ? 'bottom-nav-item--active' : ''}`}
+          end={item.end === true}
         >
           <span className="bottom-nav-icon">
-            <IconMore />
+            <item.icon />
           </span>
-          <span className="bottom-nav-label">Más</span>
+          <span className="bottom-nav-label">{item.label}</span>
+        </NavLink>
+      ))}
+
+      <div className="bottom-nav-item bottom-nav-item--account" ref={accountMenuRef}>
+        <button
+          type="button"
+          className={`bottom-nav-button ${showAccountMenu ? 'bottom-nav-button--open' : ''}`}
+          onClick={toggleAccountMenu}
+          aria-expanded={showAccountMenu}
+          aria-haspopup="true"
+          aria-label="Menú de cuenta y ajustes"
+        >
+          <span className="bottom-nav-icon">
+            <IconUser />
+          </span>
+          <span className="bottom-nav-label">Cuenta</span>
         </button>
 
-        {showMoreMenu && (
-          <div className="bottom-nav-more-menu" role="menu">
-            {user && (
+        {showAccountMenu && (
+          <div className="bottom-nav-account-sheet" role="menu" aria-label="Opciones de cuenta">
+            <p className="bottom-nav-account-sheet-title">Tu cuenta</p>
+            {user ? (
               <>
                 <Link
-                  to="/cash-express/requests"
-                  className="bottom-nav-more-item"
+                  to="/profile"
+                  className="bottom-nav-account-item"
                   role="menuitem"
-                  onClick={closeMoreMenu}
+                  onClick={closeAccountMenu}
                 >
-                  📋 Mis Solicitudes
+                  <span className="bottom-nav-account-item-icon" aria-hidden>👤</span>
+                  <span>Mi perfil</span>
+                </Link>
+                <Link
+                  to="/cart"
+                  className="bottom-nav-account-item"
+                  role="menuitem"
+                  onClick={closeAccountMenu}
+                >
+                  <span className="bottom-nav-account-item-icon" aria-hidden>🛒</span>
+                  <span>Carrito</span>
+                </Link>
+                <Link
+                  to="/cash-express/requests"
+                  className="bottom-nav-account-item"
+                  role="menuitem"
+                  onClick={closeAccountMenu}
+                >
+                  <span className="bottom-nav-account-item-icon" aria-hidden>📋</span>
+                  <span>Mis solicitudes</span>
                 </Link>
                 <Link
                   to="/addresses"
-                  className="bottom-nav-more-item"
+                  className="bottom-nav-account-item"
                   role="menuitem"
-                  onClick={closeMoreMenu}
+                  onClick={closeAccountMenu}
                 >
-                  📍 Mis direcciones
+                  <span className="bottom-nav-account-item-icon" aria-hidden>📍</span>
+                  <span>Mis direcciones</span>
+                </Link>
+                <div className="bottom-nav-account-divider" role="presentation" />
+                <Link
+                  to="/cash-express/terms"
+                  className="bottom-nav-account-item bottom-nav-account-item--muted"
+                  role="menuitem"
+                  onClick={closeAccountMenu}
+                >
+                  <span className="bottom-nav-account-item-icon" aria-hidden>📄</span>
+                  <span>Términos y condiciones</span>
                 </Link>
                 <button
                   type="button"
-                  className="bottom-nav-more-item bottom-nav-more-item--logout"
+                  className="bottom-nav-account-item bottom-nav-account-item--logout"
                   role="menuitem"
                   onClick={handleLogout}
                 >
-                  🚪 Salir
+                  <span className="bottom-nav-account-item-icon" aria-hidden>🚪</span>
+                  <span>Cerrar sesión</span>
                 </button>
               </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="bottom-nav-account-item bottom-nav-account-item--primary"
+                  role="menuitem"
+                  onClick={closeAccountMenu}
+                >
+                  <span className="bottom-nav-account-item-icon" aria-hidden>🔐</span>
+                  <span>Iniciar sesión</span>
+                </Link>
+                <Link
+                  to="/register"
+                  className="bottom-nav-account-item"
+                  role="menuitem"
+                  onClick={closeAccountMenu}
+                >
+                  <span className="bottom-nav-account-item-icon" aria-hidden>✨</span>
+                  <span>Crear cuenta</span>
+                </Link>
+                <Link
+                  to="/cart"
+                  className="bottom-nav-account-item"
+                  role="menuitem"
+                  onClick={closeAccountMenu}
+                >
+                  <span className="bottom-nav-account-item-icon" aria-hidden>🛒</span>
+                  <span>Carrito</span>
+                </Link>
+                <Link
+                  to="/orders"
+                  className="bottom-nav-account-item"
+                  role="menuitem"
+                  onClick={closeAccountMenu}
+                >
+                  <span className="bottom-nav-account-item-icon" aria-hidden>📦</span>
+                  <span>Mis pedidos</span>
+                </Link>
+                <div className="bottom-nav-account-divider" role="presentation" />
+                <Link
+                  to="/cash-express/terms"
+                  className="bottom-nav-account-item bottom-nav-account-item--muted"
+                  role="menuitem"
+                  onClick={closeAccountMenu}
+                >
+                  <span className="bottom-nav-account-item-icon" aria-hidden>📄</span>
+                  <span>Términos y condiciones</span>
+                </Link>
+              </>
             )}
-            {!user && (
-              <Link
-                to="/login"
-                className="bottom-nav-more-item"
-                role="menuitem"
-                onClick={closeMoreMenu}
-              >
-                🔐 Iniciar sesión
-              </Link>
-            )}
-            <Link
-              to="/cash-express/terms"
-              className="bottom-nav-more-item"
-              role="menuitem"
-              onClick={closeMoreMenu}
-            >
-              📄 Términos y Condiciones
-            </Link>
           </div>
         )}
       </div>

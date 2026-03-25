@@ -995,8 +995,14 @@
     min-width: 0;
   }
 
+  /* Título principal más compacto que en escritorio */
   .cash-express-header h1 {
-    font-size: 2em;
+    font-size: 1.65em;
+    line-height: 1.2;
+  }
+
+  .section-title {
+    font-size: 1.2em;
   }
 
   .section {

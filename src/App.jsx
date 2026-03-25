@@ -22,6 +22,7 @@ import Orders from './pages/Orders';
 import OrderDetail from './pages/OrderDetail';
 import OrderCheckout from './pages/OrderCheckout';
 import Addresses from './pages/Addresses';
+import Profile from './pages/Profile';
 import './App.css';
 
 function ScrollToTop() {
@@ -73,6 +74,7 @@ function AppRoutes() {
           <Route path="/orders/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
           <Route path="/orders/:id/checkout" element={<ProtectedRoute><OrderCheckout /></ProtectedRoute>} />
           <Route path="/addresses" element={<ProtectedRoute><Addresses /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

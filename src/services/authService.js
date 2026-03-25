@@ -29,3 +29,9 @@ export const getProfile = async () => {
   return response.data;
 };
 
+/** Actualiza solo el nombre del usuario autenticado. */
+export const updateProfile = async (name) => {
+  const response = await api.patch('/auth/profile', { name });
+  return response.data;
+};
+
