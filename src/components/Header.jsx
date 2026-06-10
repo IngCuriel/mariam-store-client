@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import NotificationBell from './NotificationBell';
+import { CASH_EXPRESS_ENABLED } from '../config/features';
 import storeIcon from '../assets/images/icon.png';
 import './Header.css';
 
@@ -82,9 +83,11 @@ export default function Header() {
             <Link to="/" className="nav-link">
               🛍️ Tienda Online
             </Link>
-            <Link to="/cash-express" className="nav-link">
-              ⚡ Efectivo Express
-            </Link>
+            {CASH_EXPRESS_ENABLED && (
+              <Link to="/cash-express" className="nav-link">
+                ⚡ Efectivo Express
+              </Link>
+            )}
             {user ? (
               <>
                 <NotificationBell />
@@ -116,13 +119,15 @@ export default function Header() {
                     >
                       👤 Mi perfil
                     </Link>
-                    <Link
-                      to="/cash-express/requests"
-                      className="menu-item"
-                      onClick={() => setShowUserMenu(false)}
-                    >
-                      📋 Mis Solicitudes
-                    </Link>
+                    {CASH_EXPRESS_ENABLED && (
+                      <Link
+                        to="/cash-express/requests"
+                        className="menu-item"
+                        onClick={() => setShowUserMenu(false)}
+                      >
+                        📋 Mis Solicitudes
+                      </Link>
+                    )}
                     <Link
                       to="/orders"
                       className="menu-item"
@@ -198,24 +203,28 @@ export default function Header() {
             <span className="sidebar-icon">🛍️</span>
             <span>Tienda Online</span>
           </Link>
-          <Link
-            to="/cash-express"
-            className="sidebar-link"
-            onClick={() => setShowMobileMenu(false)}
-          >
-            <span className="sidebar-icon">⚡</span>
-            <span>Efectivo Express</span>
-          </Link>
+          {CASH_EXPRESS_ENABLED && (
+            <Link
+              to="/cash-express"
+              className="sidebar-link"
+              onClick={() => setShowMobileMenu(false)}
+            >
+              <span className="sidebar-icon">⚡</span>
+              <span>Efectivo Express</span>
+            </Link>
+          )}
           {user && (
             <>
-              <Link
-                to="/cash-express/requests"
-                className="sidebar-link"
-                onClick={() => setShowMobileMenu(false)}
-              >
-                <span className="sidebar-icon">📋</span>
-                <span>Mis Solicitudes</span>
-              </Link>
+              {CASH_EXPRESS_ENABLED && (
+                <Link
+                  to="/cash-express/requests"
+                  className="sidebar-link"
+                  onClick={() => setShowMobileMenu(false)}
+                >
+                  <span className="sidebar-icon">📋</span>
+                  <span>Mis Solicitudes</span>
+                </Link>
+              )}
               <Link
                 to="/orders"
                 className="sidebar-link"

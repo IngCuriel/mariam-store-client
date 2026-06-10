@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../contexts/NotificationContext';
+import { CASH_EXPRESS_ENABLED } from '../config/features';
 import './NotificationBell.css';
 
 export default function NotificationBell() {
@@ -27,7 +28,9 @@ export default function NotificationBell() {
 
     // Navegar al detalle según el tipo
     if (notification.type === 'cash_express') {
-      navigate(`/cash-express/requests/${notification.entityId}`);
+      if (CASH_EXPRESS_ENABLED) {
+        navigate(`/cash-express/requests/${notification.entityId}`);
+      }
     } else if (notification.type === 'order') {
       navigate(`/orders/${notification.entityId}`);
     }

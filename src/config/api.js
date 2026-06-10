@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { CASH_EXPRESS_ENABLED } from './features';
 
 const API_URL = 'https://mariam-pos-web-api.onrender.com';
 // const API_URL = 'http://localhost:4000'; // Para desarrollo local
@@ -47,7 +48,8 @@ api.interceptors.response.use(
         // Token inválido o expirado, limpiar autenticación
         removeToken();
         // Redirigir al login solo si no estamos en páginas públicas
-        const publicPaths = ['/login', '/register', '/', '/products', '/cash-express'];
+        const publicPaths = ['/login', '/register', '/', '/products'];
+        if (CASH_EXPRESS_ENABLED) publicPaths.push('/cash-express');
         const currentPath = window.location.pathname;
         if (!publicPaths.some(path => currentPath.startsWith(path))) {
           window.location.href = '/login';

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { CASH_EXPRESS_ENABLED } from '../config/features';
 import './BottomNav.css';
 
 const IconHome = () => (
@@ -65,7 +66,9 @@ export default function BottomNav() {
   const mainNavItems = [
     { to: '/', label: 'Tienda', icon: IconHome, end: true },
     { to: '/orders', label: 'Pedidos', icon: IconBox },
-    { to: '/cash-express', label: 'Efectivo', icon: IconSend },
+    ...(CASH_EXPRESS_ENABLED
+      ? [{ to: '/cash-express', label: 'Efectivo', icon: IconSend }]
+      : []),
   ];
 
   return (
@@ -122,15 +125,17 @@ export default function BottomNav() {
                   <span className="bottom-nav-account-item-icon" aria-hidden>🛒</span>
                   <span>Carrito</span>
                 </Link>
-                <Link
-                  to="/cash-express/requests"
-                  className="bottom-nav-account-item"
-                  role="menuitem"
-                  onClick={closeAccountMenu}
-                >
-                  <span className="bottom-nav-account-item-icon" aria-hidden>📋</span>
-                  <span>Mis solicitudes</span>
-                </Link>
+                {CASH_EXPRESS_ENABLED && (
+                  <Link
+                    to="/cash-express/requests"
+                    className="bottom-nav-account-item"
+                    role="menuitem"
+                    onClick={closeAccountMenu}
+                  >
+                    <span className="bottom-nav-account-item-icon" aria-hidden>📋</span>
+                    <span>Mis solicitudes</span>
+                  </Link>
+                )}
                 <Link
                   to="/addresses"
                   className="bottom-nav-account-item"
@@ -141,15 +146,17 @@ export default function BottomNav() {
                   <span>Mis direcciones</span>
                 </Link>
                 <div className="bottom-nav-account-divider" role="presentation" />
-                <Link
-                  to="/cash-express/terms"
-                  className="bottom-nav-account-item bottom-nav-account-item--muted"
-                  role="menuitem"
-                  onClick={closeAccountMenu}
-                >
-                  <span className="bottom-nav-account-item-icon" aria-hidden>📄</span>
-                  <span>Términos y condiciones</span>
-                </Link>
+                {CASH_EXPRESS_ENABLED && (
+                  <Link
+                    to="/cash-express/terms"
+                    className="bottom-nav-account-item bottom-nav-account-item--muted"
+                    role="menuitem"
+                    onClick={closeAccountMenu}
+                  >
+                    <span className="bottom-nav-account-item-icon" aria-hidden>📄</span>
+                    <span>Términos y condiciones</span>
+                  </Link>
+                )}
                 <button
                   type="button"
                   className="bottom-nav-account-item bottom-nav-account-item--logout"
@@ -198,16 +205,20 @@ export default function BottomNav() {
                   <span className="bottom-nav-account-item-icon" aria-hidden>📦</span>
                   <span>Mis pedidos</span>
                 </Link>
-                <div className="bottom-nav-account-divider" role="presentation" />
-                <Link
-                  to="/cash-express/terms"
-                  className="bottom-nav-account-item bottom-nav-account-item--muted"
-                  role="menuitem"
-                  onClick={closeAccountMenu}
-                >
-                  <span className="bottom-nav-account-item-icon" aria-hidden>📄</span>
-                  <span>Términos y condiciones</span>
-                </Link>
+                {CASH_EXPRESS_ENABLED && (
+                  <>
+                    <div className="bottom-nav-account-divider" role="presentation" />
+                    <Link
+                      to="/cash-express/terms"
+                      className="bottom-nav-account-item bottom-nav-account-item--muted"
+                      role="menuitem"
+                      onClick={closeAccountMenu}
+                    >
+                      <span className="bottom-nav-account-item-icon" aria-hidden>📄</span>
+                      <span>Términos y condiciones</span>
+                    </Link>
+                  </>
+                )}
               </>
             )}
           </div>

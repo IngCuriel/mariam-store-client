@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAnalytics } from '../hooks/useAnalytics';
+import { sanitizeReturnPath } from '../config/features';
 import './Register.css';
 
 export default function Register() {
@@ -96,7 +97,7 @@ export default function Register() {
       // Registrar evento de registro en Analytics
       logSignUp('email');
       // Redirigir a la ruta de retorno si existe, o a home
-      navigate(returnTo || '/');
+      navigate(sanitizeReturnPath(returnTo));
     } catch (err) {
       setError(err.response?.data?.error || 'Error al crear la cuenta. Intenta nuevamente.');
     } finally {

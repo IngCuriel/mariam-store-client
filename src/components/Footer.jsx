@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { CASH_EXPRESS_ENABLED } from '../config/features';
 import storeIcon from '../assets/images/icon.png';
 import './Footer.css';
 
@@ -50,26 +51,32 @@ export default function Footer() {
                   🛍️ Tienda Online
                 </Link>
               </li>
-              <li>
-                <Link to="/cash-express" className="footer-link">
-                  ⚡ Efectivo Express
-                </Link>
-              </li>
-              <li>
-                <Link to="/cash-express/requests" className="footer-link">
-                  📋 Mis Solicitudes
-                </Link>
-              </li>
+              {CASH_EXPRESS_ENABLED && (
+                <>
+                  <li>
+                    <Link to="/cash-express" className="footer-link">
+                      ⚡ Efectivo Express
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/cash-express/requests" className="footer-link">
+                      📋 Mis Solicitudes
+                    </Link>
+                  </li>
+                </>
+              )}
               <li>
                 <Link to="/orders" className="footer-link">
                   📦 Mis Pedidos
                 </Link>
               </li>
-              <li>
-                <Link to="/cash-express/terms" className="footer-link">
-                  📄 Términos y Condiciones
-                </Link>
-              </li>
+              {CASH_EXPRESS_ENABLED && (
+                <li>
+                  <Link to="/cash-express/terms" className="footer-link">
+                    📄 Términos y Condiciones
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
 
@@ -134,10 +141,14 @@ export default function Footer() {
             </p>
           </div>
           <div className="footer-legal">
-            <Link to="/cash-express/terms" className="legal-link">
-              Términos y Condiciones
-            </Link>
-            <span className="legal-separator">|</span>
+            {CASH_EXPRESS_ENABLED && (
+              <>
+                <Link to="/cash-express/terms" className="legal-link">
+                  Términos y Condiciones
+                </Link>
+                <span className="legal-separator">|</span>
+              </>
+            )}
             <a href="#" className="legal-link">
               Política de Privacidad
             </a>
