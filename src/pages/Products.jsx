@@ -10,6 +10,7 @@ import {
   getRecentSearches,
   addRecentSearch,
 } from '../services/userActivityService';
+import { ProductSoldTrust } from '../components/ProductSoldTrust';
 import './Products.css';
 
 const formatPrice = (price) => {
@@ -616,7 +617,8 @@ export default function Products() {
                   </div>
                   <div className="product-card-body">
                     <h3 className="product-card-name">{item.name}</h3>
-                    {item.price != null && (
+                    <ProductSoldTrust product={item} />
+                    {item.price != null && item.hasPresentations !== true && (
                       <span className="product-card-price">{formatPrice(item.price)}</span>
                     )}
                     <span className="product-card-cta">Ver producto →</span>
@@ -644,6 +646,8 @@ export default function Products() {
                   const defaultPrice = product.presentations?.find((p) => p.isDefault)
                     ? product.presentations.find((p) => p.isDefault).unitPrice
                     : product.price;
+                  const hasPresentations =
+                    Array.isArray(product.presentations) && product.presentations.length > 0;
                   return (
                     <Link
                       key={product.id}
@@ -659,7 +663,10 @@ export default function Products() {
                       </div>
                       <div className="product-card-body">
                         <h3 className="product-card-name">{product.name}</h3>
-                        <span className="product-card-price">{formatPrice(defaultPrice ?? 0)}</span>
+                        <ProductSoldTrust product={product} />
+                        {!hasPresentations && (
+                          <span className="product-card-price">{formatPrice(defaultPrice ?? 0)}</span>
+                        )}
                         <span className="product-card-cta">Ver producto →</span>
                       </div>
                     </Link>
@@ -727,6 +734,8 @@ export default function Products() {
               const defaultPrice = product.presentations?.find((p) => p.isDefault)
                 ? product.presentations.find((p) => p.isDefault).unitPrice
                 : product.price;
+              const hasPresentations =
+                Array.isArray(product.presentations) && product.presentations.length > 0;
               const hasMultiplePresentations = product.presentations && product.presentations.length > 1;
 
               return (
@@ -755,10 +764,13 @@ export default function Products() {
                       </span>
                     )}
                     <h3 className="product-card-name">{product.name}</h3>
+                    <ProductSoldTrust product={product} />
                     {product.description && (
                       <p className="product-card-desc">{product.description}</p>
                     )}
-                    <span className="product-card-price">{formatPrice(defaultPrice)}</span>
+                    {!hasPresentations && (
+                      <span className="product-card-price">{formatPrice(defaultPrice)}</span>
+                    )}
                     {hasMultiplePresentations && (
                       <span className="product-card-presentations">
                         +{product.presentations.length - 1} presentaciones más

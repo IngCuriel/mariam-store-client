@@ -42,7 +42,7 @@ function safeSet(key, value) {
 
 /**
  * Snapshot mínimo de un producto para "Visto recientemente".
- * @typedef {{ id: number, name: string, price?: number, imageUrl?: string, categoryName?: string }} RecentProduct
+ * @typedef {{ id: number, name: string, price?: number, imageUrl?: string, categoryName?: string, hasPresentations?: boolean }} RecentProduct
  */
 
 /**
@@ -54,12 +54,15 @@ export function addRecentlyViewed(product) {
   const imageUrl =
     product.images?.[0]?.url ||
     (typeof product.imageUrl === 'string' ? product.imageUrl : null);
+  const hasPresentations =
+    Array.isArray(product.presentations) && product.presentations.length > 0;
   const entry = {
     id: Number(product.id),
     name: product.name ?? 'Producto',
     price: product.price,
     imageUrl: imageUrl ?? undefined,
     categoryName: product.category?.name ?? undefined,
+    hasPresentations,
   };
 
   const list = safeParse(STORAGE_KEYS.RECENTLY_VIEWED, []);

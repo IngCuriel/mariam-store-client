@@ -7,6 +7,7 @@ import { useAnalytics } from '../hooks/useAnalytics';
 import { addRecentlyViewed } from '../services/userActivityService';
 import { getBestProductImage, getProductEmoji } from '../services/imageService';
 import { Toast } from '../components/Toast';
+import { ProductSoldTrust } from '../components/ProductSoldTrust';
 import './ProductDetail.css';
 
 const formatPrice = (price) => {
@@ -551,6 +552,8 @@ export default function ProductDetail() {
                   const defaultPrice = rec.presentations?.find((p) => p.isDefault)
                     ? rec.presentations.find((p) => p.isDefault).unitPrice
                     : rec.price;
+                  const hasPresentations =
+                    Array.isArray(rec.presentations) && rec.presentations.length > 0;
                   return (
                     <Link
                       key={rec.id}
@@ -568,9 +571,12 @@ export default function ProductDetail() {
                       </div>
                       <div className="pdp-recommendations-card-body">
                         <h4 className="pdp-recommendations-card-name">{rec.name}</h4>
-                        <span className="pdp-recommendations-card-price">
-                          {formatPrice(defaultPrice ?? 0)}
-                        </span>
+                        <ProductSoldTrust product={rec} />
+                        {!hasPresentations && (
+                          <span className="pdp-recommendations-card-price">
+                            {formatPrice(defaultPrice ?? 0)}
+                          </span>
+                        )}
                         <span className="pdp-recommendations-card-cta">Ver producto →</span>
                       </div>
                     </Link>

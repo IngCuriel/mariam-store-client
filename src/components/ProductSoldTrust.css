@@ -1,0 +1,49 @@
+/* Prueba social discreta: "| +N vendidos" — texto secundario, sin bloques llamativos */
+.product-card-sold-trust {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 0;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  font-weight: 400;
+  color: #888;
+  letter-spacing: 0.01em;
+}
+
+.product-card-sold-trust-sep {
+  display: inline-block;
+  width: 1px;
+  align-self: stretch;
+  min-height: 0.85em;
+  margin-right: 2px;
+  background: #d0d0d0;
+  flex-shrink: 0;
+}
+
+.product-card-sold-trust-text {
+  font-weight: 400;
+  color: #757575;
+}
+
+.product-card--compact .product-card-sold-trust {
+  font-size: 0.7rem;
+  margin-top: 2px;
+  gap: 5px;
+}
+
+.product-card--compact .product-card-sold-trust-sep {
+  margin-right: 1px;
+}
+
+.pdp-recommendations-card-body .product-card-sold-trust {
+  font-size: 0.7rem;
+  margin-top: 2px;
+  gap: 5px;
+}
+
+.pdp-recommendations-card-body .product-card-sold-trust-sep {
+  margin-right: 1px;
+}
