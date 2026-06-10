@@ -10,6 +10,8 @@ import BottomNav from './components/BottomNav';
 import AnalyticsPageView from './components/AnalyticsPageView';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
@@ -62,6 +64,12 @@ function AppRoutes() {
           } />
           <Route path="/register" element={
             isAuthenticated ? <Navigate to="/" replace /> : <Register />
+          } />
+          <Route path="/forgot-password" element={
+            isAuthenticated ? <Navigate to="/" replace /> : <ForgotPassword />
+          } />
+          <Route path="/reset-password" element={
+            isAuthenticated ? <Navigate to="/" replace /> : <ResetPassword />
           } />
           <Route path="/" element={<Products />} />
           <Route path="/products" element={<Products />} />

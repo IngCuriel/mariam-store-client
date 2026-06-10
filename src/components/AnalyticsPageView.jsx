@@ -36,6 +36,8 @@ function getPageNameFromPath(pathname) {
     '/cash-express/terms': 'Términos y Condiciones',
     '/login': 'Iniciar Sesión',
     '/register': 'Registro',
+    '/forgot-password': 'Recuperar Contraseña',
+    '/reset-password': 'Restablecer Contraseña',
     '/cart': 'Carrito',
     '/home': 'Inicio',
   };

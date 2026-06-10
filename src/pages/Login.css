@@ -101,7 +101,8 @@
 }
 
 .info-message,
-.error-message {
+.error-message,
+.success-message {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -134,6 +135,29 @@
   background: #fee;
   color: #c33;
   border-left: 4px solid #e74c3c;
+}
+
+.success-message {
+  background: #eefbf3;
+  color: #1b5e20;
+  border-left: 4px solid #2ecc71;
+}
+
+.auth-forgot-row {
+  text-align: right;
+  margin: -8px 0 4px;
+}
+
+.auth-forgot-link {
+  color: #666;
+  font-size: 0.9em;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.auth-forgot-link:hover {
+  color: #DC143C;
+  text-decoration: underline;
 }
 
 .message-icon {

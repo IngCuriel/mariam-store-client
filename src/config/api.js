@@ -48,7 +48,7 @@ api.interceptors.response.use(
         // Token inválido o expirado, limpiar autenticación
         removeToken();
         // Redirigir al login solo si no estamos en páginas públicas
-        const publicPaths = ['/login', '/register', '/', '/products'];
+        const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/', '/products'];
         if (CASH_EXPRESS_ENABLED) publicPaths.push('/cash-express');
         const currentPath = window.location.pathname;
         if (!publicPaths.some(path => currentPath.startsWith(path))) {

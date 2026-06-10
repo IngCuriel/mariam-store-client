@@ -35,3 +35,20 @@ export const updateProfile = async (name) => {
   return response.data;
 };
 
+export const requestPasswordReset = async (email) => {
+  const response = await api.post('/auth/forgot-password', { email });
+  return response.data;
+};
+
+export const validatePasswordResetToken = async (token) => {
+  const response = await api.get('/auth/reset-password/validate', {
+    params: { token },
+  });
+  return response.data;
+};
+
+export const resetPassword = async (token, password) => {
+  const response = await api.post('/auth/reset-password', { token, password });
+  return response.data;
+};
+
