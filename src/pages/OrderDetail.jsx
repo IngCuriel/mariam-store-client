@@ -632,11 +632,55 @@ export default function OrderDetail() {
                             )}
                           </span>
                         )}
-                        <span className="order-detail-product-details">
-                          {item.quantity} × {formatPrice(item.unitPrice)}
-                        </span>
                       </div>
                     </div>
+
+                    {/* Desglose de precio: cantidad · precio unitario · total */}
+                    {(() => {
+                      const isPartial = effQty !== item.quantity;
+                      const expectedSubtotal = effQty * item.unitPrice;
+                      const backendSubtotal = item.subtotal;
+                      // El backend es la fuente de verdad; si no cuadra, lo marcamos.
+                      const hasMismatch =
+                        backendSubtotal != null &&
+                        Math.abs(Number(backendSubtotal) - expectedSubtotal) > 0.01;
+                      const lineTotal = backendSubtotal != null ? Number(backendSubtotal) : expectedSubtotal;
+                      return (
+                        <div className="order-detail-product-breakdown">
+                          <div className="order-detail-breakdown-item">
+                            <span className="order-detail-breakdown-label">Cantidad</span>
+                            <span className="order-detail-breakdown-value">
+                              {isPartial ? (
+                                <>
+                                  {effQty} <span className="order-detail-breakdown-of">de {item.quantity}</span>
+                                </>
+                              ) : (
+                                item.quantity
+                              )}
+                            </span>
+                          </div>
+                          <div className="order-detail-breakdown-item">
+                            <span className="order-detail-breakdown-label">Precio unitario</span>
+                            <span className="order-detail-breakdown-value">
+                              {formatPrice(item.unitPrice)}
+                            </span>
+                          </div>
+                          <div className="order-detail-breakdown-item order-detail-breakdown-item-total">
+                            <span className="order-detail-breakdown-label">Total</span>
+                            <span className="order-detail-breakdown-value order-detail-breakdown-total-value">
+                              {formatPrice(lineTotal)}
+                            </span>
+                          </div>
+                          {hasMismatch && (
+                            <p className="order-detail-breakdown-mismatch" role="alert">
+                              ⚠ El total del backend ({formatPrice(lineTotal)}) no coincide con
+                              {' '}{effQty} × {formatPrice(item.unitPrice)} = {formatPrice(expectedSubtotal)}.
+                              Revisar en el servidor.
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })()}
                     {showProductAvailability && (
                       <div className="order-detail-availability-display">
                         {unavailable && (
@@ -667,11 +711,6 @@ export default function OrderDetail() {
                         )}
                       </div>
                     )}
-                    <div className="order-detail-product-footer">
-                      <span className="order-detail-product-subtotal">
-                        {formatPrice((effQty * item.unitPrice) || item.subtotal)}
-                      </span>
-                    </div>
                   </div>
                 );
               })}

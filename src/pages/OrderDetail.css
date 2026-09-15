@@ -656,13 +656,13 @@
 }
 
 .order-detail-btn-accept {
-  background: #3483fa;
+  background: #DC143C;
   border: none;
   color: #fff;
 }
 
 .order-detail-btn-accept:hover:not(:disabled) {
-  background: #2968c8;
+  background: #b8122f;
   transform: translateY(-1px);
 }
 
@@ -761,7 +761,7 @@
 .order-detail-product-num {
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+  background: linear-gradient(135deg, #DC143C 0%, #a11029 100%);
   color: #fff;
   border-radius: 50%;
   display: flex;
@@ -845,17 +845,66 @@
   font-size: 14px;
 }
 
-.order-detail-product-footer {
-  display: flex;
-  justify-content: flex-end;
+/* Desglose de precio: Cantidad · Precio unitario · Total */
+.order-detail-product-breakdown {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: end;
+  gap: 12px;
+  margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid #eee;
 }
 
-.order-detail-product-subtotal {
-  font-size: 1.15rem;
+.order-detail-breakdown-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.order-detail-breakdown-item-total {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.order-detail-breakdown-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.order-detail-breakdown-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.order-detail-breakdown-of {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.order-detail-breakdown-total-value {
+  font-size: 1.2rem;
   font-weight: 700;
-  color: #1565c0;
+  color: #DC143C;
+  letter-spacing: -0.01em;
+}
+
+.order-detail-breakdown-mismatch {
+  grid-column: 1 / -1;
+  margin: 4px 0 0 0;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: #b45309;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  line-height: 1.45;
 }
 
 .order-detail-summary-card {
@@ -904,7 +953,7 @@
 .order-detail-summary-total-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1565c0;
+  color: #DC143C;
 }
 
 /* Loading y error */
@@ -1469,6 +1518,20 @@
   .order-detail-header {
     flex-wrap: wrap;
     gap: 12px;
+  }
+
+  .order-detail-product-breakdown {
+    grid-template-columns: 1fr 1fr;
+    row-gap: 14px;
+  }
+
+  .order-detail-breakdown-item-total {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 10px;
+    border-top: 1px dashed #e5e7eb;
   }
 
   .order-detail-title {
