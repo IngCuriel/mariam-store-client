@@ -53,6 +53,45 @@ function SearchSubmitIcon() {
   );
 }
 
+function SearchInputIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.35-4.35" />
+    </svg>
+  );
+}
+
+function EmptyBoxIcon() {
+  return (
+    <svg
+      width="56"
+      height="56"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+      <line x1="12" y1="22.08" x2="12" y2="12" />
+    </svg>
+  );
+}
+
 export default function Products() {
   const location = useLocation();
   const { logSearch, logCategorySelect } = useAnalytics();
@@ -118,6 +157,38 @@ export default function Products() {
       setRecentSearches(getRecentSearches());
     }
   }, [location.pathname]);
+
+  /**
+   * Preseleccionar categoría desde la URL (?categoryId=X).
+   * Permite enlazar a una categoría desde el detalle del producto y que
+   * el filtro sobreviva a recargas o al compartir el enlace.
+   */
+  useEffect(() => {
+    if (categories.length === 0) return;
+    const params = new URLSearchParams(location.search);
+    const rawCategoryId = params.get('categoryId');
+    if (!rawCategoryId) return;
+
+    const matchedCategory = categories.find(
+      (cat) => String(cat.id) === String(rawCategoryId)
+    );
+    if (!matchedCategory) return;
+
+    setSelectedCategory(matchedCategory.id);
+    addRecentlyViewedCategory(matchedCategory);
+    setRecentlyViewedCategories(getRecentlyViewedCategories());
+    logCategorySelect(matchedCategory.id, matchedCategory.name);
+    setSearchInput('');
+    setSearchQuery('');
+    setSearchFallbackCategoryId(null);
+    setSearchFallbackCategoryName(null);
+    setSelectedBranch(null);
+    setShowCategoriesView(false);
+    setShowNewProductsView(false);
+    setShowNovedadesView(false);
+    setShowRecentSection(false);
+    setCurrentPage(1);
+  }, [location.search, categories]);
 
   /** Recomendados para ti: productos basados en otra búsqueda reciente (diferente a la actual) */
   useEffect(() => {
@@ -468,7 +539,7 @@ export default function Products() {
           <div className="products-search-row">
             <div className="products-search-group">
               <div className="products-search-wrap">
-                <span className="products-search-icon" aria-hidden>🔍</span>
+                <span className="products-search-icon" aria-hidden><SearchInputIcon /></span>
                 <input
                   type="text"
                   className="products-search-input"
@@ -723,7 +794,7 @@ export default function Products() {
         <div className={`products-grid ${listLoading ? 'products-grid--dimmed' : ''}`}>
           {displayProducts.length === 0 && !listLoading ? (
             <div className="empty-products">
-              <div className="empty-icon">📦</div>
+              <div className="empty-icon"><EmptyBoxIcon /></div>
               <h3>No se encontraron productos</h3>
               <p>Prueba con otros términos o quita filtros</p>
             </div>

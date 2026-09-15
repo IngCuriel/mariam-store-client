@@ -54,39 +54,6 @@ export function useAnalytics() {
   };
 
   /**
-   * Registra cuando se crea una solicitud de Cash Express
-   * @param {number} amount - Monto de la solicitud
-   */
-  const logCashExpressRequest = (amount) => {
-    logAnalyticsEvent('cash_express_request_created', {
-      amount,
-      currency: 'MXN',
-    });
-  };
-
-  /**
-   * Registra cuando se sube un comprobante de depósito
-   * @param {string} requestId - ID de la solicitud
-   */
-  const logDepositReceiptUpload = (requestId) => {
-    logAnalyticsEvent('deposit_receipt_uploaded', {
-      request_id: requestId,
-    });
-  };
-
-  /**
-   * Registra cuando se completa una solicitud de Cash Express
-   * @param {string} requestId - ID de la solicitud
-   * @param {string} status - Estado final de la solicitud
-   */
-  const logCashExpressCompleted = (requestId, status) => {
-    logAnalyticsEvent('cash_express_completed', {
-      request_id: requestId,
-      status,
-    });
-  };
-
-  /**
    * Registra una búsqueda de productos (Firebase + backend para reportes).
    * @param {Object} params
    * @param {string} params.searchTerm - Término buscado
@@ -153,9 +120,6 @@ export function useAnalytics() {
     logLogin,
     logSignUp,
     logPageView,
-    logCashExpressRequest,
-    logDepositReceiptUpload,
-    logCashExpressCompleted,
     logSearch,
     logViewItem,
     logCategorySelect,

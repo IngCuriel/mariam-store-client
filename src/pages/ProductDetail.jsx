@@ -48,6 +48,8 @@ export default function ProductDetail() {
 
   useEffect(() => {
     if (id) loadProduct();
+    // Reiniciar la cantidad al cambiar de producto para no arrastrar el valor anterior
+    setQuantity(1);
   }, [id]);
 
   /** Cuando el producto es "Disponible ahora" (inventario local), cargar tipos de entrega de la sucursal del producto. */
@@ -230,7 +232,9 @@ export default function ProductDetail() {
           <span>›</span>
           {product.category && (
             <>
-              <span className="pdp-breadcrumb-current">{product.category.name}</span>
+              <Link to={`/products?categoryId=${product.category.id}`}>
+                {product.category.name}
+              </Link>
               <span>›</span>
             </>
           )}
@@ -535,9 +539,12 @@ export default function ProductDetail() {
             <div className="pdp-recommendations-header">
               <h2 className="pdp-recommendations-title">También te puede interesar</h2>
               {product.category?.name && (
-                <span className="pdp-recommendations-subtitle">
-                  Más de {product.category.name}
-                </span>
+                <Link
+                  to={`/products?categoryId=${product.category.id}`}
+                  className="pdp-recommendations-subtitle pdp-recommendations-subtitle-link"
+                >
+                  Más de {product.category.name} →
+                </Link>
               )}
             </div>
             {recommendationsLoading ? (

@@ -30,10 +30,6 @@ function getPageNameFromPath(pathname) {
   const routeMap = {
     '/': 'Tienda Online',
     '/products': 'Tienda Online',
-    '/cash-express': 'Efectivo Express',
-    '/cash-express/requests': 'Mis Solicitudes',
-    '/cash-express/requests/:id': 'Detalle de Solicitud',
-    '/cash-express/terms': 'Términos y Condiciones',
     '/login': 'Iniciar Sesión',
     '/register': 'Registro',
     '/forgot-password': 'Recuperar Contraseña',
@@ -47,7 +43,7 @@ function getPageNameFromPath(pathname) {
     return routeMap[pathname];
   }
 
-  // Buscar coincidencia con parámetros (ej: /cash-express/requests/123)
+  // Buscar coincidencia con parámetros (ej: /orders/123)
   for (const [route, name] of Object.entries(routeMap)) {
     if (route.includes(':id') && pathname.startsWith(route.split(':id')[0])) {
       return name;

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAnalytics } from '../hooks/useAnalytics';
-import { sanitizeReturnPath } from '../config/features';
 import './Login.css';
 
 export default function Login() {
@@ -48,7 +47,7 @@ export default function Login() {
       // Registrar evento de login en Analytics
       logLogin('email');
       // Redirigir a la ruta de retorno si existe, o a home
-      navigate(sanitizeReturnPath(returnTo));
+      navigate(returnTo || '/');
     } catch (err) {
       setError(err.response?.data?.error || 'Error al iniciar sesión. Verifica tus credenciales.');
     } finally {

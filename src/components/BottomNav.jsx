@@ -1,20 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { CASH_EXPRESS_ENABLED } from '../config/features';
 import './BottomNav.css';
 
 const IconHome = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
     <polyline points="9 22 9 12 15 12 15 22" />
-  </svg>
-);
-/** Icono “enviar” (avión de papel) para Efectivo Express */
-const IconSend = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-    <path d="M22 2L11 13" />
-    <path d="M22 2l-7 20-4-9-9-4 20-7z" />
   </svg>
 );
 const IconBox = () => (
@@ -33,7 +25,7 @@ const IconUser = () => (
 
 /**
  * Barra inferior móvil — orden pensado para la jornada del usuario:
- * Tienda → Pedidos → Efectivo Express → Cuenta (carrito, perfil, etc.)
+ * Tienda → Pedidos → Cuenta (carrito, perfil, etc.)
  */
 export default function BottomNav() {
   const { user, logout } = useAuth();
@@ -66,9 +58,6 @@ export default function BottomNav() {
   const mainNavItems = [
     { to: '/', label: 'Tienda', icon: IconHome, end: true },
     { to: '/orders', label: 'Pedidos', icon: IconBox },
-    ...(CASH_EXPRESS_ENABLED
-      ? [{ to: '/cash-express', label: 'Efectivo', icon: IconSend }]
-      : []),
   ];
 
   return (
@@ -125,17 +114,6 @@ export default function BottomNav() {
                   <span className="bottom-nav-account-item-icon" aria-hidden>🛒</span>
                   <span>Carrito</span>
                 </Link>
-                {CASH_EXPRESS_ENABLED && (
-                  <Link
-                    to="/cash-express/requests"
-                    className="bottom-nav-account-item"
-                    role="menuitem"
-                    onClick={closeAccountMenu}
-                  >
-                    <span className="bottom-nav-account-item-icon" aria-hidden>📋</span>
-                    <span>Mis solicitudes</span>
-                  </Link>
-                )}
                 <Link
                   to="/addresses"
                   className="bottom-nav-account-item"
@@ -145,18 +123,6 @@ export default function BottomNav() {
                   <span className="bottom-nav-account-item-icon" aria-hidden>📍</span>
                   <span>Mis direcciones</span>
                 </Link>
-                <div className="bottom-nav-account-divider" role="presentation" />
-                {CASH_EXPRESS_ENABLED && (
-                  <Link
-                    to="/cash-express/terms"
-                    className="bottom-nav-account-item bottom-nav-account-item--muted"
-                    role="menuitem"
-                    onClick={closeAccountMenu}
-                  >
-                    <span className="bottom-nav-account-item-icon" aria-hidden>📄</span>
-                    <span>Términos y condiciones</span>
-                  </Link>
-                )}
                 <button
                   type="button"
                   className="bottom-nav-account-item bottom-nav-account-item--logout"
@@ -205,20 +171,6 @@ export default function BottomNav() {
                   <span className="bottom-nav-account-item-icon" aria-hidden>📦</span>
                   <span>Mis pedidos</span>
                 </Link>
-                {CASH_EXPRESS_ENABLED && (
-                  <>
-                    <div className="bottom-nav-account-divider" role="presentation" />
-                    <Link
-                      to="/cash-express/terms"
-                      className="bottom-nav-account-item bottom-nav-account-item--muted"
-                      role="menuitem"
-                      onClick={closeAccountMenu}
-                    >
-                      <span className="bottom-nav-account-item-icon" aria-hidden>📄</span>
-                      <span>Términos y condiciones</span>
-                    </Link>
-                  </>
-                )}
               </>
             )}
           </div>

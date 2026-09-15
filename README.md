@@ -81,5 +81,4 @@ Para mejores resultados con imágenes reales, puedes configurar una API key de P
 - [ ] Carrito de compras
 - [ ] Historial de pedidos
 - [ ] Perfil de usuario
-- [ ] Integración con Efectivo Express
 

@@ -99,33 +99,64 @@
   color: white;
   text-decoration: none;
   font-weight: 500;
-  padding: 8px 15px;
-  border-radius: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
   transition: background-color 0.2s ease;
   position: relative;
-}
-
-.nav-link:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.cart-link {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
 }
 
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.nav-link-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Botón de solo icono (carrito) */
+.nav-icon-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  color: white;
+  text-decoration: none;
+  border-radius: 10px;
+  transition: background-color 0.2s ease;
+}
+
+.nav-icon-button:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.nav-icon-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
 .cart-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
   background-color: #FF8C00;
   color: white;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
+  border-radius: 999px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: bold;
+  line-height: 1;
+  box-shadow: 0 0 0 2px #DC143C;
 }
 
 .user-menu-container {
@@ -136,33 +167,53 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 8px 14px;
-  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 5px 10px 5px 5px;
+  border-radius: 999px;
   cursor: pointer;
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .user-menu-button:hover {
-  background: rgba(255, 255, 255, 0.35);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.45);
 }
 
 .user-menu-button--open,
 .user-menu-button:focus-visible {
-  background: rgba(255, 255, 255, 0.4);
-  border-color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.32);
+  border-color: rgba(255, 255, 255, 0.55);
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
   outline: none;
 }
 
-.user-menu-button-icon {
-  font-size: 1.1em;
+/* Avatar tipo Gmail (inicial en círculo) */
+.user-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #DC143C;
+  font-weight: 700;
+  font-size: 0.95rem;
   line-height: 1;
+  text-transform: uppercase;
+}
+
+.user-avatar--lg {
+  width: 44px;
+  height: 44px;
+  font-size: 1.3rem;
+  background: #DC143C;
+  color: #ffffff;
 }
 
 .user-menu-button-name {
@@ -173,10 +224,10 @@
 }
 
 .user-menu-button-chevron {
-  font-size: 0.6em;
+  display: inline-flex;
+  align-items: center;
   opacity: 0.9;
   transition: transform 0.2s ease;
-  margin-left: 2px;
 }
 
 .user-menu-button--open .user-menu-button-chevron {
@@ -187,42 +238,107 @@
   position: absolute;
   top: 100%;
   right: 0;
-  margin-top: 8px;
+  margin-top: 10px;
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  min-width: 180px;
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+  min-width: 240px;
   overflow: hidden;
   z-index: 1002;
+  padding: 6px;
+  animation: menuFadeIn 0.16s ease;
+}
+
+@keyframes menuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.user-menu-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px 14px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid #eee;
+}
+
+.user-menu-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.user-menu-header-name {
+  font-weight: 600;
+  color: #222;
+  font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-menu-header-email {
+  font-size: 0.82rem;
+  color: #888;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .menu-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   width: 100%;
-  padding: 12px 16px;
+  padding: 11px 12px;
   color: #333;
   text-decoration: none;
   text-align: left;
   border: none;
   background: none;
   cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s ease;
+  font-size: 0.92rem;
+  border-radius: 8px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.menu-item-icon {
+  display: inline-flex;
+  align-items: center;
+  color: #888;
+  transition: color 0.2s ease;
 }
 
 .menu-item:hover {
   background-color: #f5f5f5;
 }
 
+.menu-item:hover .menu-item-icon {
+  color: #DC143C;
+}
+
 .menu-item-logout {
-  border-top: 1px solid #e8e8e8;
-  margin-top: 4px;
-  padding-top: 12px;
+  margin-top: 6px;
+  border-top: 1px solid #eee;
+  border-radius: 0 0 8px 8px;
+  padding-top: 14px;
   color: #666;
 }
 
 .menu-item-logout:hover {
   background-color: #fff5f5;
+  color: #DC143C;
+}
+
+.menu-item-logout:hover .menu-item-icon {
   color: #DC143C;
 }
 
@@ -357,9 +473,11 @@
 }
 
 .sidebar-icon {
-  font-size: 1.3em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 24px;
-  text-align: center;
+  color: #DC143C;
 }
 
 .cart-sidebar-link {
@@ -456,9 +574,12 @@
 }
 
 .sidebar-user-icon {
-  font-size: 2em;
+  font-size: 1.4em;
+  font-weight: 700;
+  text-transform: uppercase;
   width: 48px;
   height: 48px;
+  flex-shrink: 0;
   background: #DC143C;
   border-radius: 50%;
   display: flex;
@@ -505,6 +626,12 @@
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 0.95em;
+}
+
+.sidebar-menu-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sidebar-menu-item:hover {

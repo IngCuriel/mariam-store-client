@@ -16,16 +16,11 @@ import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
-import CashExpress from './pages/CashExpress';
-import CashExpressRequests from './pages/CashExpressRequests';
-import CashExpressRequestDetail from './pages/CashExpressRequestDetail';
-import TermsAndConditions from './pages/TermsAndConditions';
 import Orders from './pages/Orders';
 import OrderDetail from './pages/OrderDetail';
 import OrderCheckout from './pages/OrderCheckout';
 import Addresses from './pages/Addresses';
 import Profile from './pages/Profile';
-import { CASH_EXPRESS_ENABLED } from './config/features';
 import './App.css';
 
 function ScrollToTop() {
@@ -75,16 +70,6 @@ function AppRoutes() {
           <Route path="/products" element={<Products />} />
            <Route path="/products/:id" element={<ProductDetail />} /> 
            <Route path="/cart" element={<Cart />} />
-          {CASH_EXPRESS_ENABLED ? (
-            <>
-              <Route path="/cash-express" element={<CashExpress />} />
-              <Route path="/cash-express/requests" element={<CashExpressRequests />} />
-              <Route path="/cash-express/requests/:id" element={<CashExpressRequestDetail />} />
-              <Route path="/cash-express/terms" element={<TermsAndConditions />} />
-            </>
-          ) : (
-            <Route path="/cash-express/*" element={<Navigate to="/" replace />} />
-          )}
           <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
           <Route path="/orders/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
           <Route path="/orders/:id/checkout" element={<ProtectedRoute><OrderCheckout /></ProtectedRoute>} />

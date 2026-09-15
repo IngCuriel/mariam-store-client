@@ -23,7 +23,7 @@
 }
 
 .pdp-breadcrumb a {
-  color: #3483fa;
+  color: #DC143C;
   text-decoration: none;
 }
 
@@ -875,6 +875,17 @@
   font-size: 0.9rem;
   color: #666;
   font-weight: 500;
+}
+
+.pdp-recommendations-subtitle-link {
+  color: #DC143C;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.pdp-recommendations-subtitle-link:hover {
+  text-decoration: underline;
+  opacity: 0.85;
 }
 
 .pdp-recommendations-loading {

@@ -38,11 +38,6 @@ function MyComponent() {
 - `logLogin(method)` - Registra cuando un usuario inicia sesión
 - `logSignUp(method)` - Registra cuando un usuario se registra
 
-### Eventos de Cash Express
-- `logCashExpressRequest(amount)` - Registra cuando se crea una solicitud de Cash Express
-- `logDepositReceiptUpload(requestId)` - Registra cuando se sube un comprobante
-- `logCashExpressCompleted(requestId, status)` - Registra cuando se completa una solicitud
-
 ### Eventos Generales
 - `logPageView(pageName, pagePath)` - Registra vistas de página
 - `logAnalyticsEvent(eventName, eventParams)` - Registra cualquier evento personalizado
@@ -56,7 +51,6 @@ El componente `AnalyticsPageView` rastrea automáticamente todas las vistas de p
 1. **Login** - Cuando un usuario inicia sesión (`Login.jsx`)
 2. **Registro** - Cuando un usuario se registra (`Register.jsx`)
 3. **Vistas de Página** - Automáticamente en todas las rutas (`AnalyticsPageView.jsx`)
-4. **Creación de Solicitud Cash Express** - Cuando se crea una solicitud (`CashExpress.jsx`)
 
 ## Agregar Nuevos Eventos
 
