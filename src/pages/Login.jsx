@@ -60,7 +60,9 @@ export default function Login() {
       <div className="auth-card">
         <div className="auth-header">
           <h2>Bienvenido de vuelta</h2>
-          <p className="auth-subtitle">Inicia sesión para continuar</p>
+          <p className="auth-subtitle">
+            Inicia sesión en tu cuenta de Mini Super Curiel para realizar pedidos
+          </p>
         </div>
 
         {message && (
