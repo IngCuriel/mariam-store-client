@@ -30,8 +30,25 @@ const PRODUCT_AVAILABILITY_LABELS = {
 };
 
 const PAGE_SIZE = 20;
-/** ID de sucursal para el menú "Novedades" */
-const NOVEDADES_BRANCH_ID = 10;
+
+function ChevronDownIcon() {
+  return (
+    <svg
+      className="products-quick-nav-chevron"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
 
 function SearchSubmitIcon() {
   return (
@@ -104,9 +121,7 @@ export default function Products() {
   const [selectedBranch, setSelectedBranch] = useState(null);
   const [showCategoriesView, setShowCategoriesView] = useState(false);
   const [showNewProductsView, setShowNewProductsView] = useState(false);
-  const [showNovedadesView, setShowNovedadesView] = useState(false);
   const prevNewProductsViewRef = useRef(false);
-  const prevNovedadesViewRef = useRef(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
   const [listLoading, setListLoading] = useState(false);
@@ -185,7 +200,6 @@ export default function Products() {
     setSelectedBranch(null);
     setShowCategoriesView(false);
     setShowNewProductsView(false);
-    setShowNovedadesView(false);
     setShowRecentSection(false);
     setCurrentPage(1);
   }, [location.search, categories]);
@@ -194,7 +208,7 @@ export default function Products() {
   useEffect(() => {
     const currentQuery = searchQuery?.trim() ?? '';
     const termForRecommendation = recentSearches.find((t) => t.trim() !== currentQuery);
-    if (!termForRecommendation?.trim() || showCategoriesView || showNewProductsView || showNovedadesView) {
+    if (!termForRecommendation?.trim() || showCategoriesView || showNewProductsView) {
       setRecommendedBySearch([]);
       setRecommendedSearchTerm('');
       return;
@@ -220,7 +234,7 @@ export default function Products() {
         if (!cancelled) setRecommendedBySearchLoading(false);
       });
     return () => { cancelled = true; };
-  }, [recentSearches, searchQuery, showCategoriesView, showNewProductsView, showNovedadesView]);
+  }, [recentSearches, searchQuery, showCategoriesView, showNewProductsView]);
 
   /** Al cambiar filtros, volver a página 1 */
   useEffect(() => {
@@ -229,7 +243,7 @@ export default function Products() {
 
   /** Cargar productos (listado normal) con paginación */
   useEffect(() => {
-    if (showNewProductsView || showNovedadesView) return;
+    if (showNewProductsView) return;
     loadProducts();
   }, [
     searchQuery,
@@ -237,7 +251,6 @@ export default function Products() {
     selectedBranch,
     currentPage,
     showNewProductsView,
-    showNovedadesView,
     searchFallbackCategoryId,
   ]);
 
@@ -274,61 +287,14 @@ export default function Products() {
     return () => controller.abort();
   }, [showNewProductsView, currentPage]);
 
-  /** Cargar productos de Novedades (sucursal id 10) con paginación */
-  useEffect(() => {
-    if (!showNovedadesView) return;
-    const controller = new AbortController();
-    const fetchNovedades = async () => {
-      try {
-        setListLoading(true);
-        const data = await getAllProducts(
-          {
-            showInStoreOnly: true,
-            includePresentations: true,
-            includeInventory: true,
-            branchId: NOVEDADES_BRANCH_ID,
-            limit: PAGE_SIZE,
-            offset: (currentPage - 1) * PAGE_SIZE,
-          },
-          { signal: controller.signal }
-        );
-        if (controller.signal.aborted) return;
-        const list = Array.isArray(data) ? data : data.products || [];
-        const total = typeof data?.total === 'number' ? data.total : list.length;
-        setProducts(list);
-        setTotalProducts(total);
-      } catch (err) {
-        if (err.name === 'AbortError' || err.code === 'ERR_CANCELED') return;
-        console.error('Error cargando novedades:', err);
-      } finally {
-        if (!controller.signal.aborted) setListLoading(false);
-      }
-    };
-    fetchNovedades();
-    return () => controller.abort();
-  }, [showNovedadesView, currentPage]);
-
-  /** Al salir de "Productos nuevos" restaurar listado normal (solo si no estamos entrando a Novedades) */
+  /** Al salir de "Productos nuevos" restaurar listado normal */
   useEffect(() => {
     if (prevNewProductsViewRef.current && !showNewProductsView) {
-      if (!showNovedadesView) {
-        setCurrentPage(1);
-        loadProducts();
-      }
+      setCurrentPage(1);
+      loadProducts();
     }
     prevNewProductsViewRef.current = showNewProductsView;
-  }, [showNewProductsView, showNovedadesView]);
-
-  /** Al salir de "Novedades" restaurar listado normal (solo si no estamos entrando a Productos Nuevo) */
-  useEffect(() => {
-    if (prevNovedadesViewRef.current && !showNovedadesView) {
-      if (!showNewProductsView) {
-        setCurrentPage(1);
-        loadProducts();
-      }
-    }
-    prevNovedadesViewRef.current = showNovedadesView;
-  }, [showNovedadesView, showNewProductsView]);
+  }, [showNewProductsView]);
 
   const loadData = async () => {
     try {
@@ -489,7 +455,6 @@ export default function Products() {
     setSelectedCategory(categoryId);
     setShowCategoriesView(false);
     setShowNewProductsView(false);
-    setShowNovedadesView(false);
     setShowRecentSection(false);
     setCurrentPage(1);
     setRecentlyViewedCategories(getRecentlyViewedCategories());
@@ -504,7 +469,6 @@ export default function Products() {
     setSelectedCategory(null);
     setSelectedBranch(null);
     setShowNewProductsView(false);
-    setShowNovedadesView(false);
     setShowCategoriesView(false);
     setCurrentPage(1);
     setShowRecentSection(false);
@@ -571,11 +535,28 @@ export default function Products() {
           <nav className="products-quick-nav" aria-label="Opciones rápidas">
             <button
               type="button"
-              className={`products-quick-nav-item ${showCategoriesView ? 'active' : ''}`}
-              aria-current={showCategoriesView}
-              onClick={() => setShowCategoriesView(true)}
+              className={`products-quick-nav-item products-quick-nav-item--categories ${showCategoriesView ? 'active' : ''}`}
+              aria-expanded={showCategoriesView}
+              onClick={() =>
+                setShowCategoriesView((prev) => {
+                  const next = !prev;
+                  // Al abrir Categorías, salir de la vista de "Productos Nuevo"
+                  // para que no queden dos opciones activas al mismo tiempo.
+                  if (next) {
+                    setShowNewProductsView(false);
+                    setCurrentPage(1);
+                  }
+                  return next;
+                })
+              }
             >
-              Categorías
+              <span>Categorías</span>
+              <span
+                className={`products-quick-nav-chevron-wrap ${showCategoriesView ? 'open' : ''}`}
+                aria-hidden
+              >
+                <ChevronDownIcon />
+              </span>
             </button>
            {/*<button type="button" className="products-quick-nav-item" aria-current="false">
               Ofertas
@@ -589,26 +570,10 @@ export default function Products() {
                 setSelectedCategory(null);
                 setSelectedBranch(null);
                 setCurrentPage(1);
-                setShowNovedadesView(false);
                 setShowNewProductsView(true);
               }}
             >
               Productos Nuevo
-            </button>
-            <button
-              type="button"
-              className={`products-quick-nav-item ${showNovedadesView ? 'active' : ''}`}
-              aria-current={showNovedadesView}
-              onClick={() => {
-                setShowCategoriesView(false);
-                setSelectedCategory(null);
-                setSelectedBranch(null);
-                setCurrentPage(1);
-                setShowNewProductsView(false);
-                setShowNovedadesView(true);
-              }}
-            >
-              Novedades
             </button>
           </nav>
         </div>
@@ -617,14 +582,6 @@ export default function Products() {
       {showCategoriesView ? (
         <div className="products-categories-view">
           <div className="products-categories-view-inner">
-            <button
-              type="button"
-              className="products-categories-view-back"
-              onClick={() => setShowCategoriesView(false)}
-              aria-label="Volver a productos"
-            >
-              ← Volver a productos
-            </button>
              {branchOrder.length === 0 ? (
               <p className="products-categories-view-empty">No hay categorías disponibles.</p>
             ) : (
@@ -766,7 +723,6 @@ export default function Products() {
                   setSearchFallbackCategoryId(null);
                   setSearchFallbackCategoryName(null);
                   setShowNewProductsView(false);
-                  setShowNovedadesView(false);
                   setSelectedCategory(isSelecting ? category.id : null);
                   setShowRecentSection(false);
                   setCurrentPage(1);
@@ -929,7 +885,6 @@ export default function Products() {
                         setSearchFallbackCategoryId(null);
                         setSearchFallbackCategoryName(null);
                         setShowNewProductsView(false);
-                        setShowNovedadesView(false);
                         setSelectedCategory(null);
                         setShowRecentSection(false);
                         setCurrentPage(1);

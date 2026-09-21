@@ -3,7 +3,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import NotificationBell from './NotificationBell';
-import storeIcon from '../assets/images/icon.png';
 import './Header.css';
 
 const IconStore = () => (
@@ -141,8 +140,7 @@ export default function Header() {
               </span>
             </button>
             <Link to="/" className="header-logo" onClick={() => setShowMobileMenu(false)}>
-              <img src={storeIcon} alt="Mini Super Curiel" className="header-logo-icon" />
-              <span className="header-logo-text">Mini Super Curiel</span>
+              <span className="header-logo-text">Mi Tienda en Línea</span>
             </Link>
             <div className="header-mobile-right">
               {user && (
@@ -167,7 +165,7 @@ export default function Header() {
           <nav className="header-nav desktop-nav">
             <Link to="/" className="nav-link">
               <span className="nav-link-icon"><IconStore /></span>
-              <span>Tienda</span>
+              <span>Productos</span>
             </Link>
             {user ? (
               <>
@@ -265,8 +263,7 @@ export default function Header() {
       <aside className={`mobile-sidebar ${showMobileMenu ? 'open' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-logo">
-            <img src={storeIcon} alt="Mini Super Curiel" className="sidebar-logo-icon" />
-            <span>Mini Super Curiel</span>
+            <span>Mi Tienda en Línea</span>
           </div>
           <button
             className="sidebar-close"
@@ -284,7 +281,7 @@ export default function Header() {
             onClick={() => setShowMobileMenu(false)}
           >
             <span className="sidebar-icon"><IconStore /></span>
-            <span>Tienda online</span>
+            <span>Productos</span>
           </Link>
           {user && (
             <>

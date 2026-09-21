@@ -208,6 +208,24 @@
   background: rgba(220, 20, 60, 0.1);
 }
 
+/* Botón "Categorías" con flecha (texto + chevron alineados) */
+.products-quick-nav-item--categories {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* La flecha rota 180° cuando la vista de categorías está abierta */
+.products-quick-nav-chevron-wrap {
+  display: inline-flex;
+  align-items: center;
+  transition: transform 0.2s ease;
+}
+
+.products-quick-nav-chevron-wrap.open {
+  transform: rotate(180deg);
+}
+
 @media (max-width: 640px) {
   .products-quick-nav {
     margin-top: 12px;
