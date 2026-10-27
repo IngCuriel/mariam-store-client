@@ -412,26 +412,68 @@ export default function Cart() {
                                 {item.presentation.quantity === 1 ? 'pieza' : 'piezas'}
                               </p>
                             )}
-                            <p className="cart-item-unit-price">{formatPrice(item.unitPrice)} c/u</p>
+                            <p className="cart-item-unit-price">
+                              {formatPrice(item.unitPrice)} c/u
+                              {(() => {
+                                // Mostrar badge "Precio mayoreo" solo cuando el precio
+                                // unitario vigente es menor al del primer tramo (1 pieza).
+                                // Si está en el tramo base, no hay beneficio de mayoreo.
+                                if (item.product?.pricingMode !== 'tiered' || item.presentation) return null;
+                                const tiers = item.product?.priceTiers;
+                                if (!Array.isArray(tiers) || tiers.length === 0) return null;
+                                const sorted = [...tiers].sort((a, b) => a.minQty - b.minQty);
+                                const baseTierPrice = sorted[0].unitPrice;
+                                if (item.unitPrice >= baseTierPrice) return null;
+                                return (
+                                  <span className="cart-item-tier-badge">Precio mayoreo</span>
+                                );
+                              })()}
+                            </p>
                           </div>
                           <div className="cart-item-quantity">
-                            <button
-                              type="button"
-                              className="cart-qty-btn"
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              aria-label="Disminuir cantidad"
-                            >
-                              −
-                            </button>
-                            <span className="cart-qty-value">{item.quantity}</span>
-                            <button
-                              type="button"
-                              className="cart-qty-btn"
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              aria-label="Aumentar cantidad"
-                            >
-                              +
-                            </button>
+                            {(() => {
+                              // Calcular stock máximo en unidades de presentación.
+                              const tracksInv =
+                                item.product?.inventory != null &&
+                                (item.product.inventory.trackInventory ??
+                                  item.product.trackInventory ??
+                                  false);
+                              const maxQty = tracksInv
+                                ? Math.floor(
+                                    (item.product.inventory?.currentStock ?? 0) /
+                                      (item.presentation?.quantity ?? 1)
+                                  )
+                                : null;
+                              const atMax = maxQty != null && item.quantity >= maxQty;
+                              return (
+                                <>
+                                  <button
+                                    type="button"
+                                    className="cart-qty-btn"
+                                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                    aria-label="Disminuir cantidad"
+                                  >
+                                    −
+                                  </button>
+                                  <span className="cart-qty-value">{item.quantity}</span>
+                                  <button
+                                    type="button"
+                                    className="cart-qty-btn"
+                                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                    disabled={atMax}
+                                    aria-label="Aumentar cantidad"
+                                    title={atMax ? `Máximo disponible: ${maxQty}` : undefined}
+                                  >
+                                    +
+                                  </button>
+                                  {atMax && (
+                                    <span className="cart-qty-max-hint" aria-live="polite">
+                                      Máx. {maxQty}
+                                    </span>
+                                  )}
+                                </>
+                              );
+                            })()}
                           </div>
                           <div className="cart-item-subtotal">{formatPrice(item.subtotal)}</div>
                           <button

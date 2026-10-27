@@ -1203,3 +1203,79 @@
     width: 140px;
   }
 }
+
+/* ================================================================
+   CARD DE PRODUCTO — badges, precio y mayoreo
+   ================================================================ */
+
+/* --- Zona de imagen --- */
+.product-card-image-wrap {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Badge base (esquina superior izquierda) */
+.product-card-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 999px;
+  letter-spacing: 0.01em;
+  color: #fff;
+  background: #555;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Badge: mayoreo (azul pizarrón, transmite "precio especial comercial") */
+.product-card-badge--mayoreo {
+  background: #1a56db;
+}
+
+/* Badge: promoción/oferta (rojo carmesí de la marca, urgencia) */
+.product-card-badge--promo {
+  top: auto;
+  bottom: 8px;
+  left: 8px;
+  background: #00a650;
+  font-size: 0.78rem;
+}
+
+/* --- Precios en el body --- */
+.product-card-promo-prices {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.product-card-promo-price {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #DC143C;
+}
+
+.product-card-promo-was {
+  font-size: 0.88rem;
+  color: #999;
+}
+
+.product-card-promo-was s {
+  text-decoration: line-through;
+}
+
+/* Hint de mayoreo bajo el precio base */
+.product-card-mayoreo-hint {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1a56db;
+}

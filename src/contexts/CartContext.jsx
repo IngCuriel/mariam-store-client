@@ -1,6 +1,46 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
 
-const CART_STORAGE_KEY = 'mariam_store_cart';
+/**
+ * Resuelve el precio unitario aplicando el tramo de precio escalonado (mayoreo)
+ * si el producto lo tiene. Misma lógica que ProductDetail: ESCALÓN SIMPLE,
+ * toda la cantidad se cobra al precio del tramo donde cae.
+ * Si no hay tramos o la cantidad no cae en ninguno, devuelve el precio base.
+ */
+function resolveUnitPrice(product, presentation, quantity) {
+  // Con presentación: precio de la presentación (no aplica tiered).
+  if (presentation) {
+    return (presentation.quantity ?? 1) * (presentation.unitPrice ?? 0);
+  }
+  // Sin presentación y con tramos: buscar el tramo que aplica.
+  const hasTiers =
+    product?.pricingMode === 'tiered' &&
+    Array.isArray(product?.priceTiers) &&
+    product.priceTiers.length > 0;
+  if (hasTiers) {
+    const tier = product.priceTiers.find(
+      (t) => quantity >= t.minQty && (t.maxQty == null || quantity <= t.maxQty)
+    );
+    if (tier) return tier.unitPrice;
+  }
+  // Precio base del producto.
+  return product?.price ?? 0;
+}
+
+/**
+ * Calcula la cantidad máxima permitida para un ítem según el stock disponible.
+ * El stock es en unidades BASE (piezas). Con presentación se convierte:
+ *   max = floor(currentStock / piezasPorPresentación)
+ * Sin inventario rastreado: retorna null (sin límite).
+ */
+function resolveMaxQuantity(product, presentation) {
+  const tracksInventory =
+    product?.inventory != null &&
+    (product.inventory.trackInventory ?? product.trackInventory ?? false);
+  if (!tracksInventory) return null;
+  const currentStock = product.inventory?.currentStock ?? 0;
+  const piezasPorUnidad = presentation?.quantity ?? 1;
+  return Math.floor(currentStock / piezasPorUnidad);
+}
 
 function loadCartFromStorage() {
   try {
@@ -95,17 +135,21 @@ export function CartProvider({ children }) {
       removeFromCart(itemId);
       return;
     }
-
     setItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === itemId
-          ? {
-              ...item,
-              quantity,
-              subtotal: quantity * item.unitPrice,
-            }
-          : item
-      )
+      prevItems.map((item) => {
+        if (item.id !== itemId) return item;
+        // Respetar el stock máximo: si el producto rastrea inventario, no
+        // permitir superar el máximo calculado en unidades de presentación.
+        const max = resolveMaxQuantity(item.product, item.presentation);
+        const clampedQty = max != null ? Math.min(quantity, Math.max(1, max)) : quantity;
+        const newUnitPrice = resolveUnitPrice(item.product, item.presentation, clampedQty);
+        return {
+          ...item,
+          quantity: clampedQty,
+          unitPrice: newUnitPrice,
+          subtotal: clampedQty * newUnitPrice,
+        };
+      })
     );
   };
 

@@ -1018,3 +1018,25 @@
   gap: 12px;
   justify-content: flex-end;
 }
+
+/* Badge de precio mayoreo en el ítem del carrito */
+.cart-item-tier-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+  background: #DC143C;
+  border-radius: 999px;
+  vertical-align: middle;
+  letter-spacing: 0.01em;
+}
+
+/* Hint de stock máximo en el carrito */
+.cart-qty-max-hint {
+  font-size: 0.72rem;
+  color: #b42318;
+  font-weight: 600;
+  white-space: nowrap;
+}

@@ -1264,3 +1264,35 @@
 .pdp-tiers-next:hover {
   background: #fff1f3;
 }
+
+/* ========== Promoción en el detalle del producto ========== */
+.pdp-promo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #fff;
+  background: #00a650;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.pdp-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Hint de stock máximo en controles de cantidad del detalle */
+.pdp-qty-max-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: #b42318;
+  font-weight: 600;
+}

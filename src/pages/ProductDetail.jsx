@@ -145,11 +145,13 @@ export default function ProductDetail() {
       return;
     }
     setIsAdding(true);
-    // Para productos con precio escalonado (sin presentación) se pasa el precio
-    // por pieza del tramo vigente según la cantidad, para que el carrito cobre
-    // el precio de mayoreo que vio el cliente en el detalle.
+    // Precio final que ve el cliente: considera mayoreo (tramo por cantidad) y
+    // promoción. Se usa el más bajo entre ambos cuando los dos aplican.
+    // `getDisplayPrice()` ya resuelve esa lógica, así que se reutiliza.
     const overrideUnitPrice =
-      hasTieredPricing && !selectedPresentation ? getUnitPriceForQuantity(quantity) : null;
+      (hasTieredPricing || isPromoActive) && !selectedPresentation
+        ? getDisplayPrice()
+        : null;
     addToCart(product, selectedPresentation, quantity, overrideUnitPrice);
     setToast({ open: true, message: '¡Agregado al carrito!', type: 'success' });
     setTimeout(() => {
@@ -189,12 +191,26 @@ export default function ProductDetail() {
     return product?.price || 0;
   };
 
-  /** Precio de una unidad de presentación (total = piezas × precio por pieza). Sin presentación: precio por pieza vigente (considera mayoreo). */
+  /** Precio de una unidad de presentación (total = piezas × precio por pieza). Sin presentación: precio por pieza vigente (considera mayoreo y promo). */
   const getDisplayPrice = () => {
     if (selectedPresentation) {
       return selectedPresentation.quantity * selectedPresentation.unitPrice;
     }
-    return getUnitPriceForQuantity(quantity);
+    // Promo tiene prioridad sobre el precio base pero no sobre el mayoreo
+    // cuando el mayoreo ya da un precio menor que la promo.
+    const tieredUnit = hasTieredPricing ? getUnitPriceForQuantity(quantity) : null;
+    const promoUnit =
+      product?.isPromo &&
+      product?.promoPrice != null &&
+      (product?.promoEndsAt == null || new Date(product.promoEndsAt) > new Date())
+        ? product.promoPrice
+        : null;
+    if (tieredUnit != null && promoUnit != null) {
+      return Math.min(tieredUnit, promoUnit);
+    }
+    if (tieredUnit != null) return tieredUnit;
+    if (promoUnit != null) return promoUnit;
+    return product?.price || 0;
   };
 
   /** Total a pagar: (precio por unidad de presentación) × cantidad de unidades elegidas. */
@@ -224,6 +240,30 @@ export default function ProductDetail() {
     ? tieredPrices.find((t) => t.minQty > quantity && t.unitPrice < currentUnitPrice)
     : null;
   const unitsToNextTier = nextCheaperTier ? nextCheaperTier.minQty - quantity : 0;
+
+  // --- Stock máximo por cantidad seleccionada ---
+  // El stock es en unidades BASE (piezas). Con presentación hay que convertir:
+  //   maxUnidades = floor(piezasDisponibles / piezasPorPresentación)
+  // Sin inventario rastreado: sin límite (null = cualquier cantidad es válida).
+  const piezasDisponibles = tracksInventory ? (stockUnits ?? 0) : null;
+  const piezasPorUnidad = selectedPresentation?.quantity ?? 1;
+  const maxQuantity =
+    piezasDisponibles != null ? Math.floor(piezasDisponibles / piezasPorUnidad) : null;
+
+  // --- Promoción ---
+  // La promo aplica solo cuando no hay presentación seleccionada y no hay
+  // precio de mayoreo activo (el mayoreo y la promo son excluyentes en
+  // el detalle: si el cliente ya está en un tramo de descuento por cantidad,
+  // no se apila la promo sobre el mayoreo).
+  const isPromoActive =
+    product?.isPromo === true &&
+    product?.promoPrice != null &&
+    product.promoPrice < (product?.price || 0) &&
+    (product?.promoEndsAt == null || new Date(product.promoEndsAt) > new Date()) &&
+    !selectedPresentation;
+  const promoSavingPct = isPromoActive
+    ? Math.round(((product.price - product.promoPrice) / product.price) * 100)
+    : 0;
   const availability = product?.productAvailability ? String(product.productAvailability).trim() : null;
   const effectiveAvailability = availability || 'local_delivery';
   const isOnlinePickup = effectiveAvailability === 'online_pickup';
@@ -338,9 +378,20 @@ export default function ProductDetail() {
             <h1 className="pdp-title">{product.name}</h1>
 
             <div className="pdp-price-block">
-              <span className="pdp-price-main">{formatPrice(getDisplayPrice())}</span>
-              <span className="pdp-price-unit">por unidad</span>
-              {!selectedPresentation && savingPerPiece > 0 && (
+              {isPromoActive && (
+                <span className="pdp-promo-badge">🔥 -{promoSavingPct}% Oferta</span>
+              )}
+              <div className="pdp-price-row">
+                <span className="pdp-price-main">{formatPrice(getDisplayPrice())}</span>
+                <span className="pdp-price-unit">por unidad</span>
+              </div>
+              {isPromoActive && (
+                <span className="pdp-price-was">
+                  Precio normal: <s>{formatPrice(product.price)}</s>
+                  {' '}· Ahorrás {formatPrice(product.price - product.promoPrice)} por pieza
+                </span>
+              )}
+              {!isPromoActive && !selectedPresentation && savingPerPiece > 0 && (
                 <span className="pdp-price-was">
                   antes <s>{formatPrice(baseUnitPrice)}</s>
                 </span>
@@ -486,7 +537,16 @@ export default function ProductDetail() {
                         key={presentation.id}
                         type="button"
                         className={`pdp-presentation-btn ${isSelected ? 'selected' : ''}`}
-                        onClick={() => setSelectedPresentation(presentation)}
+                        onClick={() => {
+                          setSelectedPresentation(presentation);
+                          // Al cambiar presentación, clampear la cantidad al nuevo
+                          // máximo para no quedar en un estado inválido de stock.
+                          if (tracksInventory && piezasDisponibles != null) {
+                            const newMax = Math.floor(piezasDisponibles / (presentation.quantity ?? 1));
+                            if (newMax < 1) setQuantity(1); // se bloqueará con hasStock
+                            else setQuantity((prev) => Math.min(prev, newMax));
+                          }
+                        }}
                         aria-pressed={isSelected}
                         aria-label={`${presentation.name}, ${presentation.quantity} piezas, total ${formatPrice(totalPresentation)}`}
                       >
@@ -586,6 +646,8 @@ export default function ProductDetail() {
                       type="button"
                       className="pdp-qty-btn"
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      disabled={quantity <= 1}
+                      aria-label="Disminuir cantidad"
                     >
                       −
                     </button>
@@ -593,11 +655,27 @@ export default function ProductDetail() {
                     <button
                       type="button"
                       className="pdp-qty-btn"
-                      onClick={() => setQuantity(quantity + 1)}
+                      onClick={() =>
+                        setQuantity(
+                          maxQuantity != null
+                            ? Math.min(quantity + 1, maxQuantity)
+                            : quantity + 1
+                        )
+                      }
+                      disabled={maxQuantity != null && quantity >= maxQuantity}
+                      aria-label="Aumentar cantidad"
                     >
                       +
                     </button>
                   </div>
+                  {maxQuantity != null && quantity >= maxQuantity && maxQuantity > 0 && (
+                    <span className="pdp-qty-max-hint">
+                      Máximo disponible: {maxQuantity}{' '}
+                      {selectedPresentation
+                        ? `${selectedPresentation.name}${maxQuantity === 1 ? '' : 's'}`
+                        : maxQuantity === 1 ? 'pieza' : 'piezas'}
+                    </span>
+                  )}
                 </div>
                 <div className="pdp-total-row">
                   <span className="pdp-total-label">Total</span>

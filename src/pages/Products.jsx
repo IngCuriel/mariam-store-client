@@ -765,6 +765,31 @@ export default function Products() {
                 Array.isArray(product.presentations) && product.presentations.length > 0;
               const hasMultiplePresentations = product.presentations && product.presentations.length > 1;
 
+              // Badge de precio por mayoreo: hay al menos dos tramos y el
+              // mejor precio (último tramo) es menor al precio base (primer tramo).
+              const tiers = product?.priceTiers;
+              const hasMayoreo =
+                product?.pricingMode === 'tiered' &&
+                !hasPresentations &&
+                Array.isArray(tiers) &&
+                tiers.length >= 2 &&
+                tiers[tiers.length - 1].unitPrice < tiers[0].unitPrice;
+              const mayoreoPrice = hasMayoreo ? tiers[tiers.length - 1].unitPrice : null;
+
+              // Badge de promoción: isPromo activo y promoPrice válido.
+              const isPromoActive =
+                product?.isPromo === true &&
+                product?.promoPrice != null &&
+                product.promoPrice < (defaultPrice ?? product.price) &&
+                (product?.promoEndsAt == null || new Date(product.promoEndsAt) > new Date());
+              const promoSavingPct = isPromoActive
+                ? Math.round(
+                    ((( defaultPrice ?? product.price) - product.promoPrice) /
+                      (defaultPrice ?? product.price)) *
+                      100
+                  )
+                : 0;
+
               return (
                 <Link
                   to={`/products/${product.id}`}
@@ -774,6 +799,16 @@ export default function Products() {
                   <div className="product-card-image-wrap">
                     {hasMultiplePresentations && (
                       <span className="product-card-badge">Varias opciones</span>
+                    )}
+                    {hasMayoreo && (
+                      <span className="product-card-badge product-card-badge--mayoreo">
+                        🏷️ Precio por mayoreo
+                      </span>
+                    )}
+                    {isPromoActive && (
+                      <span className="product-card-badge product-card-badge--promo">
+                        🔥 -{promoSavingPct}% Oferta
+                      </span>
                     )}
                     {imageUrl ? (
                       <img src={imageUrl} alt={product.name} />
@@ -795,8 +830,23 @@ export default function Products() {
                     {product.description && (
                       <p className="product-card-desc">{product.description}</p>
                     )}
-                    {!hasPresentations && (
+                    {!hasPresentations && !isPromoActive && (
                       <span className="product-card-price">{formatPrice(defaultPrice)}</span>
+                    )}
+                    {isPromoActive && (
+                      <div className="product-card-promo-prices">
+                        <span className="product-card-promo-price">
+                          {formatPrice(product.promoPrice)}
+                        </span>
+                        <span className="product-card-promo-was">
+                          <s>{formatPrice(defaultPrice)}</s>
+                        </span>
+                      </div>
+                    )}
+                    {hasMayoreo && (
+                      <span className="product-card-mayoreo-hint">
+                        Desde {formatPrice(mayoreoPrice)}/pza comprando más
+                      </span>
                     )}
                     {hasMultiplePresentations && (
                       <span className="product-card-presentations">
