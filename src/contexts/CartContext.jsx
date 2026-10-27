@@ -39,13 +39,15 @@ export function CartProvider({ children }) {
     }
   }, [items]);
 
-  const addToCart = (product, presentation, quantity = 1) => {
+  const addToCart = (product, presentation, quantity = 1, overrideUnitPrice = null) => {
     setItems((prevItems) => {
-      // Si tiene presentación, usar el precio total de la presentación
-      // Si no tiene presentación, usar el precio del producto
+      // Precio unitario:
+      //  - Con presentación: precio total de la presentación (piezas × precio/pza).
+      //  - Sin presentación: `overrideUnitPrice` cuando se provee (precio de
+      //    mayoreo según la cantidad elegida en el detalle); si no, product.price.
       const unitPrice = presentation
         ? presentation.quantity * presentation.unitPrice
-        : product.price;
+        : (overrideUnitPrice != null ? overrideUnitPrice : product.price);
 
       const itemId = `${product.id}-${presentation?.id || 'default'}`;
 

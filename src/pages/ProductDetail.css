@@ -1118,3 +1118,149 @@
     flex-wrap: wrap;
   }
 }
+
+/* ========== Stock de inventario ========== */
+.pdp-stock {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  margin: 4px 0 8px;
+}
+
+.pdp-stock.in-stock {
+  color: #0f7b3f;
+  background: #e7f6ec;
+}
+
+.pdp-stock.out-of-stock {
+  color: #b42318;
+  background: #fdecea;
+}
+
+/* ========== Precios escalonados (mayoreo) ========== */
+.pdp-tiers {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid #ececec;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.pdp-tiers-title {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.pdp-tiers-desc {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  color: #777;
+}
+
+.pdp-tiers-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pdp-tier-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #faf7f8;
+  border: 1px solid #f0e6e8;
+}
+
+.pdp-tier-range {
+  font-size: 0.9rem;
+  color: #444;
+  font-weight: 500;
+}
+
+.pdp-tier-price {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #DC143C;
+}
+
+.pdp-tier-price-unit {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #999;
+}
+
+/* Precio base tachado cuando aplica mayoreo */
+.pdp-price-was {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.9rem;
+  color: #999;
+}
+
+.pdp-price-was s {
+  color: #b42318;
+}
+
+/* Tramo activo (el que aplica a la cantidad elegida) */
+.pdp-tier-row--active {
+  background: #fff1f3;
+  border-color: #DC143C;
+  box-shadow: 0 0 0 1px #DC143C inset;
+}
+
+.pdp-tier-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+  background: #DC143C;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+/* Mensaje de ahorro */
+.pdp-tiers-saving {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  color: #0f7b3f;
+  background: #e7f6ec;
+  border-radius: 8px;
+}
+
+.pdp-tiers-saving strong {
+  font-weight: 700;
+}
+
+/* Invitación a llegar al siguiente tramo */
+.pdp-tiers-next {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 12px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #DC143C;
+  background: #fff;
+  border: 1px dashed #DC143C;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.pdp-tiers-next:hover {
+  background: #fff1f3;
+}

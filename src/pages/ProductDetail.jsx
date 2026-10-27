@@ -145,7 +145,12 @@ export default function ProductDetail() {
       return;
     }
     setIsAdding(true);
-    addToCart(product, selectedPresentation, quantity);
+    // Para productos con precio escalonado (sin presentación) se pasa el precio
+    // por pieza del tramo vigente según la cantidad, para que el carrito cobre
+    // el precio de mayoreo que vio el cliente en el detalle.
+    const overrideUnitPrice =
+      hasTieredPricing && !selectedPresentation ? getUnitPriceForQuantity(quantity) : null;
+    addToCart(product, selectedPresentation, quantity, overrideUnitPrice);
     setToast({ open: true, message: '¡Agregado al carrito!', type: 'success' });
     setTimeout(() => {
       setIsAdding(false);
@@ -154,12 +159,42 @@ export default function ProductDetail() {
     setTimeout(() => setShowSuccess(false), 2800);
   };
 
-  /** Precio de una unidad de presentación (total = piezas × precio por pieza). Sin presentación: precio del producto. */
+  const hasPresentations = product?.presentations && product.presentations.length > 0;
+
+  // Precios escalonados (mayoreo): solo si el producto es "tiered", NO tiene
+  // presentaciones (el escalonado aplica al precio por pieza) y hay tramos.
+  const tieredPrices =
+    product?.pricingMode === 'tiered' && !hasPresentations && Array.isArray(product?.priceTiers)
+      ? [...product.priceTiers].sort((a, b) => a.minQty - b.minQty)
+      : [];
+  const hasTieredPricing = tieredPrices.length > 0;
+
+  /**
+   * Resuelve el tramo de precio escalonado que aplica a una cantidad dada.
+   * Escalón SIMPLE: toda la cantidad se cobra al precio del tramo donde cae
+   * (mismo criterio que el POS físico). Si la cantidad no cae en ningún tramo,
+   * devuelve null (se usa el precio base del producto).
+   */
+  const getTierForQuantity = (qty) =>
+    tieredPrices.find(
+      (t) => qty >= t.minQty && (t.maxQty == null || qty <= t.maxQty)
+    ) || null;
+
+  /** Precio por pieza vigente según la cantidad (tiered) o el precio base. */
+  const getUnitPriceForQuantity = (qty) => {
+    if (hasTieredPricing) {
+      const tier = getTierForQuantity(qty);
+      if (tier) return tier.unitPrice;
+    }
+    return product?.price || 0;
+  };
+
+  /** Precio de una unidad de presentación (total = piezas × precio por pieza). Sin presentación: precio por pieza vigente (considera mayoreo). */
   const getDisplayPrice = () => {
     if (selectedPresentation) {
       return selectedPresentation.quantity * selectedPresentation.unitPrice;
     }
-    return product?.price || 0;
+    return getUnitPriceForQuantity(quantity);
   };
 
   /** Total a pagar: (precio por unidad de presentación) × cantidad de unidades elegidas. */
@@ -168,8 +203,27 @@ export default function ProductDetail() {
   /** Total de una presentación: piezas × precio por pieza (para mostrar en cada opción). */
   const getPresentationTotal = (p) => (p?.quantity ?? 0) * (p?.unitPrice ?? 0);
 
-  const hasStock = product?.inventory ? product.inventory.currentStock > 0 : true;
-  const hasPresentations = product?.presentations && product.presentations.length > 0;
+  // Inventario: solo mostramos stock cuando el producto lo rastrea
+  // (trackInventory). Si no rastrea inventario, no hay noción de stock y se
+  // considera siempre disponible.
+  const tracksInventory = Boolean(
+    product?.inventory && (product.inventory.trackInventory ?? product.trackInventory)
+  );
+  const stockUnits = tracksInventory ? product.inventory.currentStock : null;
+  const hasStock = tracksInventory ? stockUnits > 0 : true;
+
+  // --- Datos derivados para mostrar el ahorro por mayoreo de forma clara ---
+  // Precio base (tramo de 1 pieza o product.price), precio vigente según la
+  // cantidad actual, ahorro por pieza, y "siguiente tramo" para invitar a subir.
+  const baseUnitPrice = hasTieredPricing ? getUnitPriceForQuantity(1) : (product?.price || 0);
+  const currentUnitPrice = getUnitPriceForQuantity(quantity);
+  const currentTier = hasTieredPricing ? getTierForQuantity(quantity) : null;
+  const savingPerPiece = Math.max(0, baseUnitPrice - currentUnitPrice);
+  // Siguiente tramo con precio más bajo que el actual (para el mensaje "agregá N más").
+  const nextCheaperTier = hasTieredPricing
+    ? tieredPrices.find((t) => t.minQty > quantity && t.unitPrice < currentUnitPrice)
+    : null;
+  const unitsToNextTier = nextCheaperTier ? nextCheaperTier.minQty - quantity : 0;
   const availability = product?.productAvailability ? String(product.productAvailability).trim() : null;
   const effectiveAvailability = availability || 'local_delivery';
   const isOnlinePickup = effectiveAvailability === 'online_pickup';
@@ -286,19 +340,76 @@ export default function ProductDetail() {
             <div className="pdp-price-block">
               <span className="pdp-price-main">{formatPrice(getDisplayPrice())}</span>
               <span className="pdp-price-unit">por unidad</span>
+              {!selectedPresentation && savingPerPiece > 0 && (
+                <span className="pdp-price-was">
+                  antes <s>{formatPrice(baseUnitPrice)}</s>
+                </span>
+              )}
             </div>
 
-            {/*<div className={`pdp-stock ${hasStock ? 'in-stock' : 'out-of-stock'}`}>
-              {hasStock ? '✓ Disponible' : '✕ Sin stock'}
-              {availabilityLabel && (
-                <>
-                  {' · '}
-                  <span className={`pdp-availability-badge pdp-availability-${availability}`}>
-                    {availabilityLabel}
-                  </span>
-                </>
-              )}
-            </div>*/}
+            {tracksInventory && (
+              <div className={`pdp-stock ${hasStock ? 'in-stock' : 'out-of-stock'}`}>
+                {hasStock ? (
+                  <>✓ En stock{stockUnits != null ? ` · ${stockUnits} ${stockUnits === 1 ? 'disponible' : 'disponibles'}` : ''}</>
+                ) : (
+                  <>✕ Sin stock</>
+                )}
+              </div>
+            )}
+
+            {hasTieredPricing && (
+              <section className="pdp-tiers" aria-label="Precios por mayoreo">
+                <h4 className="pdp-tiers-title">Precios por cantidad (mayoreo)</h4>
+                <p className="pdp-tiers-desc">
+                  El precio por pieza baja automáticamente según cuántas lleves.
+                </p>
+                <ul className="pdp-tiers-list">
+                  {tieredPrices.map((tier, index) => {
+                    const isActive = currentTier && currentTier === tier;
+                    return (
+                      <li
+                        key={tier.id ?? index}
+                        className={`pdp-tier-row ${isActive ? 'pdp-tier-row--active' : ''}`}
+                        aria-current={isActive ? 'true' : undefined}
+                      >
+                        <span className="pdp-tier-range">
+                          {tier.maxQty != null
+                            ? `${tier.minQty} a ${tier.maxQty} pzas`
+                            : `${tier.minQty} pzas o más`}
+                          {isActive && (
+                            <span className="pdp-tier-badge">Tu precio</span>
+                          )}
+                        </span>
+                        <span className="pdp-tier-price">
+                          {formatPrice(tier.unitPrice)}
+                          <span className="pdp-tier-price-unit"> /pza</span>
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+
+                {savingPerPiece > 0 && (
+                  <p className="pdp-tiers-saving" role="status">
+                    🎉 Estás ahorrando <strong>{formatPrice(savingPerPiece)}</strong> por pieza
+                    {quantity > 1 && (
+                      <> · <strong>{formatPrice(savingPerPiece * quantity)}</strong> en total</>
+                    )}
+                  </p>
+                )}
+
+                {nextCheaperTier && unitsToNextTier > 0 && (
+                  <button
+                    type="button"
+                    className="pdp-tiers-next"
+                    onClick={() => setQuantity(nextCheaperTier.minQty)}
+                  >
+                    Agregá {unitsToNextTier} {unitsToNextTier === 1 ? 'pieza' : 'piezas'} más y pagá
+                    {' '}{formatPrice(nextCheaperTier.unitPrice)}/pza
+                  </button>
+                )}
+              </section>
+            )}
             {(isLocalDelivery || (isOnlinePickup && (product.branchInfo?.name || product.branch || product.branchInfo?.description))) && (
               <section className="pdp-delivery-card" aria-label="Entrega y disponibilidad">
                 {isLocalDelivery && (
