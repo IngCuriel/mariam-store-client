@@ -161,7 +161,7 @@ export default function ProductDetail() {
     setTimeout(() => setShowSuccess(false), 2800);
   };
 
-  const hasPresentations = product?.presentations && product.presentations.length > 0;
+  const hasPresentations = product?.presentations && product.presentations.length > 1;
 
   // Precios escalonados (mayoreo): solo si el producto es "tiered", NO tiene
   // presentaciones (el escalonado aplica al precio por pieza) y hay tramos.
@@ -383,12 +383,12 @@ export default function ProductDetail() {
               )}
               <div className="pdp-price-row">
                 <span className="pdp-price-main">{formatPrice(getDisplayPrice())}</span>
-                <span className="pdp-price-unit">por unidad</span>
+                <span className="pdp-price-unit">por {product.unitName ? product.unitName: 'Pieza'}</span>
               </div>
               {isPromoActive && (
                 <span className="pdp-price-was">
                   Precio normal: <s>{formatPrice(product.price)}</s>
-                  {' '}· Ahorrás {formatPrice(product.price - product.promoPrice)} por pieza
+                  {' '}· Ahorrás {formatPrice(product.price - product.promoPrice)} por {product.unitName ? product.unitName: 'Pieza'}
                 </span>
               )}
               {!isPromoActive && !selectedPresentation && savingPerPiece > 0 && (
@@ -529,7 +529,15 @@ export default function ProductDetail() {
                   Cada opción indica la cantidad de piezas y el total de esa presentación.
                 </p>
                 <div className="pdp-presentations-list">
-                  {product.presentations.map((presentation) => {
+                  {product.presentations
+                    .filter((presentation) => {
+                      // Si no trackea inventario o piezasDisponibles no existe, la mostramos siempre
+                      if (!tracksInventory || piezasDisponibles == null) return true;
+                      
+                      // Solo se muestra si hay suficientes piezas en stock para armar al menos 1 unidad de esta presentación
+                      return piezasDisponibles >= (presentation.quantity ?? 1);
+                    })
+                  .map((presentation) => {
                     const totalPresentation = getPresentationTotal(presentation);
                     const isSelected = selectedPresentation?.id === presentation.id;
                     return (
@@ -552,22 +560,23 @@ export default function ProductDetail() {
                       >
                         <div className="pdp-presentation-info">
                           <span className="pdp-presentation-name">{presentation.name}</span>
-                          <div className="pdp-presentation-pieces">
+                          {/*<div className="pdp-presentation-pieces">
                             <span className="pdp-presentation-pieces-badge">
                               {presentation.quantity}{' '}
                               {presentation.quantity === 1 ? 'pieza' : 'piezas'}
                             </span>
-                          </div>
+                          </div>*/
+                          }
                           <div className="pdp-presentation-formula">
                             <span className="pdp-presentation-unit">
-                              {formatPrice(presentation.unitPrice)}/pieza
+                              {formatPrice(presentation.unitPrice)}/{product.unitName ? product.unitName: 'Pieza'}
                             </span>
                             <span className="pdp-presentation-times"> × </span>
-                            <span className="pdp-presentation-qty-num">{presentation.quantity}</span>
+                            <span className="pdp-presentation-qty-num">{presentation.quantity} {presentation.quantity === 1 ? product.unitName || 'pieza' : product?.unitName ?  product?.unitName+'s':'piezas'}</span>
                             <span className="pdp-presentation-eq"> = </span>
-                            <span className="pdp-presentation-total">
+                            {/*<span className="pdp-presentation-total">
                               {formatPrice(totalPresentation)}
-                            </span>
+                            </span>*/}
                           </div>
                         </div>
                         <span className="pdp-presentation-price" aria-hidden="true">
@@ -580,13 +589,13 @@ export default function ProductDetail() {
                 {selectedPresentation && (
                   <div className="pdp-selected-summary">
                     <div className="pdp-selected-summary-row">
-                      <span>Precio por pieza</span>
+                      <span>Precio por {product.unitName ? product.unitName: 'Pieza'}</span>
                       <span className="value">{formatPrice(selectedPresentation.unitPrice)}</span>
                     </div>
                     <div className="pdp-selected-summary-row">
                       <span>
                         Total presentación ({selectedPresentation.quantity}{' '}
-                        {selectedPresentation.quantity === 1 ? 'pieza' : 'piezas'})
+                        {selectedPresentation.quantity === 1 ?  product.unitName||'pieza' :  product.unitName ?  product.unitName+'s' : 'piezas'})
                       </span>
                       <span className="value">
                         {formatPrice(getPresentationTotal(selectedPresentation))}
