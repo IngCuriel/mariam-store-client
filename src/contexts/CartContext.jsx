@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
 
+	
+// 1. DEFINIR LA VARIABLE QUE FALTABA AQUÍ ARRIBA
+const CART_STORAGE_KEY = 'minisuper_cart_v1';
 /**
  * Resuelve el precio unitario aplicando el tramo de precio escalonado (mayoreo)
  * si el producto lo tiene. Misma lógica que ProductDetail: ESCALÓN SIMPLE,
