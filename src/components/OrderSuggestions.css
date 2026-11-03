@@ -8,6 +8,23 @@
   background: linear-gradient(180deg, #f5f7ff 0%, #ffffff 100%);
 }
 
+/* Featured: standalone block for cancelled orders (more presence) */
+.order-sugg--featured {
+  margin: 16px 0 0;
+  padding: 20px;
+  border-color: #c7d2fe;
+  background: linear-gradient(135deg, #eef2ff 0%, #ffffff 60%);
+  box-shadow: 0 6px 18px rgba(79, 70, 229, 0.08);
+}
+
+.order-sugg--featured .order-sugg-title {
+  font-size: 1.15rem;
+}
+
+.order-sugg--featured .order-sugg-icon {
+  font-size: 1.5rem;
+}
+
 .order-sugg-head {
   display: flex;
   align-items: flex-start;

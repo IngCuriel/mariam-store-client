@@ -427,6 +427,19 @@ export default function OrderDetail() {
 
   const statusMessageText = noProductsAvailable ? null : nextStepMessage;
 
+  // Pedido cancelado con alternativas sugeridas: se muestran juntas (sin
+  // duplicados) en un bloque destacado bajo el estado, en lugar de dentro de
+  // cada producto (en estado final las tarjetas no muestran disponibilidad).
+  const isCancelled = order.status === ORDER_STATUS.CANCELLED;
+  const cancelledSuggestions = isCancelled
+    ? (order.items ?? [])
+        .filter((item) => item.isAvailable === false)
+        .flatMap((item) => item.suggestedProducts ?? [])
+        .filter((product, index, list) => list.findIndex((p) => p.id === product.id) === index)
+    : [];
+  const allItemsUnavailable =
+    (order.items?.length ?? 0) > 0 && order.items.every((item) => item.isAvailable === false);
+
   return (
     <div className="order-detail-page">
       <Toast open={toast.open} message={toast.message} type={toast.type} onClose={closeToast} />
@@ -512,6 +525,21 @@ export default function OrderDetail() {
               </div>
             )}
           </section>
+
+          {/* Pedido cancelado: alternativas sugeridas por la tienda, destacadas */}
+          {cancelledSuggestions.length > 0 && (
+            <OrderSuggestions
+              featured
+              suggestions={cancelledSuggestions}
+              onNotify={showToast}
+              title={
+                allItemsUnavailable
+                  ? 'No tuvimos los productos de tu pedido, pero te pueden interesar estas alternativas'
+                  : 'Alternativas para los productos que no tuvimos'
+              }
+              subtitle="Las elegimos para ti. Agrégalas a tu carrito y haz un nuevo pedido."
+            />
+          )}
 
           {/* Bloque especial: ningún producto disponible — mensaje amigable y acciones */}
           {noProductsAvailable && (
@@ -752,7 +780,7 @@ export default function OrderDetail() {
                       </div>
                     )}
                     {/* Alternativas sugeridas por la tienda para el producto no disponible */}
-                    {unavailable && order.status !== ORDER_STATUS.COMPLETED && (
+                    {unavailable && !isFinalState && (
                       <OrderSuggestions
                         productName={item.productName}
                         suggestions={item.suggestedProducts}

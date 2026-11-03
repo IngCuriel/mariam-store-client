@@ -31,7 +31,14 @@ const needsOptions = (product) =>
  * Alternatives suggested by the store for an unavailable order item.
  * Adding one goes to the cart (it becomes a NEW order, the current one is not modified).
  */
-export default function OrderSuggestions({ productName, suggestions, onNotify }) {
+export default function OrderSuggestions({
+  productName,
+  suggestions,
+  onNotify,
+  title = 'Te puede interesar',
+  subtitle = 'Alternativas que te recomendamos en lugar de este producto',
+  featured = false,
+}) {
   const { addToCart } = useCart();
   const navigate = useNavigate();
   const [addingId, setAddingId] = useState(null);
@@ -64,14 +71,17 @@ export default function OrderSuggestions({ productName, suggestions, onNotify })
   };
 
   return (
-    <section className="order-sugg" aria-label={`Alternativas para ${productName}`}>
+    <section
+      className={`order-sugg${featured ? ' order-sugg--featured' : ''}`}
+      aria-label={productName ? `Alternativas para ${productName}` : title}
+    >
       <div className="order-sugg-head">
         <span className="order-sugg-icon" aria-hidden="true">
           ✨
         </span>
         <div>
-          <p className="order-sugg-title">Te puede interesar</p>
-          <p className="order-sugg-sub">Alternativas que te recomendamos en lugar de este producto</p>
+          <p className="order-sugg-title">{title}</p>
+          {subtitle && <p className="order-sugg-sub">{subtitle}</p>}
         </div>
       </div>
 
