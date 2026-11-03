@@ -20,6 +20,7 @@ import {
 } from '../constants/orderStatus';
 import { getReadyAtAvailabilityMessage } from '../utils/orderAvailability';
 import { Toast } from '../components/Toast';
+import OrderSuggestions from '../components/OrderSuggestions';
 import './OrderDetail.css';
 
 const formatPrice = (price) => {
@@ -749,6 +750,14 @@ export default function OrderDetail() {
                           </div>
                         )}
                       </div>
+                    )}
+                    {/* Alternativas sugeridas por la tienda para el producto no disponible */}
+                    {unavailable && order.status !== ORDER_STATUS.COMPLETED && (
+                      <OrderSuggestions
+                        productName={item.productName}
+                        suggestions={item.suggestedProducts}
+                        onNotify={showToast}
+                      />
                     )}
                   </div>
                 );
