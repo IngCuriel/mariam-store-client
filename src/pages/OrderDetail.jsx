@@ -74,6 +74,26 @@ const formatTimeOnly = (dateString) => {
   }
 };
 
+/**
+ * Pedido "sobre pedido": fecha/hora estimada de disponibilidad en hora de México
+ * (ej. "Jueves 5 de noviembre, 10:00 a.m."). Devuelve '' si no hay fecha válida.
+ */
+const formatEstimatedAvailableAt = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return '';
+  const text = date.toLocaleString('es-MX', {
+    timeZone: 'America/Mexico_City',
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return text.charAt(0).toUpperCase() + text.slice(1);
+};
+/** Estados en los que ya no tiene sentido mostrar la fecha estimada. */
+const ESTIMATED_DATE_HIDDEN_STATUSES = new Set([ORDER_STATUS.COMPLETED, ORDER_STATUS.CANCELLED]);
 /** Cantidad efectiva para mostrar (confirmada o solicitada según disponibilidad) */
 function effectiveQuantity(item) {
   if (item.confirmedQuantity != null) return item.confirmedQuantity;
@@ -377,6 +397,10 @@ export default function OrderDetail() {
   const statusLabel = STATUS_LABELS[order.status] ?? order.status;
   const currentStepIndex = getTimelineStepIndex(order.status);
   const deliveryCode = order.deliveryType?.code?.toLowerCase?.();
+  // "Sobre pedido": solo se muestra si el pedido trae fecha estimada.
+  const estimatedAvailableText = ESTIMATED_DATE_HIDDEN_STATUSES.has(order.status)
+    ? ''
+    : formatEstimatedAvailableAt(order.estimatedAvailableAt);
   const nextStepMessage =
     order.status === ORDER_STATUS.IN_PREPARATION
       ? deliveryCode === 'delivery'
@@ -470,6 +494,21 @@ export default function OrderDetail() {
               <p className="order-detail-cancellation-reason" role="status">
                 {order.cancellationReason}
               </p>
+            )}
+            {estimatedAvailableText && (
+              <div className="order-detail-estimated-date" role="status">
+                <span className="order-detail-estimated-date-icon" aria-hidden="true">
+                  📅
+                </span>
+                <div>
+                  <p className="order-detail-estimated-date-title">
+                    {deliveryCode === 'delivery'
+                      ? 'Tu pedido estará llegando a partir del'
+                      : 'Tu pedido estará disponible a partir del'}
+                  </p>
+                  <p className="order-detail-estimated-date-value">{estimatedAvailableText}</p>
+                </div>
+              </div>
             )}
           </section>
 

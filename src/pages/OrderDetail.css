@@ -318,6 +318,39 @@
   border-left: 3px solid #94a3b8;
 }
 
+/* Pedido "sobre pedido": fecha estimada de disponibilidad */
+.order-detail-estimated-date {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 12px 0 0 0;
+  padding: 12px 16px;
+  max-width: 460px;
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  border-left: 4px solid #7c3aed;
+  border-radius: 10px;
+}
+
+.order-detail-estimated-date-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.order-detail-estimated-date-title {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #6d28d9;
+  font-weight: 600;
+}
+
+.order-detail-estimated-date-value {
+  margin: 2px 0 0 0;
+  font-size: 1rem;
+  color: #4c1d95;
+  font-weight: 700;
+}
+
 .order-detail-ready-banner {
   display: flex;
   align-items: flex-start;
