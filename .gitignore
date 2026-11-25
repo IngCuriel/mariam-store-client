@@ -25,3 +25,6 @@ dist-ssr
 *.sln
 *.sw?
 
+
+# Firebase CLI cache (por máquina; con CRLF rompe el deploy)
+.firebase/
