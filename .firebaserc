@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "mscurieldigital"
+    "default": "minisupercuriel-dev",
+    "dev": "minisupercuriel-dev",
+    "prod": "minisupercuriel-prod"
   }
 }

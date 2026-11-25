@@ -1,7 +1,9 @@
 import axios from 'axios';
 
-const API_URL = 'https://mariam-pos-web-api.onrender.com';
-// const API_URL = 'http://localhost:4000'; // Para desarrollo local
+// Se define por ambiente en .env.dev / .env.prod (VITE_API_URL).
+// Para backend local: VITE_API_URL=http://localhost:4000 en .env.dev.local
+const API_URL =
+  import.meta.env.VITE_API_URL || 'https://mariam-pos-web-api.onrender.com';
 
 const api = axios.create({
   baseURL: `${API_URL}/api`,
