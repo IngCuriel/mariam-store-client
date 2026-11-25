@@ -8,6 +8,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import BottomNav from './components/BottomNav';
 import AnalyticsPageView from './components/AnalyticsPageView';
+import EnvironmentBanner from './components/EnvironmentBanner';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -51,6 +52,7 @@ function AppRoutes() {
     <div className="app-wrapper">
       <ScrollToTop />
       <AnalyticsPageView />
+      <EnvironmentBanner />
       <Header />
       <main className="app-main">
         <Routes>
